@@ -1,59 +1,55 @@
-# syntax = docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
 ARG RUBY_VERSION=3.3.0
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
+FROM ruby:$RUBY_VERSION-slim AS dev
 
-# Rails app lives here
 WORKDIR /rails
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
-
-
-# Throw-away build stage to reduce size of final image
-FROM base as build
-
-# Install packages needed to build gems
+# Install system packages including PostgreSQL client
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libvips pkg-config
+    apt-get install --no-install-recommends -y \
+      curl \
+      gnupg \
+      postgresql-client \
+      libjemalloc2 \
+      libvips \
+      build-essential \
+      libpq-dev \
+      git \
+      libyaml-dev \
+      pkg-config \
+      vim less && \
+    # Install Node.js (v20 LTS)
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install --no-install-recommends -y nodejs && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-# Install application gems
+# Set environment variables
+ENV RAILS_ENV=development \
+    NODE_ENV=development \
+    BUNDLE_PATH="/usr/local/bundle" \
+    npm_config_build_from_source=true \
+    npm_config_target_platform=linux \
+    npm_config_target_arch=x64
+
+# Copy Gemfiles and install gems
 COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
-    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile --gemfile
+RUN bundle install
 
-# Copy application code
+# Copy package.json and install Node packages
+COPY package.json package-lock.json* ./
+RUN npm cache clean --force && \
+    rm -rf node_modules package-lock.json && \
+    npm install
+
+# Copy all code (or mount in docker-compose override)
 COPY . .
 
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
-
-
-# Final stage for app image
-FROM base
-
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libsqlite3-0 libvips && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
-
-# Copy built artifacts: gems, application
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /rails /rails
-
-# Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
-
-# Entrypoint prepares the database.
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-
-# Start the server by default, this can be overwritten at runtime
+# Expose ports
 EXPOSE 3000
-CMD ["./bin/rails", "server"]
+
+# Use bash for easier debugging
+SHELL ["/bin/bash", "-c"]
+
+# Run Rails server by default
+CMD ["bin/dev"]

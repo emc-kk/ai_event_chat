@@ -1,0 +1,40 @@
+services:
+  app:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - .:/rails:cached
+      - bundle:/usr/local/bundle
+    environment:
+      RAILS_ENV: development
+      NODE_ENV: development
+      WEB_CONCURRENCY: 0
+      VITE_RUBY_HOST: "0.0.0.0"
+      DB_HOST: db
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+    ports:
+      - "3000:3000"
+      - "3036:3036"
+    depends_on:
+      - db
+
+  db:
+    platform: linux/amd64
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ai_event_chat_development
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  bundle:
