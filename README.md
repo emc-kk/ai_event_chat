@@ -1,13 +1,36 @@
 # README
 
+## ai_event_chat
+
 This README would normally document whatever steps are necessary to get the
 application up and running.
 
 Things you may want to cover:
 
 * Ruby version
+3.3.0
 
 * System dependencies
+
+### Backend
+- Ruby 3.3.0
+- Ruby on Rails 7.1.x
+- PostgreSQL 15+
+- Inertia Rails (~> 3.10)
+
+### Frontend
+- Node.js 20.x LTS
+- TypeScript 5.x
+- React 19.x
+- Vite 5.x
+- Tailwind CSS 4.x
+- Vite Ruby (~> 3.0)
+- Emotion/react
+
+### Development Tools
+- Docker & Docker Compose
+- Vite Plugin React
+- PostCSS & Autoprefixer
 
 * Configuration
 
@@ -23,8 +46,16 @@ Things you may want to cover:
 
 * ...
 
+## setup
 
-## installation
+```
+$ git clone git@github.com:emc-kk/ai_event_chat.git
+$ cd ai_event_chat
+$ docker componse build
+$ docker compose up
+```
+
+## How This Project Was Built
 
 ```
 $ rails new . --skip-js --skip-asset-pipeline
