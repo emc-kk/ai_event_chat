@@ -6,6 +6,8 @@
     "vite-plugin-ruby": "^5.1.1"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@inertiajs/react": "^2.1.2",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
