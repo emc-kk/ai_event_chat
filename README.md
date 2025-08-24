@@ -7,11 +7,6 @@ application up and running.
 
 Things you may want to cover:
 
-* Ruby version
-3.3.0
-
-* System dependencies
-
 ### Backend
 - Ruby 3.3.0
 - Ruby on Rails 7.1.x
