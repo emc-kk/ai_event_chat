@@ -1,11 +1,11 @@
-import styled from '@emotion/styled';
-import { Link } from '@inertiajs/react';
-import { IQuiz } from '../types/quiz';
-import React, { useState } from 'react';
+import styled from "@emotion/styled";
+import { IQuiz } from "../types/quiz";
+import React, { useState } from "react";
+import { SlotMachine } from "./SlotMachine";
 
 type Props = {
   quizzes: IQuiz[];
-}
+};
 
 const Container = styled.div`
   display: flex;
@@ -13,7 +13,7 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background-color: #1B1A2D;
+  background-color: #1b1a2d;
   padding: 20px;
 `;
 
@@ -26,24 +26,14 @@ const Question = styled.h1`
 `;
 
 const Index = styled.p`
-  color: #82828B;
+  color: #82828b;
   font-size: 16px;
   font-weight: bold;
   margin-bottom: 72px;
 `;
 
-const SlotContainer = styled.div`
-  margin-bottom: 72px;
-  border: 3px solid #fff;
-  border-radius: 8px;
-  height: 80px;
-  width: 300px;
-  overflow: hidden;
-  box-shadow: inset 0 16px 16px -6px rgba(0, 0, 0, 0.9), inset 0 -16px 16px -6px rgba(0, 0, 0, 0.9);
-`;
-
 const NextQuizeButton = styled.button`
-  background-color: #5C8EDC;
+  background-color: #5c8edc;
   width: 300px;
   color: #fff;
   display: flex;
@@ -51,37 +41,82 @@ const NextQuizeButton = styled.button`
   justify-content: center;
   padding: 12px 24px;
   border-radius: 24px;
-`
+`;
 
-const QuizSlot = styled.div`
-  height: 80px;
+const QuizStopButton = styled.button`
+  background-color: #2d313a;
   width: 300px;
   color: #fff;
-  animation: slotAnimation 1s infinite;
-  /* background-color: #D65744; */
-  background-color: #2D313A;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  padding: 0 8px;
-`
+  padding: 12px 24px;
+  border-radius: 24px;
+`;
 
-export const Quizes: React.FC<Props> = ({quizzes}) => {
+export const Quizes: React.FC<Props> = ({ quizzes }) => {
+  const [answer, setAnswer] = useState<string[] | null>(null);
   const [index, setIndex] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(true);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
+  const currentOptions = quizzes[index]?.options || [];
+
+  const handleStop = () => {
+    setIsScrolling(false);
+    const finalPosition = Math.round(scrollPosition / 80) * 80;
+    setScrollPosition(finalPosition);
+    
+    // 停止した位置から選択された選択肢を計算
+    const selectedOptionIndex = Math.round(scrollPosition / 80) % currentOptions.length;
+    const selectedOption = currentOptions[selectedOptionIndex];
+    
+    // 回答を配列で保持
+    setAnswer(prevAnswers => {
+      const newAnswers = prevAnswers || [];
+      return [...newAnswers, selectedOption];
+    });
+  };
+
   const handleNextQuiz = () => {
-    setIndex( current => current + 1);
+    setIndex((current) => current + 1);
+    setIsScrolling(true);
+    setScrollPosition(0);
+    // 次のクイズに進む際に、現在のクイズの回答をリセット（必要に応じて）
+    // setAnswer(null); // コメントアウト: 全ての回答を保持したい場合
   }
+
+  const handleScrollPositionChange = (
+    newPositionOrUpdater: number | ((prev: number) => number)
+  ) => {
+    if (typeof newPositionOrUpdater === "function") {
+      setScrollPosition(newPositionOrUpdater);
+    } else {
+      setScrollPosition(newPositionOrUpdater);
+    }
+  };
+
   return (
     <Container>
-      <Question>{quizzes[index].question}</Question>
-      <Index>({index + 1}/{quizzes.length})</Index>
-      <SlotContainer>
-        {quizzes.map((quiz) => (
-          <QuizSlot key={quiz.id}>{quiz.question}</QuizSlot>
-        ))}
-      </SlotContainer>
-      <NextQuizeButton onClick={handleNextQuiz}>ストップ！</NextQuizeButton>
+      <Question>{quizzes[index]?.question || "Loading..."}</Question>
+      <Index>
+        ({index + 1}/{quizzes.length})
+      </Index>
+      <SlotMachine
+        options={currentOptions}
+        isScrolling={isScrolling}
+        scrollPosition={scrollPosition}
+        onScrollPositionChange={handleScrollPositionChange}
+      />
+      {isScrolling ? (
+        <QuizStopButton onClick={handleStop}>
+          ストップ！
+        </QuizStopButton>
+      ) : (
+        <NextQuizeButton onClick={handleNextQuiz}>
+          次の問題へ
+        </NextQuizeButton>
+      )}
     </Container>
-  )
-}
+  );
+};
