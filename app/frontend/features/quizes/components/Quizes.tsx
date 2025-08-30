@@ -1,7 +1,9 @@
 import styled from "@emotion/styled";
-import { IQuiz } from "../types/quiz";
-import React, { useState } from "react";
+import { IQuiz, IRunking } from "../types/quiz";
+import React from "react";
 import { SlotMachine } from "./SlotMachine";
+import { useQuiz } from "../hooks/useQuiz";
+import { Result } from "./Result";
 
 type Props = {
   quizzes: IQuiz[];
@@ -23,6 +25,7 @@ const Question = styled.h1`
   color: #fff;
   margin-bottom: 72px;
   text-align: center;
+  height: 130px;
 `;
 
 const Index = styled.p`
@@ -32,7 +35,7 @@ const Index = styled.p`
   margin-bottom: 72px;
 `;
 
-const NextQuizeButton = styled.button`
+const ResultButton = styled.button`
   background-color: #5c8edc;
   width: 300px;
   color: #fff;
@@ -41,81 +44,56 @@ const NextQuizeButton = styled.button`
   justify-content: center;
   padding: 12px 24px;
   border-radius: 24px;
-`;
+  border: none;
+  cursor: pointer;
+`     
 
-const QuizStopButton = styled.button`
-  background-color: #2d313a;
-  width: 300px;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  border-radius: 24px;
-`;
+export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
+  const { 
+    currentQuiz, 
+    currentIndex, 
+    isLastQuiz, 
+    isCompleted,
+    totalQuizzes,
+    quizzes,
+    addAnswer, 
+    nextQuiz,
+  } = useQuiz({quizzes: orgQuizzes});
 
-export const Quizes: React.FC<Props> = ({ quizzes }) => {
-  const [answer, setAnswer] = useState<string[] | null>(null);
-  const [index, setIndex] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(true);
-  const [scrollPosition, setScrollPosition] = useState(0);
+  const [runking, setRunking] = React.useState<IRunking>();
 
-  const currentOptions = quizzes[index]?.options || [];
-
-  const handleStop = () => {
-    setIsScrolling(false);
-    const finalPosition = Math.round(scrollPosition / 80) * 80;
-    setScrollPosition(finalPosition);
-    
-    // 停止した位置から選択された選択肢を計算
-    const selectedOptionIndex = Math.round(scrollPosition / 80) % currentOptions.length;
-    const selectedOption = currentOptions[selectedOptionIndex];
-    
-    // 回答を配列で保持
-    setAnswer(prevAnswers => {
-      const newAnswers = prevAnswers || [];
-      return [...newAnswers, selectedOption];
-    });
+  const handleSlotStop = (selectedOption: string) => {
+    addAnswer(selectedOption);
   };
 
   const handleNextQuiz = () => {
-    setIndex((current) => current + 1);
-    setIsScrolling(true);
-    setScrollPosition(0);
-    // 次のクイズに進む際に、現在のクイズの回答をリセット（必要に応じて）
-    // setAnswer(null); // コメントアウト: 全ての回答を保持したい場合
+    nextQuiz();
+  };
+
+  const handleRexult = () => {
+    setRunking({correct: 22, total: 100, scorre: "A"});
   }
 
-  const handleScrollPositionChange = (
-    newPositionOrUpdater: number | ((prev: number) => number)
-  ) => {
-    if (typeof newPositionOrUpdater === "function") {
-      setScrollPosition(newPositionOrUpdater);
-    } else {
-      setScrollPosition(newPositionOrUpdater);
-    }
-  };
+  if (runking) {
+    return <Result quizzes={quizzes} runking={runking} />;
+  } 
 
   return (
     <Container>
-      <Question>{quizzes[index]?.question || "Loading..."}</Question>
+      <Question>{currentQuiz?.question || "Loading..."}</Question>
       <Index>
-        ({index + 1}/{quizzes.length})
+        ({currentIndex + 1}/{totalQuizzes})
       </Index>
-      <SlotMachine
-        options={currentOptions}
-        isScrolling={isScrolling}
-        scrollPosition={scrollPosition}
-        onScrollPositionChange={handleScrollPositionChange}
+      <SlotMachine 
+        key={currentIndex}
+        options={currentQuiz?.options || []}
+        onStop={handleSlotStop}
+        onNext={handleNextQuiz}
+        isLastQuiz={isLastQuiz}
+        isCompleted={isCompleted}
       />
-      {isScrolling ? (
-        <QuizStopButton onClick={handleStop}>
-          ストップ！
-        </QuizStopButton>
-      ) : (
-        <NextQuizeButton onClick={handleNextQuiz}>
-          次の問題へ
-        </NextQuizeButton>
+      {isCompleted && (
+        <ResultButton onClick={handleRexult}>結果を見る</ResultButton>
       )}
     </Container>
   );

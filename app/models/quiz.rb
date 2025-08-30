@@ -6,7 +6,7 @@ class Quiz
   attribute :id, :integer
   attribute :question, :string
   attribute :options
-  attribute :correct_answer, :integer
+  attribute :correct_answer, :string
   attribute :explanation, :string
 
   class << self
@@ -27,7 +27,7 @@ class Quiz
   end
 
   def correct_answer?(answer)
-    answer.to_i == correct_answer
+    answer == correct_answer
   end
 
   def options
