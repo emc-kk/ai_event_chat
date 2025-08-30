@@ -48,7 +48,7 @@ class QuizResult < ApplicationRecord
       id: id,
       runking: runking,
       total: total_participants,
-      store: score,
+      score: score,
     }
   end
 end

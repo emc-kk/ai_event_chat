@@ -52,6 +52,22 @@ const Score = styled.p`
   color: #2090FF;
   margin-bottom: 12px;
   line-height: 1;
+
+  &.S {
+    color: #FFD700;
+  }
+  &.A {
+    color: #FF4500;
+  }
+  &.B {
+    color: #1E90FF
+  }
+  &.C {
+    color: #32CD32;
+  }
+  &.D {
+    color: #808080;
+  }
 `
 
 const CorrectCount = styled.p`
@@ -158,7 +174,7 @@ export const Result: React.FC<Props> = ({ quizzes, runking }) => {
       <Title>結果発表</Title>
       <Section>
         <ScoreTitle>あなたのAIレベル</ScoreTitle>
-        <Score>{runking.score}</Score>
+        <Score className={runking.score}>{runking.score}</Score>
         <CorrectCount>{correctCount} / {totalQuestions}問 正解</CorrectCount>
         <Divider />
         <RunkingText><span>{runking.runking}</span>位 / {runking.total}人中</RunkingText>
