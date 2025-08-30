@@ -44,8 +44,10 @@ const QuizSlot = styled.div<{ isCompleteStopped: boolean }>`
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.5s;
-  box-shadow: inset 0 8px 16px -6px rgba(0, 0, 0, 0.8),
-    inset 0 -8px 16px -6px rgba(0, 0, 0, 0.8);
+  box-shadow: ${(props) =>
+    props.isCompleteStopped 
+      ? "inset 0 8px 16px -6px rgba(0, 0, 0, 0.8), inset 0 -8px 16px -6px rgba(0, 0, 0, 0.8)"
+      : "none"};
 `;
 
 const NextQuizeButton = styled.button`

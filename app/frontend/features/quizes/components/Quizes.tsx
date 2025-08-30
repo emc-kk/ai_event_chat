@@ -25,7 +25,7 @@ const Question = styled.h1`
   color: #fff;
   margin-bottom: 72px;
   text-align: center;
-  height: 130px;
+  height: 125px;
 `;
 
 const Index = styled.p`
@@ -56,6 +56,7 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
     isCompleted,
     totalQuizzes,
     quizzes,
+    completionTime,
     addAnswer, 
     nextQuiz,
   } = useQuiz({quizzes: orgQuizzes});
