@@ -88,9 +88,7 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
 
   if (runking) {
     return <Result quizzes={quizzes} runking={runking} />;
-  } 
-
-  console.log(quizzes)
+  }
 
   return (
     <Container>

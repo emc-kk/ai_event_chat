@@ -6,7 +6,7 @@ interface UseQuizProps {
 }
 
 export const useQuiz = ({ quizzes }: UseQuizProps) => {
-  const _quizzes = quizzes.map(quiz => new QuizeImple(quiz));
+  const [_quizzes] = useState(() => quizzes.map(quiz => new QuizeImple(quiz)));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [completionTime, setCompletionTime] = useState<number | null>(null);
@@ -15,7 +15,6 @@ export const useQuiz = ({ quizzes }: UseQuizProps) => {
   const currentQuiz = _quizzes[currentIndex];
   const isLastQuiz = currentIndex >= _quizzes.length - 1;
 
-  // クイズ開始時の時間を記録
   useEffect(() => {
     if (startTimeRef.current === null) {
       startTimeRef.current = Date.now();
@@ -43,7 +42,7 @@ export const useQuiz = ({ quizzes }: UseQuizProps) => {
     setCurrentIndex(0);
     setIsCompleted(false);
     setCompletionTime(null);
-    startTimeRef.current = Date.now(); // 新しい開始時間を設定
+    startTimeRef.current = Date.now();
   };
 
   return {
