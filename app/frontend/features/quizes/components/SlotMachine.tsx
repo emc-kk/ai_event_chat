@@ -61,6 +61,7 @@ const NextQuizeButton = styled.button`
   border-radius: 24px;
   border: none;
   cursor: pointer;
+  font-weight: bold;
 
   &:disabled {
     background-color: #4a4a4a;
@@ -79,6 +80,7 @@ const QuizStopButton = styled.button`
   border-radius: 24px;
   border: none;
   cursor: pointer;
+  font-weight: bold;
 `;
 
 export const SlotMachine: React.FC<Props> = ({
