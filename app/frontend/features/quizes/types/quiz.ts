@@ -10,8 +10,8 @@ export type Score = "S" | "A" | "B" | "C" | "D";
 
 export type IRunking = {
   total: number;
-  correct: number;
-  scorre: Score;
+  runking: number;
+  score: Score;
 }
 
 export class QuizeImple {

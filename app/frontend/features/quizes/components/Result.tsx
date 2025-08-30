@@ -158,10 +158,10 @@ export const Result: React.FC<Props> = ({ quizzes, runking }) => {
       <Title>結果発表</Title>
       <Section>
         <ScoreTitle>あなたのAIレベル</ScoreTitle>
-        <Score>{runking.scorre}</Score>
+        <Score>{runking.score}</Score>
         <CorrectCount>{correctCount} / {totalQuestions}問 正解</CorrectCount>
         <Divider />
-        <RunkingText><span>{runking.correct}</span>位 / {runking.total}人中</RunkingText>
+        <RunkingText><span>{runking.runking}</span>位 / {runking.total}人中</RunkingText>
       </Section>
       <AnswerSection>
         <AnswersSectionTitle>答え合わせ</AnswersSectionTitle>

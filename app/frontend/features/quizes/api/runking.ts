@@ -8,7 +8,7 @@ type Parameter = {
 
 type Resoponse = IRunking;
 
-export const patchRunking = async ({ completionTime, corretCount }: Parameter): Promise<Resoponse> => {
+export const postRunking = async ({ completionTime, corretCount }: Parameter): Promise<Resoponse> => {
   const response = await fetch('/api/runking', {
     method: 'POST',
     headers: {

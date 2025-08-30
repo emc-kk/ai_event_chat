@@ -4,7 +4,7 @@ import React from "react";
 import { SlotMachine } from "./SlotMachine";
 import { useQuiz } from "../hooks/useQuiz";
 import { Result } from "./Result";
-import { patchRunking } from "../api/runking";
+import { postRunking } from "../api/runking";
 
 type Props = {
   quizzes: IQuiz[];
@@ -76,7 +76,7 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
     if (!completionTime) return;
     const corretCount = quizzes.filter(quiz => quiz.isCorrect()).length;
     const answers = quizzes.map(quiz => quiz.userAnswer || "");
-    const runking = await patchRunking({completionTime, corretCount, answers });
+    const runking = await postRunking({completionTime, corretCount, answers });
     setRunking(runking);
   }
 
