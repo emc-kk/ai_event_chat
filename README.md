@@ -31,7 +31,15 @@ Things you may want to cover:
 
 * Database creation
 
+```
+$ docker compose run --rm app bundle exec rails db:create
+```
+
 * Database initialization
+
+```
+$ docker compose run --rm bundle exec rails db:migrate
+```
 
 * How to run the test suite
 
