@@ -74,9 +74,9 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
 
   const handleRexult = async () => {
     if (!completionTime) return;
-    const correctAnswerCount = quizzes.filter(quiz => quiz.isCorrect()).length;
+    const corretCount = quizzes.filter(quiz => quiz.isCorrect()).length;
     const answers = quizzes.map(quiz => quiz.userAnswer || "");
-    const runking = await patchRunking({completionTime, correctAnswerCount, answers });
+    const runking = await patchRunking({completionTime, corretCount, answers });
     setRunking(runking);
   }
 
