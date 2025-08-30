@@ -1,11 +1,11 @@
 class Api::RunkingsController < ApplicationController
   def create
-    runking = QuizeResult.new({ quize: :default }.merge(runking_params))
+    quiz_result = QuizResult.new({ quiz: :default }.merge(runking_params))
 
-    if runking.save
-      render json: Serializers::RunkResultSerializer.new(runking).to_json, status: :created
+    if quiz_result.save
+      render json: quiz_result.to_json, status: :created
     else
-      render json: { errors: runking.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: quiz_result.errors.full_messages }, status: :unprocessable_entity
     end
   end
 

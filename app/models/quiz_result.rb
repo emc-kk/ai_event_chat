@@ -4,15 +4,13 @@ class QuizResult < ApplicationRecord
   validates :correct_count, presence: true
   validates :answers, presence: true
 
-  serialize :answers, JSON
-
   enum :quiz, {
     default: 0
   }, prefix: true
 
   def runking
     # 同じクイズの結果を取得し、正解数降順、完了時間昇順でソート
-    same_quiz_results = QuizResult.where(quiz: self.quize)
+    same_quiz_results = QuizResult.where(quiz: self.quiz)
                                    .order(correct_count: :desc, completion_time: :asc)
     
     # 自分より上位の結果の数を数える + 1 が順位
@@ -27,7 +25,7 @@ class QuizResult < ApplicationRecord
   end
 
   def total_participants
-    QuizResult.where(quiz: self.quize).count
+    QuizResult.where(quiz: self.quiz).count
   end
 
   def score
@@ -43,5 +41,14 @@ class QuizResult < ApplicationRecord
     else
       "D"
     end
+  end
+
+  def to_json
+    {
+      id: id,
+      runking: runking,
+      total: total_participants,
+      store: score,
+    }
   end
 end

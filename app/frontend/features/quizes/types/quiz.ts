@@ -9,6 +9,7 @@ export type IQuiz = {
 export type Score = "S" | "A" | "B" | "C" | "D";
 
 export type IRunking = {
+  id: string;
   total: number;
   runking: number;
   score: Score;
@@ -28,7 +29,6 @@ export class QuizeImple {
     this._options = data.options;
     this._correct_answer = data.correct_answer;
     this._explanation = data.explanation;
-    this._userAnswer = "OpenAI"
   }
 
   get id() {
