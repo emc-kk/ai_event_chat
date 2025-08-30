@@ -5,6 +5,7 @@ import { SlotMachine } from "./SlotMachine";
 import { useQuiz } from "../hooks/useQuiz";
 import { Result } from "./Result";
 import { postRunking } from "../api/runking";
+import { toast } from "react-toastify";
 
 type Props = {
   quizzes: IQuiz[];
@@ -75,14 +76,21 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
   const handleRexult = async () => {
     if (!completionTime) return;
     const corretCount = quizzes.filter(quiz => quiz.isCorrect()).length;
-    const answers = quizzes.map(quiz => quiz.userAnswer || "");
-    const runking = await postRunking({completionTime, corretCount, answers });
-    setRunking(runking);
+    const answers = quizzes.map(quiz => quiz.userAnswer!);
+    try {
+      const runking = await postRunking({completionTime, corretCount, answers });
+      setRunking(runking);
+    } catch (error) {
+      console.error(error);
+      toast.error('Soorry, something went wrong. Please try again later.');
+    }
   }
 
   if (runking) {
     return <Result quizzes={quizzes} runking={runking} />;
   } 
+
+  console.log(quizzes)
 
   return (
     <Container>

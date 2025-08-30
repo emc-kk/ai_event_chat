@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import styled from '@emotion/styled';
+import { Layaout } from '../components/layouts/layout';
 
 const Container = styled.div`
   display: flex;
@@ -38,13 +39,13 @@ const GotoButton = styled(Link)`
 
 export default function Home() {
   return (
-    <>
+    <Layaout>
       <Head title="AIレベル診断クイズ" />
       <Container>
         <Title>AIレベル診断クイズ</Title>
         <Description>ホイールを止めてあなたの知識をためそう！</Description>
         <GotoButton href="/quizzes">診断スタート</GotoButton>
       </Container>
-    </>
+    </Layaout>
   )
 }
