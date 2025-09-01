@@ -1,4 +1,4 @@
-development:
+default: &default
   quizzes:
     - id: 1
       question: "対話型AI「CHATGPT」を開発した企業はどこでしょう？"
@@ -90,4 +90,9 @@ development:
         - "全てパブリックドメイン（公共の財産）になる"
       correct_answer: "AI単独で生成したものは著作物と認められない"
       explanation: "日本の著作権法では、著作物は「思想又は感情を創作的に表現したもの」と定義されており、AI単独の生成物には人間の「創作的寄与」がないため、原則として著作物とは認められないという見解が示されています。ただし、人間がAIを道具として利用し、創作的な指示や修正を加えた場合は、その人間に著作権が認められる可能性があります。"
-production: << :*development
+development:
+  <<: *default
+test:
+  <<: *default
+production:
+  <<: *default
