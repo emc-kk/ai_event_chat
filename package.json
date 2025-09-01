@@ -23,7 +23,8 @@
   },
   "scripts": {
     "check": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
-    "vite:dev": "vite dev --port 3060 --host 0.0.0.0"
+    "vite:dev": "vite dev --port 3060 --host 0.0.0.0",
+    "build": "vite build"
   },
   "overrides": {
     "rollup": "npm:@rollup/wasm-node"
