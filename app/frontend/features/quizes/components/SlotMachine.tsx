@@ -111,7 +111,7 @@ export const SlotMachine: React.FC<Props> = ({
         <SlotWrapper
           isScrolling={isScrolling}
           style={{
-            transform: `translateY(-${scrollPosition + startOffset * 80}px)`,
+            transform: `translateY(${-scrollPosition - startOffset * 80}px)`,
           }}
         >
           {extendedOptions.map((option, idx) => (

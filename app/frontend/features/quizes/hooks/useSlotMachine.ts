@@ -12,16 +12,16 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
 
   // 無限ループのためにオプションを複製
   const extendedOptions = [...options, ...options, ...options];
-  const startOffset = options.length;
+  const startOffset = options.length; // 真ん中のセットから開始
 
   // スクロール制御のuseEffect
   useEffect(() => {
     if (isScrolling) {
       const interval = setInterval(() => {
         setScrollPosition(prev => {
-          const newPosition = prev + 5;
-          if (newPosition >= options.length * 80) {
-            return 0;
+          const newPosition = prev - 5; // 負の方向に変化（下に向かって移動）
+          if (newPosition <= -options.length * 80) {
+            return 0; // 一周したらリセット
           }
           return newPosition;
         });
@@ -48,8 +48,8 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
     const finalPosition = Math.round(scrollPosition / 80) * 80;
     setScrollPosition(finalPosition);
     
-    // 停止した位置から選択された選択肢を計算
-    const selectedOptionIndex = Math.round(scrollPosition / 80) % options.length;
+    // 停止した位置から選択された選択肢を計算（負の値に対応）
+    const selectedOptionIndex = Math.abs(Math.round(scrollPosition / 80)) % options.length;
     const selectedOption = options[selectedOptionIndex];
     
     // コールバック関数があれば実行
