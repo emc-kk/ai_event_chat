@@ -15,10 +15,21 @@ const SlotContainer = styled.div`
   border: 3px solid #fff;
   border-radius: 8px;
   height: 80px;
-  width: 300px;
+  width: 100%;
+  max-width: 90vw;
+  min-width: 280px;
   overflow: hidden;
   position: relative;
   z-index: 1;
+  
+  @media (min-width: 400px) {
+    max-width: 350px;
+  }
+  
+  @media (max-width: 360px) {
+    height: 70px;
+    margin-bottom: 60px;
+  }
 `;
 
 const SlotWrapper = styled.div<{ isScrolling: boolean }>`
@@ -30,7 +41,7 @@ const SlotWrapper = styled.div<{ isScrolling: boolean }>`
 
 const QuizSlot = styled.div<{ isCompleteStopped: boolean }>`
   height: 80px;
-  width: 300px;
+  width: 100%;
   color: #fff;
   background-color: ${(props) =>
     props.isCompleteStopped ? "#ED6067" : "#2D313A"};
@@ -38,9 +49,10 @@ const QuizSlot = styled.div<{ isCompleteStopped: boolean }>`
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 0 8px;
+  padding: 0 12px;
   flex-shrink: 0;
-  font-size: 20px;
+  font-size: clamp(16px, 4vw, 20px);
+  line-height: 1.2;
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.5s;
@@ -48,11 +60,19 @@ const QuizSlot = styled.div<{ isCompleteStopped: boolean }>`
     props.isCompleteStopped 
       ? "inset 0 8px 16px -6px rgba(0, 0, 0, 0.8), inset 0 -8px 16px -6px rgba(0, 0, 0, 0.8)"
       : "none"};
+  
+  @media (max-width: 360px) {
+    height: 70px;
+    padding: 0 8px;
+    font-size: clamp(14px, 3.5vw, 18px);
+  }
 `;
 
 const NextQuizeButton = styled.button`
   background-color: #5c8edc;
-  width: 300px;
+  width: 100%;
+  max-width: 90vw;
+  min-width: 280px;
   color: #fff;
   display: flex;
   align-items: center;
@@ -62,6 +82,11 @@ const NextQuizeButton = styled.button`
   border: none;
   cursor: pointer;
   font-weight: bold;
+  font-size: clamp(14px, 3.5vw, 16px);
+
+  @media (min-width: 400px) {
+    max-width: 350px;
+  }
 
   &:disabled {
     background-color: #4a4a4a;
@@ -71,7 +96,9 @@ const NextQuizeButton = styled.button`
 
 const QuizStopButton = styled.button`
   background-color: #2d313a;
-  width: 300px;
+  width: 100%;
+  max-width: 90vw;
+  min-width: 280px;
   color: #fff;
   display: flex;
   align-items: center;
@@ -81,6 +108,11 @@ const QuizStopButton = styled.button`
   border: none;
   cursor: pointer;
   font-weight: bold;
+  font-size: clamp(14px, 3.5vw, 16px);
+  
+  @media (min-width: 400px) {
+    max-width: 350px;
+  }
 `;
 
 export const SlotMachine: React.FC<Props> = ({
@@ -96,6 +128,7 @@ export const SlotMachine: React.FC<Props> = ({
     isCompleteStopped,
     extendedOptions,
     startOffset,
+    slotHeight,
     handleStop,
     reset,
   } = useSlotMachine({ options, onStop });
@@ -111,7 +144,7 @@ export const SlotMachine: React.FC<Props> = ({
         <SlotWrapper
           isScrolling={isScrolling}
           style={{
-            transform: `translateY(${-scrollPosition - startOffset * 80}px)`,
+            transform: `translateY(${-scrollPosition - startOffset * slotHeight}px)`,
           }}
         >
           {extendedOptions.map((option, idx) => (

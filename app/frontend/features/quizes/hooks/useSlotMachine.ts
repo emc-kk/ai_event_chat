@@ -5,6 +5,25 @@ interface UseSlotMachineProps {
   onStop?: (selectedOption: string) => void;
 }
 
+const useResponsiveSlotHeight = () => {
+  const [slotHeight, setSlotHeight] = useState(80);
+
+  useEffect(() => {
+    const updateSlotHeight = () => {
+      setSlotHeight(window.innerWidth <= 360 ? 70 : 80);
+    };
+
+    // 初回設定
+    updateSlotHeight();
+
+    // リサイズイベントリスナー
+    window.addEventListener('resize', updateSlotHeight);
+    return () => window.removeEventListener('resize', updateSlotHeight);
+  }, []);
+
+  return slotHeight;
+};
+
 export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
   const [isScrolling, setIsScrolling] = useState(true);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -13,6 +32,9 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
   // 無限ループのためにオプションを複製
   const extendedOptions = [...options, ...options, ...options];
   const startOffset = options.length; // 真ん中のセットから開始
+  
+  // レスポンシブ対応：スロットの高さを動的に設定
+  const slotHeight = useResponsiveSlotHeight();
 
   // スクロール制御のuseEffect
   useEffect(() => {
@@ -20,7 +42,7 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
       const interval = setInterval(() => {
         setScrollPosition(prev => {
           const newPosition = prev - 5; // 負の方向に変化（下に向かって移動）
-          if (newPosition <= -options.length * 80) {
+          if (newPosition <= -options.length * slotHeight) {
             return 0; // 一周したらリセット
           }
           return newPosition;
@@ -34,7 +56,7 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
       }, 800); // SlotWrapperのトランジション時間（0.8s）と同じ
       return () => clearTimeout(timer);
     }
-  }, [isScrolling, options.length]);
+  }, [isScrolling, options.length, slotHeight]);
 
   // isScrollingがtrueになったら、完全停止状態をリセット
   useEffect(() => {
@@ -45,11 +67,11 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
 
   const handleStop = () => {
     setIsScrolling(false);
-    const finalPosition = Math.round(scrollPosition / 80) * 80;
+    const finalPosition = Math.round(scrollPosition / slotHeight) * slotHeight;
     setScrollPosition(finalPosition);
     
     // 停止した位置から選択された選択肢を計算（負の値に対応）
-    const selectedOptionIndex = Math.abs(Math.round(scrollPosition / 80)) % options.length;
+    const selectedOptionIndex = Math.abs(Math.round(scrollPosition / slotHeight)) % options.length;
     const selectedOption = options[selectedOptionIndex];
     
     // コールバック関数があれば実行
@@ -68,6 +90,7 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
     isCompleteStopped,
     extendedOptions,
     startOffset,
+    slotHeight,
     handleStop,
     reset
   };

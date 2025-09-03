@@ -16,30 +16,47 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  min-height: 100vh;
   background-color: #1b1a2d;
-  padding: 20px;
+  padding: 20px 16px;
+  
+  @media (max-width: 480px) {
+    padding: 16px 12px;
+  }
 `;
 
 const Question = styled.h1`
-  font-size: 20px;
+  font-size: clamp(16px, 4vw, 20px);
   font-weight: bold;
   color: #fff;
-  margin-bottom: 72px;
+  margin-bottom: 60px;
   text-align: center;
-  height: 125px;
+  min-height: 100px;
+  line-height: 1.4;
+  max-width: 90vw;
+  
+  @media (max-width: 360px) {
+    margin-bottom: 48px;
+    min-height: 80px;
+  }
 `;
 
 const Index = styled.p`
   color: #82828b;
-  font-size: 16px;
+  font-size: clamp(14px, 3.5vw, 16px);
   font-weight: bold;
-  margin-bottom: 72px;
+  margin-bottom: 60px;
+  
+  @media (max-width: 360px) {
+    margin-bottom: 48px;
+  }
 `;
 
 const ResultButton = styled.button`
   background-color: #5c8edc;
-  width: 300px;
+  width: 100%;
+  max-width: 90vw;
+  min-width: 280px;
   color: #fff;
   display: flex;
   align-items: center;
@@ -48,6 +65,12 @@ const ResultButton = styled.button`
   border-radius: 24px;
   border: none;
   cursor: pointer;
+  font-size: clamp(14px, 3.5vw, 16px);
+  font-weight: bold;
+  
+  @media (min-width: 400px) {
+    max-width: 350px;
+  }
 `     
 
 export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
