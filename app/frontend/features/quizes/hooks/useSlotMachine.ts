@@ -41,13 +41,13 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
     if (isScrolling) {
       const interval = setInterval(() => {
         setScrollPosition(prev => {
-          const newPosition = prev - 5; // 負の方向に変化（下に向かって移動）
+          const newPosition = prev - 3; // 移動量を3pxに調整
           if (newPosition <= -options.length * slotHeight) {
             return 0; // 一周したらリセット
           }
           return newPosition;
         });
-      }, 25);
+      }, 30); // 間隔は30msのまま（3px ÷ 30ms = 100px/秒）
       return () => clearInterval(interval);
     } else {
       // スクロールが停止した際、トランジション完了後に色を変更
