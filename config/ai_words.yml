@@ -1,0 +1,319 @@
+default: &default
+  categories:
+    - category: 基礎概念
+      words:
+        - id: 1
+          word_title: AI（Artificial Intelligence）
+          description: 人間の知的な働きをコンピュータで再現する技術。学習・推論・判断・理解などを行い、問題解決や自動化を実現する。スマホの音声アシスタントや画像検索などにも利用されている。
+        - id: 2
+          word_title: 機械学習（Machine Learning）
+          description: データからパターンや規則性を学び、経験で性能を高める仕組み。ルールをすべてプログラムする必要がなく、スパム判定や需要予測などに活用されている。
+        - id: 3
+          word_title: 深層学習（Deep Learning）
+          description: 多層のニューラルネットワークを使い複雑な特徴を自動で学習する方法。画像認識・音声認識・言語理解で高精度を発揮し、近年のAIブームを支えている。
+        - id: 4
+          word_title: ニューラルネットワーク（Neural Network）
+          description: 脳の神経細胞を模した計算モデル。入力層・隠れ層・出力層を通じてデータを処理し、非線形な問題を扱える。ディープラーニングはこのモデルを多層化したもの。
+        - id: 5
+          word_title: 教師あり学習（Supervised Learning）
+          description: 正解ラベル付きデータを使って学習する方法。入力と出力の関係を覚え、未知の入力を予測できる。画像分類や音声認識で広く使われる。
+        - id: 6
+          word_title: 教師なし学習（Unsupervised Learning）
+          description: ラベルのないデータからパターンや構造を見つける方法。似たものをグループ化したり特徴を要約したりできる。クラスタリングや次元削減に利用される。
+        - id: 7
+          word_title: 強化学習（Reinforcement Learning）
+          description: 試行錯誤を繰り返しながら報酬を最大化する行動を学習する方法。囲碁や将棋のAI、ロボットの動作学習に利用される。「褒められて学ぶ」イメージに近い。
+        - id: 8
+          word_title: 自己教師あり学習（Self-supervised Learning）
+          description: ラベルなしデータから自分で学習課題を作って学ぶ方法。文の一部を隠して予測させる課題を与える。BERTやGPTなど大規模言語モデルの学習に広く使われている。
+        - id: 9
+          word_title: 転移学習（Transfer Learning）
+          description: 学んだ知識を別のタスクに応用する方法。既存モデルを利用することでデータ量や学習時間を減らせる。少量データで高精度を出したい場合に有効。
+        - id: 10
+          word_title: Few-shot Learning
+          description: 少数の例だけで新しいタスクを解ける学習方法。従来の機械学習では大量データが必要だったが、大規模言語モデルは少数の例でも柔軟に対応できる。
+        - id: 11
+          word_title: Zero-shot Learning
+          description: 例を与えずに新しいタスクに対応できる学習方法。英語からフランス語への翻訳のように、学習していないタスクでも対応可能。LLMの汎用性を示す代表例。
+        - id: 12
+          word_title: オンライン学習（Online Learning）
+          description: データが順次入ってくる状況で逐次的に学習を更新する方式。株価予測やセンサー解析などリアルタイム性が必要な場面で利用される。
+        - id: 13
+          word_title: バッチ学習（Batch Learning）
+          description: データをまとめて一括で学習する方式。安定したモデルを作りやすいが、計算資源を多く使い再学習にコストがかかる。
+        - id: 14
+          word_title: 汎化（Generalization）
+          description: 学習した知識を未知のデータに適用できる能力。AIの性能評価で重要で、過学習を避けつつ高めることが求められる。
+        - id: 15
+          word_title: 過学習（Overfitting）
+          description: 学習データに合わせすぎて未知データで性能が落ちる状態。訓練精度は高いがテスト精度が低いときに発生。データ拡張や正則化で防げる。
+
+    - category: モデルと手法
+      words:
+        - id: 16
+          word_title: 回帰（Regression）
+          description: 数値を予測する手法。家賃や気温など連続値を扱う。線形回帰や非線形回帰があり実務で幅広く使われる。
+        - id: 17
+          word_title: 分類（Classification）
+          description: データをカテゴリに振り分ける手法。メールをスパムか否かに分ける、画像を犬か猫かに分けるなど典型的なタスク。
+        - id: 18
+          word_title: クラスタリング（Clustering）
+          description: 似たデータを自動でグループ化する手法。顧客をセグメントに分けてマーケティングに活用するなど、ラベルがないデータで役立つ。
+        - id: 19
+          word_title: 主成分分析（PCA）
+          description: 情報を保ちながら次元を圧縮する手法。高次元データを2Dや3Dに可視化したり、前処理に利用されたりする。
+        - id: 20
+          word_title: k-means法
+          description: あらかじめ指定した数のグループにデータを分けるクラスタリング手法。シンプルで高速なため多くの場面で利用される。
+        - id: 21
+          word_title: サポートベクターマシン（SVM）
+          description: データを分ける最適な境界線を見つけて分類する手法。マージンを最大化して汎化性能を高め、少量や高次元データに強い。画像認識やテキスト分類でよく使われる。
+        - id: 22
+          word_title: 決定木（Decision Tree）
+          description: 条件分岐を木構造で表現し、データを分類や予測するモデル。直感的で可視化しやすいが、単独では過学習しやすい。ランダムフォレストなどで補強されることが多い。
+        - id: 23
+          word_title: ランダムフォレスト（Random Forest）
+          description: 複数の決定木をランダムに構築し、結果を多数決や平均で統合するアンサンブル手法。安定して高精度な予測が得られ、分類や回帰など幅広い実務で使われる。
+        - id: 24
+          word_title: 勾配ブースティング（Gradient Boosting）
+          description: 弱い予測器を順に積み重ね、誤差を補正しながら性能を高める手法。高精度を出せるが計算コストが大きい。金融やレコメンドなど実用性の高い分野で使われる。
+        - id: 25
+          word_title: XGBoost
+          description: 勾配ブースティングを効率化したライブラリ。計算速度とメモリ効率に優れ、大規模データでも短時間で高精度を実現する。Kaggleなどのコンペで定番となっている。
+        - id: 26
+          word_title: LightGBM
+          description: 大規模データ処理に強い勾配ブースティングライブラリ。ヒストグラムベースの学習で高速かつメモリ効率が高い。ビッグデータやリアルタイム予測に利用される。
+        - id: 27
+          word_title: CatBoost
+          description: カテゴリ変数を直接扱える勾配ブースティングライブラリ。欠損値や文字列も処理でき、前処理の手間を減らせる。実務で使いやすいのが特徴。
+        - id: 28
+          word_title: k近傍法（k-NN）
+          description: 新しいデータを既知データとの距離で比較し、近いデータの多数決や平均で分類・予測する手法。シンプルで理解しやすいが、データが多いと計算コストが高くなる。
+        - id: 29
+          word_title: ベイズ推定（Bayesian Estimation）
+          description: 事前知識と新しいデータを組み合わせて確率的に推論する方法。不確実性を扱いやすく、医療や金融など不確実性が重要な分野でよく使われる。
+        - id: 30
+          word_title: ナイーブベイズ分類器
+          description: 特徴が独立していると仮定して分類する確率モデル。計算が速く少量データでも効果的で、スパム判定などのテキスト分類でよく使われる。
+        - id: 31
+          word_title: マルコフ連鎖（Markov Chain）
+          description: 現在の状態だけから次の状態を決める確率モデル。文章生成やゲームAIなどで利用され、単純だが複雑なパターンを表現できる。
+        - id: 32
+          word_title: 隠れマルコフモデル（HMM）
+          description: 観測できない隠れ状態を持つマルコフモデル。音声認識や自然言語処理に広く使われ、時系列データの解析に利用される。
+        - id: 33
+          word_title: エキスパートシステム
+          description: 専門家の知識をルールとして組み込んだAIシステム。医療診断や故障検出で使われたが、大規模化が難しく、現在は機械学習に置き換えられている。
+        - id: 34
+          word_title: 遺伝的アルゴリズム（Genetic Algorithm）
+          description: 生物の進化を模した探索手法。選択・交叉・突然変異を繰り返し、より良い解を探す。経路探索やパラメータ調整など最適化問題に利用される。
+        - id: 35
+          word_title: スウォームインテリジェンス
+          description: アリやハチなど群れの行動を模倣した分散型AI。個体は単純でも全体で効率的な行動が可能。経路探索やロボティクスで利用される。
+        
+    - category: 深層学習アーキテクチャ
+      words:
+        - id: 36
+          word_title: パーセプトロン
+          description: 人工ニューラルネットワークの最も基本的なモデル。入力に重みをかけて総和を計算し、閾値を超えれば1を返す。単純だがAI研究の基盤となった。
+        - id: 37
+          word_title: 畳み込みニューラルネットワーク（CNN）
+          description: 画像の特徴を自動で抽出する深層学習モデル。物体検出や画像分類で高精度を発揮し、コンピュータビジョン分野で広く使われる。
+        - id: 38
+          word_title: 再帰型ニューラルネットワーク（RNN）
+          description: データの順序や時系列情報を扱えるニューラルネットワーク。文章生成や音声認識に利用されるが、長期依存の学習は苦手。
+        - id: 39
+          word_title: LSTM（Long Short-Term Memory）
+          description: RNNを拡張し、長期的な依存関係を保持できるモデル。翻訳や音声処理で高い性能を発揮し、時系列データの解析に強い。
+        - id: 40
+          word_title: GRU（Gated Recurrent Unit）
+          description: LSTMを簡略化して計算効率を高めたモデル。性能を維持しながら学習速度を向上でき、リソースが限られた環境でも使いやすい。
+        - id: 41
+          word_title: Transformer
+          description: Attention機構を中心に構成されたモデル。長文の依存関係を効率的に学習でき、BERTやGPTなど多くの最新モデルの基盤となっている。
+        - id: 42
+          word_title: Attention
+          description: 入力データの中で重要な部分に重みを置く仕組み。自然言語処理や画像認識で性能を大幅に高めた。
+        - id: 43
+          word_title: Encoder-Decoderモデル
+          description: 入力をエンコーダで表現に変換し、デコーダで目的の形式に出力する構造。翻訳や要約などに利用される。
+        - id: 44
+          word_title: BERT
+          description: 文脈を双方向に学習するTransformerモデル。検索や文章分類などに広く使われる。
+        - id: 45
+          word_title: GPT（Generative Pre-trained Transformer）
+          description: 事前学習とファインチューニングを組み合わせた生成モデル。ChatGPTをはじめ、文章生成で広く使われている。
+        - id: 46
+          word_title: T5
+          description: すべての自然言語処理タスクを「テキスト入力からテキスト出力」に統一したモデル。多様な応用が可能。
+        - id: 47
+          word_title: XLNet
+          description: BERTの改良モデル。順序を考慮した学習で精度を向上させた。
+        - id: 48
+          word_title: RoBERTa
+          description: BERTを改良して大規模データで再学習したモデル。精度が高く多くのベンチマークで成果を上げた。
+        - id: 49
+          word_title: DistilBERT
+          description: BERTを小型化して軽量かつ高速にしたモデル。モバイルやリソース制限のある環境で利用される。
+        - id: 50
+          word_title: ALBERT
+          description: BERTを効率化し、パラメータを共有して軽量化したモデル。大規模データセットにも対応。
+        - id: 51
+          word_title: Vision Transformer（ViT）
+          description: 画像をパッチに分割してTransformerに入力するモデル。従来のCNNに匹敵する性能を持つ。
+        - id: 52
+          word_title: Diffusion Model
+          description: ノイズを加えてから逆に取り除く過程を学習する生成モデル。画像生成AIで高品質な出力を実現する。
+        - id: 53
+          word_title: GAN（Generative Adversarial Network）
+          description: 生成器と識別器を競わせることで本物そっくりのデータを作る生成モデル。ディープフェイクなどに利用される。
+        - id: 54
+          word_title: VAE（Variational Autoencoder）
+          description: データの潜在表現を学習し、新しいデータを生成できるモデル。画像生成や異常検知に使われる。
+        - id: 55
+          word_title: Energy-based Model
+          description: データにエネルギー関数を割り当てて確率を定義するモデル。生成やパターン認識に利用される。
+        
+    - category: 応用分野
+      words:
+        - id: 56
+          word_title: 自然言語処理（NLP）
+          description: 人間の言語を理解・生成する技術。翻訳、要約、検索、対話など多くの応用がある。
+        - id: 57
+          word_title: 機械翻訳（Machine Translation）
+          description: 一つの言語を別の言語に変換する技術。Google翻訳などで広く使われている。
+        - id: 58
+          word_title: 文章要約（Text Summarization）
+          description: 長文から重要部分を抽出したり要約文を生成する技術。ニュース要約や論文支援で利用される。
+        - id: 59
+          word_title: 感情分析（Sentiment Analysis）
+          description: テキストから感情を判定する技術。口コミ分析やSNS分析で使われる。
+        - id: 60
+          word_title: 質問応答（QAシステム）
+          description: 質問を入力すると適切な回答を返すシステム。検索やチャットボットに応用される。
+        - id: 61
+          word_title: 対話システム（Dialogue System）
+          description: ユーザーと自然な会話を行うシステム。音声アシスタントやチャットボットで使われる。
+        - id: 62
+          word_title: 音声認識（Speech Recognition）
+          description: 音声をテキストに変換する技術。スマホの音声入力や字幕生成に利用される。
+        - id: 63
+          word_title: 音声合成（Speech Synthesis）
+          description: テキストを音声に変換する技術。ナビや読み上げソフトで利用される。
+        - id: 64
+          word_title: 画像認識（Image Recognition）
+          description: 画像から物体や特徴を識別する技術。顔認証や自動タグ付けなどで利用される。
+        - id: 65
+          word_title: 物体検出（Object Detection）
+          description: 画像内の特定の物体を検出し位置を特定する技術。自動運転や監視カメラで利用される。
+        - id: 66
+          word_title: セマンティックセグメンテーション
+          description: 画像をピクセルごとに分類して意味を持たせる技術。医療画像解析などに使われる。
+        - id: 67
+          word_title: 動作認識（Action Recognition）
+          description: 動画や連続画像から人や物の動作を識別する技術。スポーツ分析や防犯に活用される。
+        - id: 68
+          word_title: 画像生成（Image Generation）
+          description: AIで新しい画像を作り出す技術。イラストやデザイン生成に使われる。
+        - id: 69
+          word_title: 動画生成（Video Generation）
+          description: 新しい映像をAIで作る技術。映画制作や広告に活用される。
+        - id: 70
+          word_title: 強化学習ゲームAI
+          description: ゲーム環境で試行錯誤しながら戦略を学ぶAI。AlphaGoなどが代表例。
+        - id: 71
+          word_title: 自動運転（Autonomous Driving）
+          description: 車両をAIで制御し自律走行させる技術。カメラやセンサーを使って周囲を認識する。
+        - id: 72
+          word_title: 医療AI
+          description: 医療画像診断や新薬開発にAIを応用する分野。診断支援や効率化に貢献する。
+        - id: 73
+          word_title: 金融AI
+          description: 株価予測や不正検知、信用スコアリングにAIを応用する分野。
+        - id: 74
+          word_title: ロボティクスAI
+          description: ロボットに知能を持たせる技術。工場の自動化やサービスロボットに活用される。
+        - id: 75
+          word_title: 教育AI
+          description: 学習者に合わせて教材や進度を最適化するシステム。個別学習支援に利用される。
+        
+    - category: 実務・実装関連
+      words:
+        - id: 76
+          word_title: トークナイゼーション（Tokenization）
+          description: 文章をAIが扱える単位（トークン）に分割する処理。自然言語処理の前処理として必須。
+        - id: 77
+          word_title: Word2Vec
+          description: 単語をベクトルとして表現する技術。意味の近い単語同士の距離を計算できる。
+        - id: 78
+          word_title: GloVe
+          description: 共起情報に基づいて単語をベクトル化する手法。Word2Vecと同様に意味表現に使われる。
+        - id: 79
+          word_title: FastText
+          description: 単語を文字単位のn-gramに分解して学習する手法。未知語や希少語にも強い。
+        - id: 80
+          word_title: 埋め込みベクトル（Embedding）
+          description: データを多次元の連続ベクトルに変換して意味や特徴を表す方法。
+        - id: 81
+          word_title: コサイン類似度（Cosine Similarity）
+          description: ベクトル同士の角度に基づいて類似度を測る指標。文章や画像の類似検索に使われる。
+        - id: 82
+          word_title: 正規化（Normalization）
+          description: データを一定の範囲に揃える前処理。学習の安定化や収束速度の向上に役立つ。
+        - id: 83
+          word_title: 標準化（Standardization）
+          description: データを平均0、分散1に変換する前処理。特徴量のスケールを揃えるために使う。
+        - id: 84
+          word_title: 損失関数（Loss Function）
+          description: 予測値と正解の差を数値化する関数。学習の指標となる。
+        - id: 85
+          word_title: 交差エントロピー損失
+          description: 分類問題でよく使われる損失関数。予測分布と正解分布の差を測る。
+        - id: 86
+          word_title: 活性化関数（Activation Function）
+          description: ニューラルネットワークに非線形性を与える関数。ReLUやシグモイドなどがある。
+        - id: 87
+          word_title: ReLU関数
+          description: 負の入力を0にし、正の入力はそのまま出力する活性化関数。深層学習で標準的に使われる。
+        - id: 88
+          word_title: シグモイド関数
+          description: 入力を0から1の範囲に変換する活性化関数。確率のように解釈できる。
+        - id: 89
+          word_title: ソフトマックス関数
+          description: 複数クラスの確率分布に変換する関数。多クラス分類で利用される。
+        - id: 90
+          word_title: 勾配消失問題（Vanishing Gradient）
+          description: ニューラルネットワークで勾配が小さくなり学習が進まなくなる問題。深層学習の課題の一つ。
+        
+    - category: 社会・その他
+      words:
+        - id: 91
+          word_title: Explainable AI（説明可能なAI）
+          description: AIの判断根拠を人間に分かりやすく示す技術。透明性や信頼性を高めるために重要。
+        - id: 92
+          word_title: フェアネス（AI Fairness）
+          description: AIの予測や判断に偏りがない状態。公正性を保つために必要。
+        - id: 93
+          word_title: バイアス（Bias）
+          description: データやモデルに含まれる偏り。公平なAI実現の課題となる。
+        - id: 94
+          word_title: ハルシネーション（Hallucination）
+          description: AIが事実に基づかない情報をもっともらしく生成する現象。生成AIの注意点。
+        - id: 95
+          word_title: ディープフェイク（Deepfake）
+          description: 人の顔や声を合成して偽物を作る技術。悪用の危険もある。
+        - id: 96
+          word_title: AI倫理（AI Ethics）
+          description: AIの開発や利用における倫理的な考え方。プライバシーや公正性が議論される。
+        - id: 97
+          word_title: AIガバナンス
+          description: AIを安全かつ公平に運用するための仕組みやルール。
+        - id: 98
+          word_title: 生成AI（Generative AI）
+          description: 新しい文章や画像、音声などを作り出すAI。ChatGPTや画像生成AIが代表例。
+        - id: 99
+          word_title: マルチモーダルAI
+          description: テキストや画像、音声など複数の情報を統合して扱うAI。Geminiなどがある。
+        - id: 100
+          word_title: エッジAI
+          description: クラウドではなく端末側で動作するAI。スマホやIoT機器に組み込まれリアルタイム性が高い。
