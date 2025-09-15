@@ -6,30 +6,18 @@ import { useQuiz } from "../hooks/useQuiz";
 import { Result } from "./Result";
 import { postRunking } from "../api/runking";
 import { toast } from "react-toastify";
+import { Main } from "../../../components/ui/Main";
+import { TitleSet } from "../../../components/ui/TitleSet";
 
 type Props = {
   quizzes: IQuiz[];
 };
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background-color: #1b1a2d;
-  padding: 20px 16px;
-  
-  @media (max-width: 480px) {
-    padding: 16px 12px;
-  }
-`;
-
 const Question = styled.h1`
   font-size: clamp(16px, 4vw, 20px);
   font-weight: bold;
   color: #fff;
-  margin-bottom: 60px;
+  margin: 42px 0 0;
   text-align: center;
   min-height: 100px;
   line-height: 1.4;
@@ -42,7 +30,7 @@ const Question = styled.h1`
 `;
 
 const Index = styled.p`
-  color: #82828b;
+  color: #fff;
   font-size: clamp(14px, 3.5vw, 16px);
   font-weight: bold;
   margin-bottom: 60px;
@@ -114,7 +102,8 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
   }
 
   return (
-    <Container>
+    <Main>
+      <TitleSet />
       <Question>{currentQuiz?.question || "Loading..."}</Question>
       <Index>
         ({currentIndex + 1}/{totalQuizzes})
@@ -130,6 +119,6 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
       {isCompleted && (
         <ResultButton onClick={handleRexult}>結果を見る</ResultButton>
       )}
-    </Container>
+    </Main>
   );
 };

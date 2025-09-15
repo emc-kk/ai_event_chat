@@ -1,15 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import styled from '@emotion/styled';
 import { Layaout } from '../components/layouts/layout';
-import { Title } from '../components/Title';
-import { Main } from '../components/Main';
-
-const Copyright = styled.p`
-  color: #fff;
-  font-size: 10px;
-  text-align: center;
-  margin-bottom: 24px;
-`;
+import { Main } from '../components/ui/Main';
+import { TitleSet } from '../components/ui/TitleSet';
 
 const GotoButton = styled(Link)`
   background-color: #3A7BE8;
@@ -52,11 +45,7 @@ export default function Home() {
     <Layaout>
       <Head title="AIクイズ" />
       <Main>
-        <Title>AIクイズ</Title>
-        <Copyright>
-          Powered by 株式会社taiziii <br />
-          業務の未来をデザインする・AI x システム開発
-        </Copyright>
+        <TitleSet />
         <RuleContainer>
           <RuleTitle>ルール説明</RuleTitle>
           <RuleList>

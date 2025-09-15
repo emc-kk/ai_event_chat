@@ -10,18 +10,17 @@ type Props = {
   isCompleted?: boolean;
 };
 
-const SlotContainer = styled.div`
-  margin-bottom: 72px;
-  border: 3px solid #fff;
-  border-radius: 8px;
-  height: 80px;
+const SlotMachineContainer = styled.div`
   width: 100%;
+  height: 120px;
+  padding: 20px 0px;
   max-width: 90vw;
   min-width: 280px;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-  
+  overflow-y: hidden;
+  border-radius: 12px;
+  border: 1px solid #fff;
+  margin-bottom: 64px;
+
   @media (min-width: 400px) {
     max-width: 350px;
   }
@@ -32,6 +31,13 @@ const SlotContainer = styled.div`
   }
 `;
 
+const SlotItemContainer = styled.div`
+  height: 80px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+`;
+
 const SlotWrapper = styled.div<{ isScrolling: boolean }>`
   display: flex;
   flex-direction: column;
@@ -39,12 +45,10 @@ const SlotWrapper = styled.div<{ isScrolling: boolean }>`
     props.isScrolling ? "none" : "transform 0.8s ease-out"};
 `;
 
-const QuizSlot = styled.div<{ isCompleteStopped: boolean }>`
+const QuizSlot = styled.div`
   height: 80px;
   width: 100%;
   color: #fff;
-  background-color: ${(props) =>
-    props.isCompleteStopped ? "#ED6067" : "#2D313A"};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,19 +56,32 @@ const QuizSlot = styled.div<{ isCompleteStopped: boolean }>`
   padding: 0 12px;
   flex-shrink: 0;
   font-size: clamp(16px, 4vw, 20px);
+  font-weight: bold;
   line-height: 1.2;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid #fff;
   transition: all 0.5s;
-  box-shadow: ${(props) =>
-    props.isCompleteStopped 
-      ? "inset 0 8px 16px -6px rgba(0, 0, 0, 0.8), inset 0 -8px 16px -6px rgba(0, 0, 0, 0.8)"
-      : "none"};
   
   @media (max-width: 360px) {
     height: 70px;
     padding: 0 8px;
     font-size: clamp(14px, 3.5vw, 18px);
+  }
+
+  &.first {
+    background-color: #FF6B6C;
+  }
+
+  &.second {
+    background-color: #3778C1;
+  }
+
+  &.third {
+    background-color: #FFE66D;
+    color: #000;
+  }
+
+  &.fourth {
+    background-color: #9C59B6;
   }
 `;
 
@@ -95,11 +112,11 @@ const NextQuizeButton = styled.button`
 `;
 
 const QuizStopButton = styled.button`
-  background-color: #2d313a;
+  color: #3A7BE8;
   width: 100%;
   max-width: 90vw;
   min-width: 280px;
-  color: #fff;
+  background-color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -115,6 +132,11 @@ const QuizStopButton = styled.button`
   }
 `;
 
+const choiceStotItemColor = (index: number) => {
+  const colors = ["first", "second", "third", "fourth"];
+  return colors[index % colors.length];
+};
+
 export const SlotMachine: React.FC<Props> = ({
   options,
   onStop,
@@ -125,7 +147,6 @@ export const SlotMachine: React.FC<Props> = ({
   const {
     isScrolling,
     scrollPosition,
-    isCompleteStopped,
     extendedOptions,
     startOffset,
     slotHeight,
@@ -140,23 +161,25 @@ export const SlotMachine: React.FC<Props> = ({
 
   return (
     <>
-      <SlotContainer>
-        <SlotWrapper
-          isScrolling={isScrolling}
-          style={{
-            transform: `translateY(${-scrollPosition - startOffset * slotHeight}px)`,
-          }}
-        >
-          {extendedOptions.map((option, idx) => (
-            <QuizSlot
-              isCompleteStopped={isCompleteStopped}
-              key={`${option}-${idx}`}
-            >
-              {option}
-            </QuizSlot>
-          ))}
-        </SlotWrapper>
-      </SlotContainer>
+      <SlotMachineContainer>
+        <SlotItemContainer>
+          <SlotWrapper
+            isScrolling={isScrolling}
+            style={{
+              transform: `translateY(${-scrollPosition - startOffset * slotHeight}px)`,
+            }}
+          >
+            {extendedOptions.map((option, idx) => (
+              <QuizSlot
+                key={`${option}-${idx}`}
+                className={choiceStotItemColor(idx)}
+              >
+                {option}
+              </QuizSlot>
+            ))}
+          </SlotWrapper>
+        </SlotItemContainer>
+      </SlotMachineContainer>
 
       {!isCompleted && (
         <>
@@ -164,7 +187,7 @@ export const SlotMachine: React.FC<Props> = ({
             <QuizStopButton onClick={handleStop}>ストップ！</QuizStopButton>
           ) : (
             <NextQuizeButton onClick={handleNextQuiz} disabled={isLastQuiz}>
-              {isLastQuiz ? "クイズ終了" : "次の問題へ"}
+              次の問題へ
             </NextQuizeButton>
           )}
         </>

@@ -30,8 +30,8 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
   const [isCompleteStopped, setIsCompleteStopped] = useState(false);
 
   // 無限ループのためにオプションを複製
-  const extendedOptions = [...options, ...options, ...options];
-  const startOffset = options.length; // 真ん中のセットから開始
+  const extendedOptions = [...options, ...options, ...options, ...options, ...options];
+  const startOffset = options.length * 2; // 真ん中のセットから開始
   
   // レスポンシブ対応：スロットの高さを動的に設定
   const slotHeight = useResponsiveSlotHeight();
@@ -70,9 +70,14 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
     const finalPosition = Math.round(scrollPosition / slotHeight) * slotHeight;
     setScrollPosition(finalPosition);
     
-    // 停止した位置から選択された選択肢を計算（負の値に対応）
-    const selectedOptionIndex = Math.abs(Math.round(scrollPosition / slotHeight)) % options.length;
+    // 停止した位置から選択された選択肢を計算（オフセットを考慮）
+    const absolutePosition = Math.abs(scrollPosition);
+    const totalOffset = startOffset * slotHeight; // startOffsetをピクセル単位に変換
+    const adjustedPosition = (absolutePosition + totalOffset) / slotHeight;
+    const selectedOptionIndex = Math.round(adjustedPosition) % options.length;
     const selectedOption = options[selectedOptionIndex];
+
+    console.log({ selectedOptionIndex, selectedOption });
     
     // コールバック関数があれば実行
     onStop?.(selectedOption);
