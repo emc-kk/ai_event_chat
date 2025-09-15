@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface UseSlotMachineProps {
   options: string[];
@@ -28,6 +28,7 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
   const [isScrolling, setIsScrolling] = useState(true);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isCompleteStopped, setIsCompleteStopped] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 無限ループのためにオプションを複製
   const extendedOptions = [...options, ...options, ...options, ...options, ...options];
@@ -70,17 +71,34 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
     const finalPosition = Math.round(scrollPosition / slotHeight) * slotHeight;
     setScrollPosition(finalPosition);
     
-    // 停止した位置から選択された選択肢を計算（オフセットを考慮）
-    const absolutePosition = Math.abs(scrollPosition);
-    const totalOffset = startOffset * slotHeight; // startOffsetをピクセル単位に変換
-    const adjustedPosition = (absolutePosition + totalOffset) / slotHeight;
-    const selectedOptionIndex = Math.round(adjustedPosition) % options.length;
-    const selectedOption = options[selectedOptionIndex];
+    // SlotItemContainer内の真ん中に表示されている要素を取得
+    if (containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const containerCenter = containerRect.top + containerRect.height / 2;
+      
+      // SlotWrapper内のすべてのQuizSlot要素を取得
+      const slotElements = containerRef.current.querySelectorAll('[data-slot-option]');
+      
+      let selectedOption = '';
+      let minDistance = Infinity;
+      
+      // 各スロット要素の位置を確認し、コンテナの中央に最も近い要素を見つける
+      slotElements.forEach((element) => {
+        const elementRect = element.getBoundingClientRect();
+        const elementCenter = elementRect.top + elementRect.height / 2;
+        const distance = Math.abs(elementCenter - containerCenter);
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          selectedOption = element.getAttribute('data-slot-option') || '';
+        }
+      });
 
-    console.log({ selectedOptionIndex, selectedOption });
-    
-    // コールバック関数があれば実行
-    onStop?.(selectedOption);
+      console.log('Selected option from DOM:', selectedOption);
+      
+      // コールバック関数があれば実行
+      onStop?.(selectedOption);
+    }
   };
 
   const reset = () => {
@@ -97,6 +115,7 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
     startOffset,
     slotHeight,
     handleStop,
-    reset
+    reset,
+    slotRef: containerRef,
   };
 };

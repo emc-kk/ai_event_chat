@@ -152,6 +152,7 @@ export const SlotMachine: React.FC<Props> = ({
     slotHeight,
     handleStop,
     reset,
+    slotRef
   } = useSlotMachine({ options, onStop });
 
   const handleNextQuiz = () => {
@@ -162,7 +163,7 @@ export const SlotMachine: React.FC<Props> = ({
   return (
     <>
       <SlotMachineContainer>
-        <SlotItemContainer>
+        <SlotItemContainer ref={slotRef}>
           <SlotWrapper
             isScrolling={isScrolling}
             style={{
@@ -173,6 +174,7 @@ export const SlotMachine: React.FC<Props> = ({
               <QuizSlot
                 key={`${option}-${idx}`}
                 className={choiceStotItemColor(idx)}
+                data-slot-option={option}
               >
                 {option}
               </QuizSlot>
