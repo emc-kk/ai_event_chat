@@ -4,31 +4,53 @@ class QuizResult < ApplicationRecord
   validates :correct_count, presence: true
   validates :answers, presence: true
 
+  attr_reader :runking
+
+  # 保存前にscoreを自動計算
+  before_save :calculate_score
+
   enum :quiz, {
     default: 0
   }, prefix: true
 
+  class << self
+    def surrounding(quiz_result)
+      quiz = quiz_result.quiz
+      target_score = quiz_result.score
+
+      same_quiz_results = where(quiz: quiz)
+      
+      # 自分より上位の2名（スコアが高い）
+      upper_results = same_quiz_results
+                      .where('score > ?', target_score)
+                      .order(score: :asc)
+                      .limit(2)
+                      .to_a
+                      .reverse # 自分に近い順に
+
+      # 自分より下位の2名（スコアが低い）  
+      lower_results = same_quiz_results
+                      .where('score < ?', target_score)
+                      .order(score: :desc)
+                      .limit(4 - upper_results.size) # 上位が2名未満の場合に対応
+                      .to_a
+
+      # 結果をまとめる（前2名 + 自分 + 後2名）
+      upper_results + [quiz_result] + lower_results
+    end
+
+    def total_participants(quiz_type)
+      where(quiz: quiz_type).count
+    end
+  end
+
   def runking
-    # 同じクイズの結果を取得し、正解数降順、完了時間昇順でソート
-    same_quiz_results = QuizResult.where(quiz: self.quiz)
-                                   .order(correct_count: :desc, completion_time: :asc)
-    
-    # 自分より上位の結果の数を数える + 1 が順位
-    better_results_count = same_quiz_results.where(
-      "(correct_count > ? OR (correct_count = ? AND completion_time < ?))",
-      self.correct_count,
-      self.correct_count,
-      self.completion_time
-    ).count
-    
-    better_results_count + 1
+    @runking ||= QuizResult.where(quiz: self.quiz)
+                          .where('score > ?', self.score)
+                          .count + 1
   end
 
-  def total_participants
-    QuizResult.where(quiz: self.quiz).count
-  end
-
-  def score
+  def score_grade
     case correct_count
     when 9..10
       "S"
@@ -47,8 +69,23 @@ class QuizResult < ApplicationRecord
     {
       id: id,
       runking: runking,
-      total: total_participants,
       score: score,
+      correct_count: correct_count,
+      completion_time: completion_time,
     }
+  end
+
+  private
+
+  def calculate_score
+    self.score = calculate_ranking_score
+  end
+
+  def calculate_ranking_score
+    if self.correct_count == 0
+      score = -self.completion_time
+    else
+      score = self.correct_count * 1000000 - self.completion_time
+    end
   end
 end

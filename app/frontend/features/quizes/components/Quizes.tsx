@@ -74,7 +74,7 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
     nextQuiz,
   } = useQuiz({quizzes: orgQuizzes});
 
-  const [runking, setRunking] = React.useState<IRunking>();
+  const [result, setResult] = React.useState<IRunking>();
 
   const handleSlotStop = (selectedOption: string) => {
     addAnswer(selectedOption);
@@ -89,16 +89,17 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
     const corretCount = quizzes.filter(quiz => quiz.isCorrect()).length;
     const answers = quizzes.map(quiz => quiz.userAnswer!);
     try {
-      const runking = await postRunking({completionTime, corretCount, answers });
-      setRunking(runking);
+      const response = await postRunking({completionTime, corretCount, answers });
+      console.log(response);
+      setResult(response);
     } catch (error) {
       console.error(error);
       toast.error('Soorry, something went wrong. Please try again later.');
     }
   }
 
-  if (runking) {
-    return <Result quizzes={quizzes} runking={runking} />;
+  if (result) {
+    return <Result quizzes={quizzes} runking={result} />;
   }
 
   return (

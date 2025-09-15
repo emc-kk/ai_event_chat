@@ -3,7 +3,13 @@ class Api::RunkingsController < ApplicationController
     quiz_result = QuizResult.new({ quiz: :default }.merge(runking_params))
 
     if quiz_result.save
-      render json: quiz_result.to_json, status: :created
+      render json: {
+        id: quiz_result.id,
+        runking: quiz_result.runking,
+        score: quiz_result.score_grade,
+        surrounding: QuizResult.surrounding(quiz_result),
+        total: QuizResult.total_participants(quiz_result.quiz)
+      }, status: :created
     else
       render json: { errors: quiz_result.errors.full_messages }, status: :unprocessable_entity
     end
