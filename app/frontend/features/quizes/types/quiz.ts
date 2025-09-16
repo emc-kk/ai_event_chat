@@ -13,6 +13,13 @@ export type IRunking = {
   total: number;
   runking: number;
   score: Score;
+  surrounding: ISurrondingRunking[];
+}
+
+export type ISurrondingRunking = {
+  id: string;
+  correct_count: number;
+  completion_time: number;
 }
 
 export class QuizeImple {

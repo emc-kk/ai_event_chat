@@ -99,7 +99,7 @@ export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
   }
 
   if (result) {
-    return <Result quizzes={quizzes} runking={result} />;
+    return <Result quizzes={quizzes} runking={result} completionTime={completionTime} />;
   }
 
   return (

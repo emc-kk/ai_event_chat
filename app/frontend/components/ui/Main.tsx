@@ -5,6 +5,8 @@ export const Main = styled.main`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 100%;
+  min-height: 100vh;
   background-color: #35556C;
+  padding: 16px 0 8px;
 `

@@ -7,7 +7,7 @@ class Api::RunkingsController < ApplicationController
         id: quiz_result.id,
         runking: quiz_result.runking,
         score: quiz_result.score_grade,
-        surrounding: QuizResult.surrounding(quiz_result),
+        surrounding: QuizResult.surrounding(quiz_result).map(&:to_json),
         total: QuizResult.total_participants(quiz_result.quiz)
       }, status: :created
     else

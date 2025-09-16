@@ -10,7 +10,7 @@ type Props = {
 export default function QuizeShow({ quizzes }: Props) {
   return (
     <Layaout>
-      <Head title="AIレベル診断クイズ | 診断" />
+      <Head title="AIクイズ | 診断" />
       <Quizes quizzes={quizzes} />
     </Layaout>
   )

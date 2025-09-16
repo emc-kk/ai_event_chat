@@ -68,8 +68,6 @@ class QuizResult < ApplicationRecord
   def to_json
     {
       id: id,
-      runking: runking,
-      score: score,
       correct_count: correct_count,
       completion_time: completion_time,
     }

@@ -1,21 +1,13 @@
 import styled from '@emotion/styled';
 import { IRunking, QuizeImple } from '../types/quiz';
 import { Link } from '@inertiajs/react';
+import { Main } from '../../../components/ui/Main';
 
 type Props = {
   quizzes: QuizeImple[]
   runking: IRunking;
+  completionTime: number | null;
 }
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #1b1a2d;
-  padding: 20px;
-`;
 
 const Title = styled.h1`
   color: #fff;
@@ -29,13 +21,13 @@ const Title = styled.h1`
 const Section = styled.div`
   background-color: #fff;
   padding: 12px;
-  border-radius: 24px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 90%;
-  margin-bottom: 16px;
+  margin: 12px 0;
 `
 
 const ScoreTitle = styled.p`
@@ -75,10 +67,18 @@ const CorrectCount = styled.p`
   font-weight: bold;
   line-height: 1;
   color: #333;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   &::first-letter {
     color: #2090FF;
   }
+`
+
+const Time = styled.p`
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+  color: #333;
+  margin-bottom: 4px;
 `
 
 const Divider = styled.hr`
@@ -101,6 +101,8 @@ const RunkingText = styled.p`
 const AnswerSection = styled(Section)`
   overflow-y: scroll;
   height: 400px;
+  min-height: 400px;
+  max-height: 400px;
   box-sizing: border-box;
   display: block;
   padding: 12px 20px;
@@ -152,7 +154,7 @@ const AnserDescription = styled.p`
 `
 
 const RetryButton = styled(Link)`
-  background-color: #5c8edc;
+  background-color: #3270DE;
   color: #fff;
   padding: 12px 32px;
   border-radius: 24px;
@@ -162,20 +164,61 @@ const RetryButton = styled(Link)`
   font-weight: bold;
   width: 280px;
   text-align: center;
+  margin: 12px 0;
 `
 
+const GotoLearnButton = styled(RetryButton)``;
 
-export const Result: React.FC<Props> = ({ quizzes, runking }) => {
+const RunkingTable = styled.table`
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+  font-size: 12px;
+
+  & th, & td {
+    border: 2px solid #d2e8f1;
+    padding: 8px;
+  }
+
+  & thead th {
+    background-color: #3270DE;
+    color: #fff;
+    border: 2px solid #4d9bc1;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+  }
+
+  & thead th:last-of-type {
+    border-right: 2px solid #4d9bc1;
+  }
+
+  & tbody th {
+    color: #4d9bc1;
+    font-weight: bold;
+    text-align: center;
+  }
+`;
+
+const formatTime = (ms: number) => {
+  const mins = Math.floor(ms / 60000);
+  const secs = Math.floor((ms % 60000) / 1000);
+  return `${mins}分${secs}秒`;
+}
+
+export const Result: React.FC<Props> = ({ quizzes, runking, completionTime }) => {
   const correctCount = quizzes.filter(q => q.isCorrect()).length;
   const totalQuestions = quizzes.length;
 
   return (
-    <Container>
+    <Main>
       <Title>結果発表</Title>
       <Section>
         <ScoreTitle>あなたのAIレベル</ScoreTitle>
         <Score className={runking.score}>{runking.score}</Score>
         <CorrectCount>{correctCount} / {totalQuestions}問 正解</CorrectCount>
+        {completionTime && <Time>タイム: {formatTime(completionTime)}</Time>}
         <Divider />
         <RunkingText><span>{runking.runking}</span>位 / {runking.total}人中</RunkingText>
       </Section>
@@ -183,7 +226,7 @@ export const Result: React.FC<Props> = ({ quizzes, runking }) => {
         <AnswersSectionTitle>答え合わせ</AnswersSectionTitle>
         {quizzes.map((quiz, index) => {
           const isCorrect = quiz.isCorrect();
-          
+
           return (
             <>
               <QuestionItem key={quiz.id}>
@@ -201,10 +244,37 @@ export const Result: React.FC<Props> = ({ quizzes, runking }) => {
           );
         })}
       </AnswerSection>
+      <GotoLearnButton>自学勉強する</GotoLearnButton>
+      <Section>
+        <ScoreTitle>ランキング</ScoreTitle>
+        <RunkingTable>
+          <thead>
+            <tr>
+              <th>順位</th>
+              <th>正解数</th>
+              <th>タイム</th>
+            </tr>
+          </thead>
+          <tbody>
+            {runking.surrounding.map((entry, idx) => {
+              const isCurrentUser = entry.id === runking.id;
+              const currentUserIndex = runking.surrounding.findIndex(e => e.id === runking.id);
+              const displayRanking = runking.runking - currentUserIndex + idx;
+              return (
+                <tr key={entry.id} style={{ backgroundColor: isCurrentUser ? '#F4CCCC' : 'transparent' }}>
+                  <td>{displayRanking}</td>
+                  <td>{entry.correct_count}問</td>
+                  <td>{formatTime(entry.completion_time)}</td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </RunkingTable>
+      </Section>
       <RetryButton href="/quizzes">
         もう1回やる
       </RetryButton>
-    </Container>
+    </Main>
   );
 }
 
