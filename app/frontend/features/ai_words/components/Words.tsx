@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
 import { useState, useEffect } from "react";
-import { Link } from "@inertiajs/react";
 import { IAiWord } from "../../quizzes/types/ai_word";
 import { Main } from "../../../components/ui/Main";
 import bunner1 from "../../../assets/bunner_1.png";
@@ -111,20 +110,67 @@ const BannerSection = styled.div`
   flex-shrink: 0;
 `;
 
+const ArrowButton = styled.button`
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    color: #333;
+    transform: translateY(-50%) scale(1.05);
+  }
+  
+  &.left {
+    left: -14px;
+  }
+  
+  &.right {
+    right: -14px;
+  }
+`;
+
 const BannerContainer = styled.div`
   background-color: #fff;
   border-radius: 8px;
   text-align: center;
   position: relative;
+  overflow: hidden;
+`;
+
+const BannerSlider = styled.div<{ currentIndex: number }>`
+  display: flex;
+  width: ${props => props.currentIndex !== undefined ? '400%' : '400%'};
+  transform: translateX(-${props => (props.currentIndex * 25)}%);
+  transition: transform 0.5s ease-in-out;
+`;
+
+const BannerSlide = styled.div`
+  width: 25%;
+  flex-shrink: 0;
 `;
 
 const BannerImage = styled.img`
   width: 100%;
   height: 100px;
   object-fit: cover;
+  display: block;
 `;
 
-const BannerLink = styled(Link)`
+const BannerLink = styled.a`
   display: block;
   text-decoration: none;
   transition: transform 0.1s ease;
@@ -159,10 +205,10 @@ export const Words = ({ words }: Props) => {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
   const banners = [
-    { image: bunner1, title: "バナー表示" },
-    { image: bunner2, title: "バナー表示" },
-    { image: bunner3, title: "バナー表示" },
-    { image: bunner4, title: "バナー表示" }
+    { image: bunner1, link: "" },
+    { image: bunner2, link: "https://taiziii.com/skillrelay/" },
+    { image: bunner3, link: "https://taiziii.com/contact/" },
+    { image: bunner4, link: "" }
   ];
 
   // 自動スライド機能
@@ -173,6 +219,15 @@ export const Words = ({ words }: Props) => {
 
     return () => clearInterval(interval);
   }, [banners.length]);
+
+  // 矢印ボタンの操作
+  const handlePrevBanner = () => {
+    setCurrentBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+  };
+
+  const handleNextBanner = () => {
+    setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+  };
 
   // カテゴリごとにグループ化
   const groupedWords = words.reduce((acc, word) => {
@@ -228,14 +283,32 @@ export const Words = ({ words }: Props) => {
       </WordCardsContainer>
 
       <BannerSection>
+        <ArrowButton className="left" onClick={handlePrevBanner}>
+          &#8249;
+        </ArrowButton>
+        
         <BannerContainer>
-          <BannerLink href="">
-            <BannerImage 
-              src={banners[currentBannerIndex].image} 
-              alt={`Banner ${currentBannerIndex + 1}`}
-            />
-          </BannerLink>
+          <BannerSlider currentIndex={currentBannerIndex}>
+            {banners.map((banner, index) => (
+              <BannerSlide key={index}>
+                <BannerLink 
+                  href={banner.link || "#"}
+                  target={banner.link ? "_blank" : "_self"}
+                  rel={banner.link ? "noopener noreferrer" : ""}
+                >
+                  <BannerImage 
+                    src={banner.image} 
+                    alt={`Banner ${index + 1}`}
+                  />
+                </BannerLink>
+              </BannerSlide>
+            ))}
+          </BannerSlider>
         </BannerContainer>
+        
+        <ArrowButton className="right" onClick={handleNextBanner}>
+          &#8250;
+        </ArrowButton>
         <NavigationDots>
           {banners.map((_, index) => (
             <Dot 
