@@ -7,7 +7,8 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "home#index"
-  resource :quizzes, only: %i[show create]
+  resources :quizzes, only: %i[index]
+  resources :ai_words, only: %i[index]
   namespace :api do
     resources :runkings, only: %i[create]
   end

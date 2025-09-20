@@ -317,3 +317,9 @@ default: &default
         - id: 100
           word_title: エッジAI
           description: クラウドではなく端末側で動作するAI。スマホやIoT機器に組み込まれリアルタイム性が高い。
+development:
+  <<: *default
+test:
+  <<: *default
+production:
+  <<: *default

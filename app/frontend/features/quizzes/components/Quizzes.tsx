@@ -61,7 +61,7 @@ const ResultButton = styled.button`
   }
 `     
 
-export const Quizes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
+export const Quizzes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
   const { 
     currentQuiz, 
     currentIndex, 
