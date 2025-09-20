@@ -34,6 +34,7 @@ const WordCardsContainer = styled.div`
   margin: 12px;
   background-color: #FFFFFF;
   border-radius: 4px;
+  max-width: 380px;
 `;
 
 const Title = styled.h1`
@@ -104,7 +105,7 @@ const WordDescription = styled.div<{ isExpanded: boolean }>`
 const BannerSection = styled.div`
   position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 380px;
   margin: 0 auto;
   padding: 0 12px;
   flex-shrink: 0;

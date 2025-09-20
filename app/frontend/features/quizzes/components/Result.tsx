@@ -167,7 +167,21 @@ const RetryButton = styled(Link)`
   margin: 12px 0;
 `
 
-const GotoLearnButton = styled(RetryButton)``;
+const GotoLearnButton = styled.a`
+  background-color: #3270DE;
+  color: #fff;
+  padding: 12px 32px;
+  border-radius: 24px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  width: 280px;
+  text-align: center;
+  margin: 12px 0;
+  text-decoration: none;
+  display: inline-block;
+`;
 
 const RunkingTable = styled.table`
   border-collapse: collapse;
@@ -244,7 +258,7 @@ export const Result: React.FC<Props> = ({ quizzes, runking, completionTime }) =>
           );
         })}
       </AnswerSection>
-      <GotoLearnButton>自学勉強する</GotoLearnButton>
+      <GotoLearnButton href="/ai_words" target="_blank" rel="noopener noreferrer">自学勉強する</GotoLearnButton>
       <Section>
         <ScoreTitle>ランキング</ScoreTitle>
         <RunkingTable>

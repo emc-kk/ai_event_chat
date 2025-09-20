@@ -93,8 +93,6 @@ export const useSlotMachine = ({ options, onStop }: UseSlotMachineProps) => {
           selectedOption = element.getAttribute('data-slot-option') || '';
         }
       });
-
-      console.log('Selected option from DOM:', selectedOption);
       
       // コールバック関数があれば実行
       onStop?.(selectedOption);
