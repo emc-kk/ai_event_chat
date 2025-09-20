@@ -1,7 +1,12 @@
 import styled from "@emotion/styled";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "@inertiajs/react";
 import { IAiWord } from "../../quizzes/types/ai_word";
 import { Main } from "../../../components/ui/Main";
+import bunner1 from "../../../assets/bunner_1.png";
+import bunner2 from "../../../assets/bunner_2.png";
+import bunner3 from "../../../assets/bunner_3.png";
+import bunner4 from "../../../assets/bunner_4.png";
 
 type Props = {
   words: IAiWord[];
@@ -98,40 +103,76 @@ const WordDescription = styled.div<{ isExpanded: boolean }>`
 `;
 
 const BannerSection = styled.div`
-  background-color: #fff;
-  border-radius: 12px;
-  width: 90%;
+  position: relative;
+  width: 100%;
   max-width: 400px;
-  padding: 20px;
-  text-align: center;
   margin: 0 auto;
+  padding: 0 12px;
   flex-shrink: 0;
 `;
 
-const BannerTitle = styled.h2`
-  font-size: 20px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12px;
+const BannerContainer = styled.div`
+  background-color: #fff;
+  border-radius: 8px;
+  text-align: center;
+  position: relative;
+`;
+
+const BannerImage = styled.img`
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+`;
+
+const BannerLink = styled(Link)`
+  display: block;
+  text-decoration: none;
+  transition: transform 0.1s ease;
+  
+  &:hover {
+    transform: scale(1.01);
+  }
 `;
 
 const NavigationDots = styled.div`
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
+  gap: 6px;
+  margin-top: 8px;
 `;
 
 const Dot = styled.div<{ active: boolean }>`
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background-color: ${props => props.active ? '#3270DE' : '#ccc'};
+  background-color: ${props => props.active ? '#3270DE' : '#ddd'};
   transition: background-color 0.2s ease;
+  cursor: pointer;
+  
+  &:hover {
+    background-color: ${props => props.active ? '#3270DE' : '#bbb'};
+  }
 `;
 
 export const Words = ({ words }: Props) => {
   const [expandedWords, setExpandedWords] = useState<Set<number>>(new Set());
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+
+  const banners = [
+    { image: bunner1, title: "バナー表示" },
+    { image: bunner2, title: "バナー表示" },
+    { image: bunner3, title: "バナー表示" },
+    { image: bunner4, title: "バナー表示" }
+  ];
+
+  // 自動スライド機能
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 4000); // 4秒ごとに切り替え
+
+    return () => clearInterval(interval);
+  }, [banners.length]);
 
   // カテゴリごとにグループ化
   const groupedWords = words.reduce((acc, word) => {
@@ -187,11 +228,22 @@ export const Words = ({ words }: Props) => {
       </WordCardsContainer>
 
       <BannerSection>
-        <BannerTitle>バナー表示</BannerTitle>
+        <BannerContainer>
+          <BannerLink href="">
+            <BannerImage 
+              src={banners[currentBannerIndex].image} 
+              alt={`Banner ${currentBannerIndex + 1}`}
+            />
+          </BannerLink>
+        </BannerContainer>
         <NavigationDots>
-          <Dot active={true} />
-          <Dot active={false} />
-          <Dot active={false} />
+          {banners.map((_, index) => (
+            <Dot 
+              key={index} 
+              active={index === currentBannerIndex}
+              onClick={() => setCurrentBannerIndex(index)}
+            />
+          ))}
         </NavigationDots>
       </BannerSection>
     </Container>
