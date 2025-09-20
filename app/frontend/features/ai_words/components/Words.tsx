@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { IAiWord } from "../../quizzes/types/ai_word";
 import { Main } from "../../../components/ui/Main";
 import bunner1 from "../../../assets/bunner_1.png";
@@ -105,18 +105,15 @@ const WordDescription = styled.div<{ isExpanded: boolean }>`
 const BannerSection = styled.div`
   position: relative;
   width: 100%;
-  max-width: 380px;
-  margin: 0 auto;
-  padding: 0 12px;
   flex-shrink: 0;
 `;
 
 const ArrowButton = styled.button`
   position: absolute;
-  top: 45%;
+  top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #ddd;
+  background: #35556C;
+  border: 1px solid #35556C;
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -124,29 +121,29 @@ const ArrowButton = styled.button`
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #666;
+  color: #fff;
   cursor: pointer;
   z-index: 2;
   transition: all 0.2s ease;
   
   &:hover {
-    background: rgba(255, 255, 255, 1);
-    color: #333;
+    background: #4a6b7a;
+    border: 1px solid #4a6b7a;
+    color: #fff;
     transform: translateY(-50%) scale(1.05);
   }
   
   &.left {
-    left: -14px;
+    left: 4px;
   }
   
   &.right {
-    right: -14px;
+    right: 4px;
   }
 `;
 
 const BannerContainer = styled.div`
   background-color: #fff;
-  border-radius: 8px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -166,7 +163,7 @@ const BannerSlide = styled.div`
 
 const BannerImage = styled.img`
   width: 100%;
-  height: 100px;
+  height: 90px;
   object-fit: cover;
   display: block;
 `;
@@ -181,29 +178,10 @@ const BannerLink = styled.a`
   }
 `;
 
-const NavigationDots = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 8px;
-`;
-
-const Dot = styled.div<{ active: boolean }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: ${props => props.active ? '#3270DE' : '#ddd'};
-  transition: background-color 0.2s ease;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: ${props => props.active ? '#3270DE' : '#bbb'};
-  }
-`;
-
 export const Words = ({ words }: Props) => {
   const [expandedWords, setExpandedWords] = useState<Set<number>>(new Set());
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const intervalRef = useRef<number | null>(null);
 
   const banners = [
     { image: bunner1, link: "" },
@@ -212,22 +190,35 @@ export const Words = ({ words }: Props) => {
     { image: bunner4, link: "" }
   ];
 
-  // 自動スライド機能
-  useEffect(() => {
-    const interval = setInterval(() => {
+  // 自動スライド機能を開始する関数
+  const startAutoSlide = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    intervalRef.current = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
     }, 4000); // 4秒ごとに切り替え
-
-    return () => clearInterval(interval);
   }, [banners.length]);
+
+  // 自動スライド機能
+  useEffect(() => {
+    startAutoSlide();
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [startAutoSlide]);
 
   // 矢印ボタンの操作
   const handlePrevBanner = () => {
     setCurrentBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+    startAutoSlide(); // タイマーを初期化
   };
 
   const handleNextBanner = () => {
     setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    startAutoSlide(); // タイマーを初期化
   };
 
   // カテゴリごとにグループ化
@@ -310,15 +301,6 @@ export const Words = ({ words }: Props) => {
         <ArrowButton className="right" onClick={handleNextBanner}>
           &#8250;
         </ArrowButton>
-        <NavigationDots>
-          {banners.map((_, index) => (
-            <Dot 
-              key={index} 
-              active={index === currentBannerIndex}
-              onClick={() => setCurrentBannerIndex(index)}
-            />
-          ))}
-        </NavigationDots>
       </BannerSection>
     </Container>
   )
