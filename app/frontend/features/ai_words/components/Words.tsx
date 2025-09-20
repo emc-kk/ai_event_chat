@@ -15,7 +15,7 @@ const Container = styled(Main)`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 16px;
+  padding: 16px 0;
 `;
 
 const Header = styled.div`
@@ -31,7 +31,7 @@ const WordCardsContainer = styled.div`
   align-items: center;
   gap: 20px;
   padding: 12px;
-  margin: 12px;
+  margin: 12px 0;
   background-color: #FFFFFF;
   border-radius: 4px;
   max-width: 380px;
