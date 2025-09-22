@@ -8,5 +8,5 @@ export const Main = styled.main`
   height: 100%;
   min-height: 100vh;
   background-color: #35556C;
-  padding: 16px 0 8px;
+  padding: 16px 0 24px;
 `
