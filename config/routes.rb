@@ -9,6 +9,7 @@ Rails.application.routes.draw do
   root "home#index"
   resources :quizzes, only: %i[index]
   resources :ai_words, only: %i[index]
+  resource :contact, only: %i[show], controller: :contact
   namespace :api do
     resources :runkings, only: %i[create]
   end
