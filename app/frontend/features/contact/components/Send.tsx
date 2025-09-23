@@ -3,6 +3,10 @@ import { Main } from "../../../components/ui/Main";
 import { Title } from "../../../components/ui/Title";
 import { useRef, useState } from "react";
 
+type Props = {
+  serviceNames: string[];
+}
+
 const MainC = styled(Main)`
   background-color: #fff;
   padding: 20px;
@@ -90,7 +94,7 @@ const Button = styled.button`
   }
 `;
 
-export const Send = () => {
+export const Send = ({ serviceNames }: Props) => {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"step1" | "step2" | "done">("step1");
@@ -217,7 +221,7 @@ export const Send = () => {
       <ChatRow>
         <ChatLogo>taiziii</ChatLogo>
         <ChatBubble>
-          ミスターAI・スキルリレーにご興味をお持ちいただきありがとうございます。
+          {serviceNames.join("・")}にご興味をお持ちいただきありがとうございます。
         </ChatBubble>
       </ChatRow>
       <ChatRow>

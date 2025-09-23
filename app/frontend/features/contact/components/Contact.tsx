@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Main } from "../../../components/ui/Main";
 import { Title } from "../../../components/ui/Title";
 import bunner1 from "../../../assets/bunner_1.png";
@@ -120,15 +120,19 @@ const ContactButton = styled.button`
   }
 `
 
+const services = [
+  { id: 'mister-ai', name: 'ミスターAI', image: bunner1 },
+  { id: 'skill-relay', name: 'スキルリレー', image: bunner2 },
+  { id: 'ai-training', name: 'AI研修', image: bunner3 },
+];
+
 export const Contact = () => {
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
-  const [isSending, setSending] = useState(true);
+  const [isSending, setSending] = useState(false);
 
-  const services = [
-    { id: 'star-ai', name: 'スターAI', image: bunner1 },
-    { id: 'skill-relay', name: 'スキルリレー', image: bunner2 },
-    { id: 'ai-training', name: 'AI研修', image: bunner3 },
-  ];
+  const serviceNames = useMemo(() => {
+    return services.filter(s => selectedServices.has(s.id)).map(s => s.name);
+  }, [selectedServices]);
 
   const toggleService = (serviceId: string) => {
     const newSelected = new Set(selectedServices);
@@ -145,14 +149,11 @@ export const Contact = () => {
       alert('サービスを選択してください。');
       return;
     }
-    
-    // メール送信処理をここに実装
-    console.log('Selected services:', Array.from(selectedServices));
-    alert('お問い合わせありがとうございます。');
+    setSending(true);
   };
 
   if (isSending) {
-    return <Send />
+    return <Send serviceNames={serviceNames} />
   }
 
   return (
