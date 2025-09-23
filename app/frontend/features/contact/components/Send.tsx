@@ -102,6 +102,10 @@ export const Send = () => {
     if (value.trim()) {
       setCompany(value);
       setStep("step2");
+      // inputをクリア
+      if (companyRef.current) {
+        companyRef.current.value = "";
+      }
     }
   };
 
@@ -110,12 +114,101 @@ export const Send = () => {
     if (value.trim()) {
       setEmail(value);
       setStep("done");
+      // inputをクリア
+      if (emailRef.current) {
+        emailRef.current.value = "";
+      }
     }
   };
 
   const handleSend = () => {
     // 送信処理
     alert(`送信しました！\n会社名: ${company}\nメール: ${email}`);
+  };
+
+  const renderChatHistory = () => {
+    const chatElements = [];
+
+    // Step 1のチャット履歴
+    if (step !== "step1") {
+      chatElements.push(
+        <ChatRow key="company-question">
+          <ChatLogo style={{opacity: 0}}>taiziii</ChatLogo>
+          <ChatBubble>御社名を教えてください。</ChatBubble>
+        </ChatRow>
+      );
+      chatElements.push(
+        <UserChatRow key="company-answer">
+          <UserChatBubble>{company}</UserChatBubble>
+        </UserChatRow>
+      );
+    }
+
+    // Step 2のチャット履歴
+    if (step === "done") {
+      chatElements.push(
+        <ChatRow key="email-question">
+          <ChatLogo>taiziii</ChatLogo>
+          <ChatBubble>
+            ありがとうございます。
+            続いて、ご返信先のメールアドレスをお願いします。
+            資料や詳細情報をこちらにお送り致します。
+          </ChatBubble>
+        </ChatRow>
+      );
+      chatElements.push(
+        <UserChatRow key="email-answer">
+          <UserChatBubble>{email}</UserChatBubble>
+        </UserChatRow>
+      );
+    }
+
+    return chatElements;
+  };
+
+  const renderCurrentStep = () => {
+    switch (step) {
+      case "step1":
+        return (
+          <>
+            <ChatRow>
+              <ChatLogo style={{opacity: 0}}>taiziii</ChatLogo>
+              <ChatBubble>御社名を教えてください。</ChatBubble>
+            </ChatRow>
+            <Input type="text" placeholder="御社名" ref={companyRef} />
+            <Button onClick={handleCompanyNext}>OK</Button>
+          </>
+        );
+      case "step2":
+        return (
+          <>
+            <ChatRow>
+              <ChatLogo>taiziii</ChatLogo>
+              <ChatBubble>
+                ありがとうございます。
+                続いて、ご返信先のメールアドレスをお願いします。
+                資料や詳細情報をこちらにお送り致します。
+              </ChatBubble>
+            </ChatRow>
+            <Input type="text" placeholder="メールアドレス" ref={emailRef} />
+            <Button onClick={handleEmailNext}>OK</Button>
+          </>
+        );
+      case "done":
+        return (
+          <>
+            <ChatRow>
+              <ChatLogo>taiziii</ChatLogo>
+              <ChatBubble>
+                入力はこれで完了です。送信ボタンを押してください。
+              </ChatBubble>
+            </ChatRow>
+            <Button onClick={handleSend}>送信</Button>
+          </>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -135,62 +228,8 @@ export const Send = () => {
           30秒ほどで完了しますのでご安心ください。
         </ChatBubble>
       </ChatRow>
-      {step === "step1" && (
-        <>
-          <ChatRow>
-            <ChatLogo style={{opacity: 0}}>taiziii</ChatLogo>
-            <ChatBubble>御社名を教えてください。</ChatBubble>
-          </ChatRow>
-          <Input type="text" placeholder="御社名" ref={companyRef} />
-          <Button onClick={handleCompanyNext}>OK</Button>
-        </>
-      )}
-      {step === "step2" && (
-        <>
-          <UserChatRow>
-            <UserChatBubble>{company}</UserChatBubble>
-          </UserChatRow>
-          <ChatRow>
-            <ChatLogo>taiziii</ChatLogo>
-            <ChatBubble>
-              ありがとうございます。
-              続いて、ご返信先のメールアドレスをお願いします。
-              資料や詳細情報をこちらにお送り致します。
-            </ChatBubble>
-          </ChatRow>
-          <Input type="text" placeholder="メールアドレス" ref={emailRef} />
-          <Button onClick={handleEmailNext}>OK</Button>
-        </>
-      )}
-      {step === "done" && (
-        <>
-          <ChatRow>
-            <ChatLogo style={{opacity: 0}}>taiziii</ChatLogo>
-            <ChatBubble>御社名を教えてください。</ChatBubble>
-          </ChatRow>
-          <UserChatRow>
-            <UserChatBubble>{company}</UserChatBubble>
-          </UserChatRow>
-          <ChatRow>
-            <ChatLogo>taiziii</ChatLogo>
-            <ChatBubble>
-              ありがとうございます。
-              続いて、ご返信先のメールアドレスをお願いします。
-              資料や詳細情報をこちらにお送り致します。
-            </ChatBubble>
-          </ChatRow>
-          <UserChatRow>
-            <UserChatBubble>{email}</UserChatBubble>
-          </UserChatRow>
-          <ChatRow>
-            <ChatLogo>taiziii</ChatLogo>
-            <ChatBubble>
-              入力はこれで完了です。送信ボタンを押してください。
-            </ChatBubble>
-          </ChatRow>
-          <Button onClick={handleSend}>送信</Button>
-        </>
-      )}
+      {renderChatHistory()}
+      {renderCurrentStep()}
     </MainC>
   );
 };
