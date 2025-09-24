@@ -1,3 +1,4 @@
+import { getCSRFToken } from "../../../lib/api";
 import { IRunking } from "../types/quiz";
 
 type Parameter = {
@@ -7,14 +8,6 @@ type Parameter = {
 }
 
 type Resoponse = IRunking;
-
-const getCSRFToken = (): string => {
-  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-  if (!token) {
-    throw new Error('CSRF token not found');
-  }
-  return token;
-};
 
 export const postRunking = async ({ completionTime, corretCount, answers }: Parameter): Promise<Resoponse> => {
   const response = await fetch('/api/runkings', {

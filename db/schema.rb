@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_16_000000) do
+ActiveRecord::Schema[7.1].define(version: 2025_09_24_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "contact_submissions", id: { type: :string, limit: 26 }, force: :cascade do |t|
+    t.string "company_name", null: false
+    t.string "email", null: false
+    t.json "interested_services", null: false, comment: "Array of service names user is interested in"
+    t.json "service_ids", null: false, comment: "Array of service IDs corresponding to interested services"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_name"], name: "index_contact_submissions_on_company_name"
+    t.index ["created_at"], name: "index_contact_submissions_on_created_at"
+    t.index ["email"], name: "index_contact_submissions_on_email"
+  end
 
   create_table "quiz_results", id: { type: :string, limit: 26 }, force: :cascade do |t|
     t.integer "quiz", null: false

@@ -2,6 +2,8 @@ import styled from "@emotion/styled";
 import { Main } from "../../../components/ui/Main";
 import { Title } from "../../../components/ui/Title";
 import { useRef, useState } from "react";
+import { postContactSubmission } from "../api/contact_submission";
+import { toast } from "react-toastify";
 
 type Props = {
   serviceNames: string[];
@@ -126,29 +128,40 @@ export const Send = ({ serviceNames, serviceIds }: Props) => {
     }
   };
 
-  const handleSend = () => {
-    // メール送信処理
-    const toAddress = `service+${serviceIds.join('+')}@taiziii.com`;
-    const subject = `【展示会お問い合わせ】資料希望：${serviceNames.join('、')}`;
-    const body = `以下の内容でお問い合わせを受け付けました。
-内容をご確認のうえ、お客様へのご対応をお願いいたします。
+  const handleSend = async () => {
+    try {
+      await postContactSubmission({
+        companyName: company,
+        email,
+        interestedServices: serviceNames,
+        serviceIds
+      })
+      // メール送信処理
+      const toAddress = `service+${serviceIds.join('+')}@taiziii.com`;
+      const subject = `【展示会お問い合わせ】資料希望：${serviceNames.join('、')}`;
+      const body = `以下の内容でお問い合わせを受け付けました。
+  内容をご確認のうえ、お客様へのご対応をお願いいたします。
 
-ーーーーーーー
-■ 会社名
-${company}
+  ーーーーーーー
+  ■ 会社名
+  ${company}
 
-■ メールアドレス
-${email}
+  ■ メールアドレス
+  ${email}
 
-■ 関心のある製品
-${serviceNames.map(name => `- ${name}`).join('\n')}
-ーーーーーーー`;
+  ■ 関心のある製品
+  ${serviceNames.map(name => `- ${name}`).join('\n')}
+  ーーーーーーー`;
 
-    // メールリンクを作成
-    const mailtoLink = `mailto:${toAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // デフォルトメーラーを開く
-    window.location.href = mailtoLink;
+      // メールリンクを作成
+      const mailtoLink = `mailto:${toAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      
+      // デフォルトメーラーを開く
+      window.location.href = mailtoLink;
+    } catch (error) {
+      console.error(error);
+      toast.error('Soorry, something went wrong. Please try again later.');
+    }
   };
 
   const renderChatHistory = () => {

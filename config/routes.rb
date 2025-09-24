@@ -12,5 +12,6 @@ Rails.application.routes.draw do
   resource :contact, only: %i[show], controller: :contact
   namespace :api do
     resources :runkings, only: %i[create]
+    resources :contact_submissions, only: %i[create]
   end
 end
