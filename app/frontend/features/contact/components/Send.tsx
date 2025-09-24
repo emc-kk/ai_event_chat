@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 
 type Props = {
   serviceNames: string[];
+  serviceIds: string[];
 }
 
 const MainC = styled(Main)`
@@ -94,7 +95,7 @@ const Button = styled.button`
   }
 `;
 
-export const Send = ({ serviceNames }: Props) => {
+export const Send = ({ serviceNames, serviceIds }: Props) => {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [step, setStep] = useState<"step1" | "step2" | "done">("step1");
@@ -126,8 +127,28 @@ export const Send = ({ serviceNames }: Props) => {
   };
 
   const handleSend = () => {
-    // 送信処理
-    alert(`送信しました！\n会社名: ${company}\nメール: ${email}`);
+    // メール送信処理
+    const toAddress = `service+${serviceIds.join('+')}@taiziii.com`;
+    const subject = `【展示会お問い合わせ】資料希望：${serviceNames.join('、')}`;
+    const body = `以下の内容でお問い合わせを受け付けました。
+内容をご確認のうえ、お客様へのご対応をお願いいたします。
+
+ーーーーーーー
+■ 会社名
+${company}
+
+■ メールアドレス
+${email}
+
+■ 関心のある製品
+${serviceNames.map(name => `- ${name}`).join('\n')}
+ーーーーーーー`;
+
+    // メールリンクを作成
+    const mailtoLink = `mailto:${toAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // デフォルトメーラーを開く
+    window.location.href = mailtoLink;
   };
 
   const renderChatHistory = () => {
