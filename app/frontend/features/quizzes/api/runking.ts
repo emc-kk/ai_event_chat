@@ -5,11 +5,12 @@ type Parameter = {
   completionTime: number;
   corretCount: number;
   answers: string[];
+  email?: string
 }
 
 type Resoponse = IRunking;
 
-export const postRunking = async ({ completionTime, corretCount, answers }: Parameter): Promise<Resoponse> => {
+export const postRunking = async ({ completionTime, corretCount, answers, email }: Parameter): Promise<Resoponse> => {
   const response = await fetch('/api/runkings', {
     method: 'POST',
     headers: {
@@ -19,7 +20,8 @@ export const postRunking = async ({ completionTime, corretCount, answers }: Para
     body: JSON.stringify({
       completion_time: completionTime,
       correct_count: corretCount,
-      answers
+      answers,
+      email
     }),
   });
 

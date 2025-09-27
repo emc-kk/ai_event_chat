@@ -18,6 +18,6 @@ class Api::RunkingsController < ApplicationController
   private
 
   def runking_params
-    params.permit(:completion_time, :correct_count, answers: []).to_h
+    params.permit(:completion_time, :correct_count, :email, answers: []).to_h
   end
 end

@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import { IQuiz, IRunking } from "../types/quiz";
 import React from "react";
 import { SlotMachine } from "./SlotMachine";
+import { EmailForm } from "./EmailForm";
 import { useQuiz } from "../hooks/useQuiz";
 import { Result } from "./Result";
 import { postRunking } from "../api/runking";
@@ -75,6 +76,7 @@ export const Quizzes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
   } = useQuiz({quizzes: orgQuizzes});
 
   const [result, setResult] = React.useState<IRunking>();
+  const [showEmailForm, setShowEmailForm] = React.useState(false);
 
   const handleSlotStop = (selectedOption: string) => {
     addAnswer(selectedOption);
@@ -84,22 +86,47 @@ export const Quizzes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
     nextQuiz();
   };
 
-  const handleRexult = async () => {
+  const handleEmailSubmit = (email: string) => {
+    handleResult(email);
+  };
+
+  const handleResult = async (email: string) => {
     if (!completionTime) return;
     const corretCount = quizzes.filter(quiz => quiz.isCorrect()).length;
     const answers = quizzes.map(quiz => quiz.userAnswer!);
     try {
-      const response = await postRunking({completionTime, corretCount, answers });
-      console.log(response);
+      const response = await postRunking({completionTime, corretCount, answers, email});
       setResult(response);
+      setShowEmailForm(false);
     } catch (error) {
       console.error(error);
-      toast.error('Soorry, something went wrong. Please try again later.');
+      toast.error('Sorry, something went wrong. Please try again later.');
     }
-  }
+  };
+
+  const handleShowEmailForm = () => {
+    setShowEmailForm(true);
+  };
 
   if (result) {
     return <Result quizzes={quizzes} runking={result} completionTime={completionTime} />;
+  }
+
+  // メールアドレス入力フォームを表示
+  if (showEmailForm) {
+    return (
+      <Main>
+        <TitleSet />
+        <Question>
+          お疲れ様でした！<br />
+          メールアドレスを教えていただければ検定結果をPDFでお送りいたします!
+        </Question>
+        <Index>
+          ({totalQuizzes}/{totalQuizzes})
+        </Index>
+        <EmailForm onEmailSubmit={handleEmailSubmit} />
+      </Main>
+    );
   }
 
   return (
@@ -118,7 +145,7 @@ export const Quizzes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
         isCompleted={isCompleted}
       />
       {isCompleted && (
-        <ResultButton onClick={handleRexult}>結果を見る</ResultButton>
+        <ResultButton onClick={handleShowEmailForm}>次へ</ResultButton>
       )}
     </Main>
   );
