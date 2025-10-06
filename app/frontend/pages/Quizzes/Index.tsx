@@ -10,7 +10,10 @@ type Props = {
 export default function QuizeIndex({ quizzes }: Props) {
   return (
     <Layaout>
-      <Head title="AIクイズ | 診断" />
+      <Head>
+        <title>AIクイズ – 10問でAI理解度チェック</title>
+        <meta name="description" content="AIに関する10問のクイズで、あなたのAI理解度をチェックしましょう。初心者から上級者まで楽しめる内容です。" />
+      </Head>
       <Quizzes quizzes={quizzes} />
     </Layaout>
   )

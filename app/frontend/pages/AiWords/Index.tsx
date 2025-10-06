@@ -10,7 +10,10 @@ type Props = {
 export default function AiWordsIndex({ words }: Props) {
   return (
     <Layaout>
-      <Head title="AIクイズ | AI単語帳" />
+      <Head>
+        <title>AI単語帳 – 100のAI用語で基礎と応用を学ぶ</title>
+        <meta name="description" content="AIに関する用語を基礎概念やモデル・手法などのカテゴリー別にまとめた全100語の用語集です。" />
+      </Head>
       <Words words={words} />
     </Layaout>
   )
