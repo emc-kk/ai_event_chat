@@ -91,7 +91,7 @@ export const Quizzes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
   };
 
   const handleResult = async (email: string) => {
-    if (!completionTime) return;
+    if (!completionTime || !email) return;
     const corretCount = quizzes.filter(quiz => quiz.isCorrect()).length;
     const answers = quizzes.map(quiz => quiz.userAnswer!);
     try {
@@ -119,7 +119,7 @@ export const Quizzes: React.FC<Props> = ({ quizzes: orgQuizzes }) => {
         <TitleSet />
         <Question>
           お疲れ様でした！<br />
-          メールアドレスを教えていただければ検定結果をPDFでお送りいたします!
+          最後にメールアドレスを入力してください、診断結果をPDFでお送りいたします!
         </Question>
         <Index>
           ({totalQuizzes}/{totalQuizzes})

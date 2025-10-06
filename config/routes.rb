@@ -10,8 +10,12 @@ Rails.application.routes.draw do
   resources :quizzes, only: %i[index]
   resources :ai_words, only: %i[index]
   resource :contact, only: %i[show], controller: :contact
+  resource :mister_ai, only: %i[show], controller: :mister_ai
   namespace :api do
     resources :runkings, only: %i[create]
     resources :contact_submissions, only: %i[create]
+    resource :mister_ai, only: [], controller: 'mister_ai' do
+      post :diagnose, on: :member
+    end
   end
 end
