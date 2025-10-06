@@ -1,8 +1,4 @@
-class HubspotForm
-  Error = Class.new(StandardError)
-
-  BASE_URL = 'https://api.hsforms.com/submissions/v3/integration/secure/submit'
-
+class HubspotQuizForm
   class << self
     def submit!(quiz_result:)
       new.submit(quiz_result)
@@ -12,23 +8,15 @@ class HubspotForm
   def submit(quiz_result)
     body = build_form_data(quiz_result)
 
-    connection.post("#{portal_id}/#{form_guid}") do |req|
+    hubspot_client.post("#{portal_id}/#{form_guid}") do |req|
       req.body = body.to_json
     end
   end
 
-  def connection
-    Faraday.new(BASE_URL) do |conn|
-      conn.request :json
-      conn.response :json
-      conn.headers['Authorization'] = "Bearer #{api_token}"
-      conn.headers['Content-Type'] = 'application/json'
-      conn.response :raise_error
-    end
-  end
+  private
 
-  def api_token
-    token = ENV['HUBSPOT_API_TOKEN']
+  def hubspot_client
+    @hubspot_client ||= HubspotClient.new
   end
 
   def portal_id
