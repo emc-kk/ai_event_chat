@@ -19,10 +19,18 @@ const TitleC = styled(Title)`
   color: #35556c;
   background-color: transparent;
   border-radius: 0;
-  font-size: 48px;
+  font-size: 42px;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 8px;
+  line-height: 1;
+`;
+
+const Description = styled.p`
+  color: #35556c;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 24px;
 `;
 
 const ErrorMessage = styled.div`
@@ -98,6 +106,7 @@ export const MisterAi: React.FC = () => {
   return (
     <Container>
       <TitleC>ミスターAI</TitleC>
+      <Description>AIで業務を効率化しましょう</Description>
       <DiagnosisForm onSubmit={handleBasicFormSubmit} />
     </Container>
   );
