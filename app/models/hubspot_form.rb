@@ -4,7 +4,7 @@ class HubspotForm
   BASE_URL = 'https://api.hsforms.com/submissions/v3/integration/secure/submit'
 
   class << self
-    def call!(quiz_result:)
+    def submit!(quiz_result:)
       new.submit(quiz_result)
     end
   end

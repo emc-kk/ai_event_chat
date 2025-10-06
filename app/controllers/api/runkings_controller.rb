@@ -4,7 +4,7 @@ class Api::RunkingsController < ApplicationController
 
     ActiveRecord::Base.transaction do
       quiz_result.save!
-      HubspotForm.call!(quiz_result: quiz_result)
+      HubspotForm.submit!(quiz_result: quiz_result)
     end
 
     render json: {
