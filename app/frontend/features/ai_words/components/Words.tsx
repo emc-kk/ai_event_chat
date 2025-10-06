@@ -186,10 +186,10 @@ export const Words = ({ words }: Props) => {
   const intervalRef = useRef<number | null>(null);
 
   const banners = [
-    { image: bunner1, link: "" },
-    { image: bunner2, link: "https://taiziii.com/skillrelay/" },
-    { image: bunner3, link: "https://taiziii.com/contact/" },
-    { image: bunner4, link: "" }
+    { image: bunner1, link: "https://taiziii.com/mr-ai/?utm_source=exhibition&utm_medium=quiz_banner&utm_campaign=mr_ai&utm_content=entry_ai_vocab" },
+    { image: bunner2, link: "https://taiziii.com/skillrelay/?utm_source=exhibition&utm_medium=quiz_banner&utm_campaign=skillrelay&utm_content=entry_ai_vocab" },
+    { image: bunner3, link: "https://taiziii.com/contact/?utm_source=exhibition&utm_medium=quiz_banner&utm_campaign=ai_training&utm_content=entry_ai_vocab" },
+    { image: bunner4, link: "https://taiziii.com/news/kindle-lp/?utm_source=exhibition&utm_medium=quiz_banner&utm_campaign=kindle_lp&utm_content=entry_ai_vocab" }
   ];
 
   // 自動スライド機能を開始する関数
