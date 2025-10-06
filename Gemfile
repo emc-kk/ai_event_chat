@@ -59,3 +59,5 @@ gem "inertia_rails", "~> 3.10"
 gem "vite_rails", "~> 3.0"
 
 gem 'ulid', '~> 1.4'
+
+gem 'faraday', '~> 2.14'

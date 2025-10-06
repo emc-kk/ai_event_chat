@@ -16,6 +16,7 @@ services:
       DB_HOST: db
       DB_USERNAME: postgres
       DB_PASSWORD: password
+      HUBSPOT_API_TOKEN: your_hubspot_api_token_here
     ports:
       - "3000:3000"
       - "3036:3036"

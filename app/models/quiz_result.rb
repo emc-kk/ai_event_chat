@@ -1,4 +1,4 @@
-class QuizResult < ApplicationRecord
+class QuizResult < ApplicationRecord  
   validates :quiz, presence: true
   validates :completion_time, presence: true
   validates :correct_count, presence: true
