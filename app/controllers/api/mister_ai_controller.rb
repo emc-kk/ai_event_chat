@@ -2,7 +2,7 @@ class Api::MisterAiController < ApplicationController
   def diagnose
     result = openai_predict!
 
-    # hubspot_submit!(result)
+    hubspot_submit!(result)
 
     render json: {
       success: true,
