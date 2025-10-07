@@ -8,14 +8,16 @@ export interface DiagnosisRequest {
 }
 
 export interface DiagnosisResult {
-  estimated_time_savings: string;
+  estimated_time_saving_rate: number;
   explanation: string;
+  difficulty_level: 'easy' | 'medium' | 'hard';
 }
 
 interface DiagnosisResponse {
   success: boolean;
-  estimated_time_savings?: string;
+  estimated_time_saving_rate?: number;
   explanation?: string;
+  difficulty_level?: 'easy' | 'medium' | 'hard';
   error?: string;
 }
 
@@ -36,7 +38,8 @@ export const postDiagnosis = async (data: DiagnosisRequest): Promise<DiagnosisRe
   }
 
   return {
-    estimated_time_savings: responseData.estimated_time_savings!,
-    explanation: responseData.explanation!
+    estimated_time_saving_rate: responseData.estimated_time_saving_rate!,
+    explanation: responseData.explanation!,
+    difficulty_level: responseData.difficulty_level!
   };
 };

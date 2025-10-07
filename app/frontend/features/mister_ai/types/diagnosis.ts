@@ -6,6 +6,7 @@ export interface FormData {
 }
 
 export interface DiagnosisResult {
-  estimated_time_savings: string;
+  estimated_time_saving_rate: number;
+  difficulty_level: 'easy' | 'medium' | 'hard';
   explanation: string;
 }

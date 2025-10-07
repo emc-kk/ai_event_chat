@@ -2,12 +2,13 @@ class Api::MisterAiController < ApplicationController
   def diagnose
     result = openai_predict!
 
-    hubspot_submit!(result)
+    # hubspot_submit!(result)
 
     render json: {
       success: true,
-      estimated_time_savings: result['estimated_time_savings'],
-      explanation: result['explanation']
+      estimated_time_saving_rate: result['estimated_time_saving_rate'],
+      explanation: result['explanation'],
+      difficulty_level: result['difficulty_level']
     }
   rescue OpenaiClient::Error => e
     render json: {

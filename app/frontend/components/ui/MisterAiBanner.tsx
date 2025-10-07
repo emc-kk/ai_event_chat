@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import { Link } from '@inertiajs/react';
 
 const BannerContainer = styled.div`
-  position: fixed;
+  position: absolute;
   bottom: 4px;
   left: 4px;
   z-index: 1000;

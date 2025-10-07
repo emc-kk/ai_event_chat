@@ -13,6 +13,7 @@ const Container = styled(Main)`
   padding: 20px;
   justify-content: flex-start;
   max-width: 600px;
+  margin: 0 auto;
 `;
 
 const TitleC = styled(Title)`
