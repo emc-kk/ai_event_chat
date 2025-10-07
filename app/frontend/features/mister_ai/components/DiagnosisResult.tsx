@@ -22,12 +22,16 @@ const ResultTitle = styled.h3`
 
 const MetricsContainer = styled.div`
   display: flex;
-  gap: 20px;
+  gap: 16px;
   margin-bottom: 24px;
   
-  @media (max-width: 480px) {
+  @media (max-width: 768px) {
     flex-direction: column;
     gap: 16px;
+  }
+  
+  @media (min-width: 769px) {
+    gap: 20px;
   }
 `;
 
@@ -55,6 +59,14 @@ const MetricLabel = styled.div`
   font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
   font-weight: 500;
+`;
+
+const MetricSubLabel = styled.div`
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  margin-top: 4px;
+  line-height: 1.3;
 `;
 
 const DifficultyBadge = styled.span<{ level: string }>`
@@ -137,6 +149,12 @@ export const DiagnosisResult: React.FC<Props> = ({ result }) => {
         <MetricCard color="linear-gradient(135deg, #28a745, #20c997)">
           <MetricValue>{result.estimated_time_saving_rate}%</MetricValue>
           <MetricLabel>時間削減率</MetricLabel>
+        </MetricCard>
+        
+        <MetricCard color="linear-gradient(135deg, #007bff, #0056b3)">
+          <MetricValue>{Math.round(100 * result.estimated_time_saving_rate / 100)}時間</MetricValue>
+          <MetricLabel>削減時間数</MetricLabel>
+          <MetricSubLabel>（月100時間作業として算出）</MetricSubLabel>
         </MetricCard>
         
         <MetricCard color="linear-gradient(135deg, #35556c, #4a6b7c)">
