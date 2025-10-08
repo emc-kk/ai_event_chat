@@ -50,7 +50,7 @@ const BannerLink = styled(Link)`
   font-weight: bold;
   transition: all 0.2s ease;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  white-space: nowrap;
+  width: 100%;
   
   &:hover {
     background: rgba(255, 255, 255, 0.2);
