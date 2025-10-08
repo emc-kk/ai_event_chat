@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import { IRunking, QuizeImple } from '../types/quiz';
 import { Link } from '@inertiajs/react';
 import { Main } from '../../../components/ui/Main';
+import lineQrCode from '../../../assets/line_qrcode.png';
 
 type Props = {
   quizzes: QuizeImple[]
@@ -215,6 +216,46 @@ const RunkingTable = styled.table`
   }
 `;
 
+const LineSection = styled(Section)`
+  background: linear-gradient(135deg, #00C300, #00A300);
+  color: white;
+  text-align: center;
+  padding: 20px;
+`;
+
+const LineSectionTitle = styled(ScoreTitle)`
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin-bottom: 16px;
+`;
+
+const LineQrImage = styled.img`
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  margin-bottom: 16px;
+`;
+
+const LineInstructionText = styled.p`
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  font-weight: 500;
+`;
+
+const LineEmailInstruction = styled.p`
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+`;
+
 const formatTime = (ms: number) => {
   const mins = Math.floor(ms / 60000);
   const secs = Math.floor((ms % 60000) / 1000);
@@ -285,6 +326,18 @@ export const Result: React.FC<Props> = ({ quizzes, runking, completionTime }) =>
           </tbody>
         </RunkingTable>
       </Section>
+      <LineSection>
+        <LineSectionTitle>📱 LINE友達追加でより詳しい結果をお送りします</LineSectionTitle>
+        <LineQrImage src={lineQrCode} alt="LINE友達追加QRコード" />
+        <LineInstructionText>
+          上記QRコードを読み取って<br />
+          LINE友達追加をお願いします
+        </LineInstructionText>
+        <LineEmailInstruction>
+          LINE追加後、お手数ですが、LINEメッセージで<br />
+          先程ご入力いただいたメールアドレスを送信してください
+        </LineEmailInstruction>
+      </LineSection>
       <RetryButton href="/quizzes">
         もう1回やる
       </RetryButton>
