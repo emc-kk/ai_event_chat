@@ -121,7 +121,7 @@ const ContactButton = styled.button`
 `;
 
 const services = [
-  { id: "mister-ai", name: "ミスターAI", image: bunner1 },
+  // { id: "mister-ai", name: "ミスターAI", image: bunner1 },
   { id: "skillrelay", name: "スキルリレー", image: bunner2 },
   { id: "ai-training", name: "AI研修", image: bunner3 },
 ];
