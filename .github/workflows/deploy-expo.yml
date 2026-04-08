@@ -1,0 +1,174 @@
+name: Deploy Exhibition (ai-expo)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tacit-knowledge/ai-server/**'
+      - '.github/workflows/deploy-expo.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-1
+  AWS_ACCOUNT_ID: "778389812638"
+  PROJECT_NAME: skillrelay
+  ENVIRONMENT: production
+  ECR_REPO: skillrelay-ai-server
+  EXPO_IMAGE_TAG: expo-latest
+  EXPO_SERVICE_NAME: skillrelay-expo-ai-server
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-expo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY"
+          docker system prune -af
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push AI Server image (expo)
+        uses: docker/build-push-action@v6
+        with:
+          context: tacit-knowledge/ai-server
+          file: tacit-knowledge/ai-server/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO }}:${{ env.EXPO_IMAGE_TAG }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO }}:expo-${{ github.sha }}
+          cache-from: type=gha,scope=expo-ai-server
+          cache-to: type=gha,mode=max,scope=expo-ai-server
+
+      - name: Get AppRunner service ARN
+        id: get-service
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services \
+            --query "ServiceSummaryList[?ServiceName=='${EXPO_SERVICE_NAME}'].ServiceArn" \
+            --output text)
+          echo "service_arn=${SERVICE_ARN}" >> $GITHUB_OUTPUT
+          if [ -z "$SERVICE_ARN" ] || [ "$SERVICE_ARN" = "None" ]; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get IAM role ARNs
+        id: get-roles
+        run: |
+          ACCESS_ROLE=$(aws cloudformation list-exports \
+            --query "Exports[?Name=='${PROJECT_NAME}-${ENVIRONMENT}-ai-server-apprunner-access-role-arn'].Value" \
+            --output text)
+          INSTANCE_ROLE=$(aws cloudformation list-exports \
+            --query "Exports[?Name=='${PROJECT_NAME}-${ENVIRONMENT}-ai-server-apprunner-instance-role-arn'].Value" \
+            --output text)
+          echo "access_role=${ACCESS_ROLE}" >> $GITHUB_OUTPUT
+          echo "instance_role=${INSTANCE_ROLE}" >> $GITHUB_OUTPUT
+
+      - name: Create AppRunner service (first time only)
+        if: steps.get-service.outputs.exists == 'false'
+        run: |
+          ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+          aws apprunner create-service \
+            --service-name "${EXPO_SERVICE_NAME}" \
+            --source-configuration "{
+              \"ImageRepository\": {
+                \"ImageIdentifier\": \"${ECR_URI}:${EXPO_IMAGE_TAG}\",
+                \"ImageRepositoryType\": \"ECR\",
+                \"ImageConfiguration\": {
+                  \"Port\": \"3000\",
+                  \"RuntimeEnvironmentSecrets\": {
+                    \"OPENAI_API_KEY\": \"/${PROJECT_NAME}/${ENVIRONMENT}/OPENAI_API_KEY\",
+                    \"ANTHROPIC_API_KEY\": \"/${PROJECT_NAME}/${ENVIRONMENT}/ANTHROPIC_API_KEY\"
+                  },
+                  \"RuntimeEnvironmentVariables\": {
+                    \"NODE_ENV\": \"production\"
+                  }
+                }
+              },
+              \"AutoDeploymentsEnabled\": false,
+              \"AuthenticationConfiguration\": {
+                \"AccessRoleArn\": \"${{ steps.get-roles.outputs.access_role }}\"
+              }
+            }" \
+            --instance-configuration "{
+              \"Cpu\": \"0.25 vCPU\",
+              \"Memory\": \"0.5 GB\",
+              \"InstanceRoleArn\": \"${{ steps.get-roles.outputs.instance_role }}\"
+            }" \
+            --health-check-configuration "{
+              \"Protocol\": \"HTTP\",
+              \"Path\": \"/api/health\",
+              \"Interval\": 10,
+              \"Timeout\": 5,
+              \"HealthyThreshold\": 1,
+              \"UnhealthyThreshold\": 10
+            }"
+
+      - name: Update AppRunner service (subsequent deploys)
+        if: steps.get-service.outputs.exists == 'true'
+        run: |
+          ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+          aws apprunner update-service \
+            --service-arn "${{ steps.get-service.outputs.service_arn }}" \
+            --source-configuration "{
+              \"ImageRepository\": {
+                \"ImageIdentifier\": \"${ECR_URI}:${EXPO_IMAGE_TAG}\",
+                \"ImageRepositoryType\": \"ECR\",
+                \"ImageConfiguration\": {
+                  \"Port\": \"3000\",
+                  \"RuntimeEnvironmentSecrets\": {
+                    \"OPENAI_API_KEY\": \"/${PROJECT_NAME}/${ENVIRONMENT}/OPENAI_API_KEY\",
+                    \"ANTHROPIC_API_KEY\": \"/${PROJECT_NAME}/${ENVIRONMENT}/ANTHROPIC_API_KEY\"
+                  },
+                  \"RuntimeEnvironmentVariables\": {
+                    \"NODE_ENV\": \"production\"
+                  }
+                }
+              },
+              \"AutoDeploymentsEnabled\": false,
+              \"AuthenticationConfiguration\": {
+                \"AccessRoleArn\": \"${{ steps.get-roles.outputs.access_role }}\"
+              }
+            }"
+
+      - name: Wait for deployment
+        run: |
+          SERVICE_ARN=$(aws apprunner list-services \
+            --query "ServiceSummaryList[?ServiceName=='${EXPO_SERVICE_NAME}'].ServiceArn" \
+            --output text)
+          echo "Waiting for service to become RUNNING..."
+          for i in $(seq 1 60); do
+            STATUS=$(aws apprunner describe-service \
+              --service-arn "${SERVICE_ARN}" \
+              --query "Service.Status" \
+              --output text)
+            echo "  Status: ${STATUS} (attempt ${i}/60)"
+            if [ "$STATUS" = "RUNNING" ]; then
+              SERVICE_URL=$(aws apprunner describe-service \
+                --service-arn "${SERVICE_ARN}" \
+                --query "Service.ServiceUrl" \
+                --output text)
+              echo "Service is running at: https://${SERVICE_URL}"
+              break
+            fi
+            sleep 10
+          done
