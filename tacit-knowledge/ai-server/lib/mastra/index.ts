@@ -1,5 +1,5 @@
 import { Mastra } from "@mastra/core/mastra"
-import { Observability, DefaultExporter } from "@mastra/observability";
+// import { Observability, DefaultExporter } from "@mastra/observability";  // Disabled for expo build
 import { postgresStore, vectorStore } from "./storage"
 import { flowAgent } from "./agents/flow-agent"
 import { qaAgent } from "./agents/qa-agent"
@@ -16,14 +16,7 @@ export { postgresStore, vectorStore }
 
 export const mastra = new Mastra({
   storage: postgresStore,
-  observability: new Observability({
-    configs: {
-      local: {
-        serviceName: "mastra",
-        exporters: [new DefaultExporter()],
-      },
-    },
-  }),
+  // observability disabled for expo build
   agents: {
     flowAgent: flowAgent(),
     qaAgent: qaAgent(),
