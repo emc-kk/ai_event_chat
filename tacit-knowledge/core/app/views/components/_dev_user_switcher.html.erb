@@ -1,0 +1,39 @@
+<div class="dev-user-switcher">
+  <div class="dev-switcher-header" onclick="this.parentElement.classList.toggle('open')">
+    <i class="fa-solid fa-bug"></i>
+    DEV: ユーザー切替
+    <i class="fa-solid fa-chevron-down dev-switcher-arrow"></i>
+  </div>
+  <div class="dev-switcher-body">
+    <div class="dev-switcher-current">
+      <small>現在: <strong><%= current_user&.name %></strong>
+        (<%= session[:user_type] == 'admin' ? '管理者' : current_user&.role %>)
+      </small>
+    </div>
+
+    <% Admin.order(:company_id).each do |admin| %>
+      <%= form_tag "/dev/switch_user", method: :post, class: "dev-switch-form" do %>
+        <%= hidden_field_tag :id, admin.id %>
+        <%= hidden_field_tag :user_type, "admin" %>
+        <button type="submit" class="dev-switch-btn <%= 'active' if current_user&.id == admin.id && session[:user_type] == 'admin' %>">
+          <i class="fa-solid fa-user-shield"></i>
+          <%= admin.name %>
+          <span class="dev-role-badge admin"><%= admin.company_id.nil? ? '特権' : '会社管理者' %></span>
+        </button>
+      <% end %>
+    <% end %>
+
+    <% User.where(company_id: Company.pluck(:id)).order(:company_id, :role).each do |user| %>
+      <%= form_tag "/dev/switch_user", method: :post, class: "dev-switch-form" do %>
+        <%= hidden_field_tag :id, user.id %>
+        <%= hidden_field_tag :user_type, "user" %>
+        <button type="submit" class="dev-switch-btn <%= 'active' if current_user&.id == user.id && session[:user_type] == 'user' %>">
+          <i class="fa-solid fa-user"></i>
+          <%= user.name %>
+          <span class="dev-role-badge <%= user.role %>"><%= user.role_i18n rescue user.role %></span>
+          <span class="dev-company-badge"><%= user.company&.name&.truncate(8) %></span>
+        </button>
+      <% end %>
+    <% end %>
+  </div>
+</div>

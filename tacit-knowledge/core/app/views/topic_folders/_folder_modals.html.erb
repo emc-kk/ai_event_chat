@@ -1,0 +1,79 @@
+<%# フォルダ名変更モーダル %>
+<div class="modal fade" id="folderRenameModal" tabindex="-1" aria-labelledby="folderRenameModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="folderRenameForm" method="post" action="#">
+        <input type="hidden" name="_method" value="patch">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="modal-header">
+          <h5 class="modal-title" id="folderRenameModalLabel">
+            <i class="bi bi-pencil"></i> フォルダ名の変更
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="folderRenameInput" class="form-label fw-bold">フォルダ名</label>
+            <input type="text" class="form-control" id="folderRenameInput" name="topic_folder[name]" required maxlength="255">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-primary">変更</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%# フォルダ削除確認モーダル %>
+<div class="modal fade" id="folderDeleteModal" tabindex="-1" aria-labelledby="folderDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="folderDeleteForm" method="post" action="#">
+        <input type="hidden" name="_method" value="delete">
+        <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger" id="folderDeleteModalLabel">
+            <i class="bi bi-exclamation-triangle"></i> フォルダの削除
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body">
+          <p>フォルダ「<strong id="folderDeleteName"></strong>」を削除しますか？</p>
+          <p id="folderDeleteTopicsWarning" class="text-warning mb-0" style="display: none;">
+            <i class="bi bi-exclamation-circle me-1"></i>このフォルダには <strong id="folderDeleteTopicsCount"></strong> 件のトピックが含まれています。トピックはルートに移動されます。
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <button type="submit" class="btn btn-danger">削除</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openFolderRenameModal(folderId, folderName) {
+    document.getElementById('folderRenameInput').value = folderName;
+    document.getElementById('folderRenameForm').action = '/topic_folders/' + folderId;
+    var modal = new bootstrap.Modal(document.getElementById('folderRenameModal'));
+    modal.show();
+    setTimeout(function() { document.getElementById('folderRenameInput').select(); }, 300);
+  }
+
+  function openFolderDeleteModal(folderId, folderName, topicsCount) {
+    document.getElementById('folderDeleteName').textContent = folderName;
+    document.getElementById('folderDeleteForm').action = '/topic_folders/' + folderId;
+    var warning = document.getElementById('folderDeleteTopicsWarning');
+    if (topicsCount > 0) {
+      document.getElementById('folderDeleteTopicsCount').textContent = topicsCount;
+      warning.style.display = 'block';
+    } else {
+      warning.style.display = 'none';
+    }
+    var modal = new bootstrap.Modal(document.getElementById('folderDeleteModal'));
+    modal.show();
+  }
+</script>

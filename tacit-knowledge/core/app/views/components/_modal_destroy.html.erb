@@ -1,0 +1,21 @@
+<% options = local_assigns[:options] %>
+
+<div class="modal fade" id="<%= local_assigns[:modalId] %>" data-controller="modalDestroy" data-modalDestroy-target="modalDestroy" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="d-flex justify-content-center align-items-center flex-column">
+          <% if local_assigns[:icon].present? %>
+            <%= icon.html_safe %>
+          <% end %>
+          <div class="fs-20 text-center mb-4" data-modalDestroy-target="message"><%= local_assigns[:confirm] %></div>
+          <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+            <% options[:data][:modalDestroy_target] = "button" %>
+            <%= link_to options[:text], options[:href], method: options[:method], data: options[:data], class: options[:class] %>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

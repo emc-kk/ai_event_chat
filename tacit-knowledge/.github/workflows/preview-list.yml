@@ -1,0 +1,66 @@
+name: List Preview Environments
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-1
+  PROJECT_NAME: skillrelay
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::778389812638:role/${{ env.PROJECT_NAME }}-production-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: List preview environments
+        run: |
+          echo "## Preview Environments" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          STACKS=$(aws cloudformation list-stacks \
+            --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE UPDATE_ROLLBACK_COMPLETE \
+            --query "StackSummaries[?starts_with(StackName, '${{ env.PROJECT_NAME }}-mock-')].{Name:StackName,Status:StackStatus,Created:CreationTime,Updated:LastUpdatedTime}" \
+            --output json)
+
+          COUNT=$(echo "$STACKS" | jq length)
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "No preview environments found." >> $GITHUB_STEP_SUMMARY
+            echo "No preview environments found."
+            exit 0
+          fi
+
+          echo "| Slug | Core URL | AI Server URL | Status | Last Updated |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|----------|---------------|--------|--------------|" >> $GITHUB_STEP_SUMMARY
+
+          echo "$STACKS" | jq -r '.[].Name' | while read STACK_NAME; do
+            SLUG=$(echo "$STACK_NAME" | sed "s/${{ env.PROJECT_NAME }}-mock-//")
+
+            OUTPUTS=$(aws cloudformation describe-stacks \
+              --stack-name "$STACK_NAME" \
+              --query 'Stacks[0]' \
+              --output json)
+
+            CORE_URL=$(echo "$OUTPUTS" | jq -r '.Outputs[]? | select(.OutputKey=="CoreUrl") | .OutputValue // "-"')
+            AI_URL=$(echo "$OUTPUTS" | jq -r '.Outputs[]? | select(.OutputKey=="AIServerUrl") | .OutputValue // "-"')
+            STATUS=$(echo "$OUTPUTS" | jq -r '.StackStatus')
+            UPDATED=$(echo "$OUTPUTS" | jq -r '.LastUpdatedTime // .CreationTime' | cut -d'T' -f1)
+
+            [ -z "$CORE_URL" ] && CORE_URL="-"
+            [ -z "$AI_URL" ] && AI_URL="-"
+
+            echo "| ${SLUG} | https://${CORE_URL} | https://${AI_URL} | ${STATUS} | ${UPDATED} |" >> $GITHUB_STEP_SUMMARY
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total: ${COUNT} environment(s)**" >> $GITHUB_STEP_SUMMARY
+          echo "Found ${COUNT} preview environment(s)"

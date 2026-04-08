@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - SQS Queue'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+  
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+Resources:
+  # SQS Queue for Document Processing
+  DocumentProcessingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ProjectName}-${Environment}-document-processing
+      VisibilityTimeout: 300
+      MessageRetentionPeriod: 1209600
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DocumentProcessingDLQ.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Dead Letter Queue for Failed Messages
+  DocumentProcessingDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ProjectName}-${Environment}-document-processing-dlq
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  DocumentProcessingQueueUrl:
+    Description: URL of the Document Processing Queue
+    Value: !Ref DocumentProcessingQueue
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-document-processing-queue-url
+
+  DocumentProcessingQueueArn:
+    Description: ARN of the Document Processing Queue
+    Value: !GetAtt DocumentProcessingQueue.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-document-processing-queue-arn
+

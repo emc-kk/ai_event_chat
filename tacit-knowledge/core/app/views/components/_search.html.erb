@@ -1,0 +1,16 @@
+<%= search_form_for @q, url: dashboard_index_path, class: "my-5" do |f| %>
+  <div class="search-filters">
+    <div class="flex-grow-1">
+      <%= f.text_field :topic_name_cont, class: "form-control", placeholder: "キーワード検索..." %>
+    </div>
+    <% searching_fields.each do |field_name, field| %>
+      <div class="d-flex align-items-center gap-2">
+        <%= f.label field_name, "#{field[:label]}:", class: "text-muted flex-shrink-0" %>
+        <%= f.select field_name, options_for_select([["すべて", ""]] + field[:options], @q.send(field_name.to_sym)), {}, { class: "form-select w-100 flex-grow-1", onchange: "this.form.submit()" } %>
+      </div>
+    <% end %>
+    <% if current_admin? %>
+      <%= link_to "+ 新規ヒアリング依頼", new_request_path, class: "btn btn-secondary" %>
+    <% end%>
+  </div>
+<% end %>

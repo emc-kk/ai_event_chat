@@ -1,0 +1,81 @@
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+      <h4>SkillRelay</h4>
+  </div>
+  <div class="sidebar-body">
+    <ul class="sidebar-menu">
+      <li>
+        <%= link_to topics_path, class: active_class(topics_path) do %>
+          <i class="fa-solid fa-file"></i>
+          トピック管理
+        <% end %>
+      </li>
+      <% if current_admin? %>
+        <% if privileged_admin? %>
+          <li>
+            <%= link_to companies_path, class: active_class(companies_path) do %>
+              <i class="fa-solid fa-building"></i>
+              会社管理
+            <% end %>
+          </li>
+        <% end %>
+        <li>
+          <%= link_to admins_path, class: active_class(admins_path) do %>
+            <i class="fa-solid fa-user-shield"></i>
+            管理者管理
+          <% end %>
+        </li>
+        <li>
+          <%= link_to scraper_admin_index_path, class: active_class(scraper_admin_index_path) do %>
+            <i class="fa-solid fa-robot"></i>
+            スクレイパー管理
+          <% end %>
+        </li>
+      <% end %>
+      <% if admin_or_company_admin? %>
+        <li>
+          <%= link_to users_path, class: active_class(users_path) do %>
+            <i class="fa-solid fa-users"></i>
+            ユーザー管理
+          <% end %>
+        </li>
+        <li>
+          <%= link_to user_groups_path, class: active_class(user_groups_path) do %>
+            <i class="fa-solid fa-people-group"></i>
+            グループ管理
+          <% end %>
+        </li>
+      <% end %>
+      <% if current_company_id.present? || privileged_admin? %>
+        <li>
+          <%= link_to data_sources_path, class: active_class(data_sources_path) do %>
+            <i class="fa-solid fa-database"></i>
+            データソース管理
+          <% end %>
+        </li>
+      <% end %>
+      <% if user_can_edit_glossary? && current_company_id.present? %>
+        <li>
+          <%= link_to glossary_terms_path, class: active_class(glossary_terms_path) do %>
+            <i class="fa-solid fa-book"></i>
+            社内辞書
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+    <% if Rails.env.development? %>
+      <%= render "components/dev_user_switcher" %>
+    <% end %>
+  </div>
+  <div class="sidebar-footer">
+    <ul class="sidebar-menu">
+      <li class="logout-item">
+        <%= link_to logout_path,
+          data: {turbo_method: :delete, turbo_confirm: "ログアウトしますか？"} do %>
+          <i class="fa-solid fa-sign-out-alt"></i>
+          ログアウト
+        <% end %>
+      </li>
+    </ul>
+  </div>
+</div>

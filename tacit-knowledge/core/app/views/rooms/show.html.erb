@@ -1,0 +1,20 @@
+<% content_for :body_class, "rooms-show" %>
+<%= javascript_include_tag "react-app", "data-turbo-track": "reload", type: "module" %>
+
+<% case @room.chat_type %>
+<% when 'hearing' %>
+  <%= render "rooms/hearing_chat",
+             room: @room,
+             request_record: @request,
+             title: @title,
+             subtitle: @subtitle,
+             back_path: @back_path,
+             has_conflicts: @has_conflicts %>
+<% when 'topic' %>
+  <%= render "rooms/topic_chat",
+             room: @room,
+             title: @title,
+             subtitle: @subtitle,
+             back_path: @back_path,
+             completed_requests: @completed_requests %>
+<% end %>

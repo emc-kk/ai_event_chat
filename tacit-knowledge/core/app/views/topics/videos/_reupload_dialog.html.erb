@@ -1,0 +1,87 @@
+<div class="modal fade"
+     id="videoUploadModal"
+     tabindex="-1"
+     aria-labelledby="videoUploadModalLabel"
+     aria-hidden="true"
+     data-controller="manual-video-upload"
+     data-manual-video-upload-max-size-value="<%= 500.megabytes %>"
+     data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content manual-video-upload-modal">
+      <div class="modal-header">
+        <h5 class="modal-title" id="videoUploadModalLabel">動画の登録・変更</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+      </div>
+      <div class="modal-body">
+        <%= form_with url: topic_manual_video_path(topic_id: params[:topic_id], manual_id: params[:manual_id], id: params[:id]),
+                      method: :put,
+                      multipart: true,
+                      data: {
+                        manual_video_upload_target: 'form',
+                        action: 'submit->manual-video-upload#validateBeforeSubmit'
+                      } do |f| %>
+
+          <%# ドロップゾーン %>
+          <div class="upload-dropzone"
+               data-manual-video-upload-target="dropzone"
+               data-action="click->manual-video-upload#openFileDialog
+                            dragover->manual-video-upload#dragOver
+                            dragleave->manual-video-upload#dragLeave
+                            drop->manual-video-upload#drop">
+            <div class="upload-dropzone__icon">
+              <%= content_tag :svg, xmlns: 'http://www.w3.org/2000/svg',
+                              width: '48', height: '48', fill: 'currentColor', viewBox: '0 0 16 16' do %>
+                <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3H14.5a2 2 0 0 1 2 2v1.5H.54z"/>
+                <path d="M.54 5.5H16.5v7.5a2 2 0 0 1-2 2H2.5a2 2 0 0 1-2-2V5.5z"/>
+              <% end %>
+            </div>
+            <div class="upload-dropzone__text">ファイルをドラッグ＆ドロップ</div>
+            <div class="upload-dropzone__hint">MP4, MOV など（最大500MB）</div>
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    data-action="click->manual-video-upload#openFileDialog:stop">
+              またはファイルを選択する
+            </button>
+          </div>
+
+          <%= f.file_field :file,
+                           name: 'video[file]',
+                           accept: 'video/*',
+                           class: 'd-none',
+                           data: {
+                             manual_video_upload_target: 'fileInput',
+                             action: 'change->manual-video-upload#fileSelected'
+                           } %>
+
+          <%# 選択されたファイル情報 %>
+          <div class="selected-file-info"
+               data-manual-video-upload-target="fileInfo"
+               hidden>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <strong data-manual-video-upload-target="fileName"></strong>
+                <span class="text-muted ms-2" data-manual-video-upload-target="fileSize"></span>
+              </div>
+              <button type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      data-action="click->manual-video-upload#removeFile">
+                削除
+              </button>
+            </div>
+          </div>
+
+          <%# アップロードボタン %>
+          <%= f.submit 'アップロードを実行する',
+                       class: 'btn btn-primary w-100 mt-3',
+                       data: { manual_video_upload_target: 'submitBtn' },
+                       disabled: true %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# ローディング %>
+  <div class="loading" data-manual-video-upload-target="loading" hidden>
+    <div class="spinner"></div>
+  </div>
+</div>

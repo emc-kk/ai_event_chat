@@ -1,0 +1,96 @@
+<div class="col-md-10 p-4 p-lg-5 w-100 pt-lg-0">
+  <%= render "topic_folders/breadcrumb" %>
+  <%# TODO: ヘッダーに企業管理者が使える機能追加が必要だが、とりあえずいったんコメントアウト %>
+  <%#= render "topics/table/header_menu" %>
+  <div class="table-container"
+       data-controller="request-polling"
+       data-request-polling-has-updating-value="<%= @has_updating_requests %>"
+       data-request-polling-request-ids-value="<%= @updating_request_ids.to_json %>">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>&nbsp;</th>
+          <th>トピックチャット</th>
+          <th>トピック</th>
+          <th>ヒアリング名</th>
+          <th>トピックステータス</th>
+          <% if privileged_admin? || !current_user&.role_general? %>
+            <%# システム管理者 or 企業管理者/熟練者 のみアクセス可能 %>
+            <th>ヒアリング用チャットボット</th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @requests&.any? %>
+          <% @requests.each do |request| %>
+            <tr>
+              <td class="text-center">
+                <% if request.topic.icon_color %>
+                  <%= image_tag("topic-icon/#{request.topic.icon_color}", style: "width: 50px; height: 50px;") %>
+                <% else %>
+                  &nbsp;
+                <% end %>
+              </td>
+              <td class="text-center">
+                <%# トピックチャット %>
+                <% if request.topic.chat_accessible? %>
+                  <% topic_chat_path = latest_room_path(request.topic, 'topic') || chat_topic_path(request.topic) %>
+                  <%= link_to topic_chat_path, class: "text-primary", title: "トピックチャット" do %>
+                    <i class="bi bi-chat-square-text fs-5"></i>
+                  <% end %>
+                <% else %>
+                  <i class="bi bi-chat-square-text fs-5 text-muted" title="トピックが完了状態でないとアクセスできません"></i>
+                <% end %>
+              </td>
+              <td>
+                <%# トピック %>
+                <%= request.topic.name %>
+              </td>
+              <td class="m-0">
+                <%# ヒアリング名 %>
+                <% if request.name.present? %>
+                  <div><%= link_to truncate(request.name, length: 30), request_path(request), class: "text-primary" %></div>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td data-topic-status-id="<%= request.topic_id %>">
+                <%# トピックステータス %>
+                <span class="status-badge status-<%= request.topic.status.gsub("_", "-") %>"><%= t("activerecord.attributes.topic.statuses.#{request.topic.status}") %></span>
+              </td>
+              <% if privileged_admin? || !current_user&.role_general? %>
+                <td data-hearing-request-id="<%= request.id %>">
+                  <%# ヒアリング用チャットボット %>
+                  <% if !current_user.role_company_admin? && request.respondent_id != current_user.id %>
+                    -
+                  <% elsif can_access_chat?(request, 'hearing') %>
+                    <% hearing_path = latest_room_path(request, 'hearing') || hearing_request_path(request) %>
+                    <%= link_to hearing_path, class: "text-primary", title: "ヒアリング用チャットボット" do %>
+                      <i class="bi bi-chat-dots fs-5"></i>
+                    <% end %>
+                  <% else %>
+                    <i class="bi bi-chat-dots fs-5 text-muted" title="このステータスではアクセスできません"></i>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bi bi-inbox fa-2x mb-2"></i><br>
+              データがありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-end mt-4">
+    <% if @requests.present? %>
+      <%= paginate @requests %>
+    <% end %>
+  </div>
+</div>
+<%= render "topic_folders/new_folder_modal" %>
+<%= render "topic_folders/folder_modals" %>

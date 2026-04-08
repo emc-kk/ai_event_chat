@@ -1,0 +1,17 @@
+<% if topic.manual.present? %>
+  <% if topic.manual.request.status_completed? %>
+    <%= link_to 'マニュアル詳細', topic_manual_path(topic_id: topic.id, id: topic.manual.id) %>
+  <% else %>
+    <%# NOTE: ポーリングしてリンクに更新する %>
+    <span data-manual-request-id="<%= topic.manual.request.id %>"
+          data-manual-url="<%= topic_manual_path(topic_id: topic.id, id: topic.manual.id) %>">
+      マニュアル作成中
+    </span>
+  <% end %>
+<% else %>
+  <% if admin_or_company_admin? || topic.editable_by?(current_user, session[:user_type]) %>
+    <%= link_to 'マニュアル作成', new_topic_manual_path(topic_id: topic.id) %>
+  <% else %>
+    <span class="text-muted">-</span>
+  <% end %>
+<% end %>

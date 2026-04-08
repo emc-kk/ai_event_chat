@@ -1,0 +1,35 @@
+<%= form_with(model: company, local: true, class: "needs-validation", html: { novalidate: true },
+    data: { controller: "bootstrap-validation", action: "submit->bootstrap-validation#validate", turbo: false }) do |form| %>
+  <% if company.errors.any? %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% company.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :name, "会社名", class: "form-label fw-bold required" %>
+    <%= form.text_field :name, class: "form-control #{'is-invalid' if company.errors[:name].present? }", placeholder: "会社名を入力してください", required: true %>
+    <div class="invalid-feedback">
+      会社名を入力してください。
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :description, "説明", class: "form-label fw-bold" %>
+    <%= form.text_area :description, class: "form-control #{'border-danger' if company.errors[:description].present? }", rows: 4, placeholder: "会社の説明を入力してください" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :status, "ステータス", class: "form-label fw-bold" %>
+    <%= form.select :status, [["有効", "active"], ["無効", "inactive"]], {}, class: "form-select" %>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <%= link_to "キャンセル", companies_path, class: "btn btn-secondary" %>
+    <%= form.submit (company.new_record? ? "登録" : "更新"), class: "btn btn-primary" %>
+  </div>
+<% end %>

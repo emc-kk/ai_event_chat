@@ -1,0 +1,52 @@
+// 全体で使用できる共通スタイル
+$hr-color: #D0D0D0;
+$font-color: #171E2B;
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  color: $font-color;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 20px;
+  letter-spacing: 0%;
+}
+
+.vertical-hr {
+  border: 0;
+  border-left: 1px solid $hr-color;
+  height: 40px;
+  content: " ";
+  margin: 0 60px;
+
+  &.sm {
+    height: 24px;
+    margin: 0 20px;
+  }
+}
+
+.back-btn {
+  text-decoration: none;
+
+  display: flex;
+  align-items: center;
+
+  .back-btn-icon {
+    margin-right: 16px;
+  }
+
+  .back-btn-text {
+    color: $font-color;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 20px;
+    letter-spacing: 0;
+  }
+}

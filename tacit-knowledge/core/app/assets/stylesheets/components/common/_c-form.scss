@@ -1,0 +1,102 @@
+.c-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__block {
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    &-label {
+      width: 160px;
+      flex: 0 0 auto;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: calc(20 / 14);
+      padding-top: 0.625rem;
+      padding-bottom: 0.625rem;
+      color: #171E2B;
+      align-items: center;
+      display: flex;
+    }
+
+    &-field {
+      display: flex;
+      align-items: center;
+      flex: 1 1 auto;
+      
+      input[type="text"],
+      input[type="number"],
+      input[type="email"],
+      input[type="password"],
+      select,
+      textarea {
+        border: 1px solid #CACACA;
+        background: #fff;
+        border-radius: 6px;
+        width: 100%;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: calc(20 / 14);
+        color: #171E2B;
+        padding: 10px 16px;
+      }
+      textarea {
+        min-height: 92px;
+      }
+      select {
+        background: #fff url(common/icon-select.svg) no-repeat right 16px center / 6px auto;
+        appearance: none;
+      }
+
+      &.--md {
+        max-width: 425px;
+      }
+    }
+  }
+
+  &__file {
+    display: flex;
+    flex-direction: column;
+
+    &-button {
+      max-width: 160px;
+      width: 100%;
+      padding: 8px 16px;
+      text-align: center;
+      background: #F3F3F3;
+      border: 1px solid #CACACA;
+      border-radius: 6px;
+      transition: 0.3s ease-out;
+      transition-property: opacity;
+      cursor: pointer;
+
+      input[type="file"] {
+        display: none;
+      }
+    }
+
+    &-buttonText {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: calc(24 / 14);
+      color: #171E2B;
+      text-decoration: none;
+    }
+
+    &-name {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: calc(24 / 14);
+      color: #171E2B;
+      padding-bottom: 12px;
+    }
+
+    &-text {
+      padding-top: 8px;
+      font-size: 12px;
+      font-weight: 400;
+    }
+  }
+}

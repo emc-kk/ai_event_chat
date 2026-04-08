@@ -1,0 +1,181 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - Scraper Coordinator (Lambda + EventBridge + SSH Push)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+  BootstrapToken:
+    Type: String
+    NoEcho: true
+    Description: Bootstrap token for agent registration (stored in SSM)
+
+  DispatchIntervalMinutes:
+    Type: Number
+    Default: 1
+    Description: How often the coordinator runs (in minutes)
+
+Resources:
+  # -------------------------------------------------------
+  # IAM Role for Lambda
+  # -------------------------------------------------------
+  CoordinatorLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Environment}-scraper-coordinator-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: '*'
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${ProjectName}/${Environment}/scraper-*
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:GetParametersByPath
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+        - PolicyName: EC2DescribeAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                Resource: '*'
+        - PolicyName: STSAssumeRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-scraper-*
+
+  # -------------------------------------------------------
+  # Lambda Function
+  # -------------------------------------------------------
+  CoordinatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-scraper-coordinator
+      Description: SSH Push coordinator for distributed scraping
+      Runtime: python3.11
+      Handler: handler.lambda_handler
+      Code:
+        S3Bucket: !Sub ${ProjectName}-${Environment}-datasource
+        S3Key: coordinator/coordinator.zip
+      Timeout: 900
+      MemorySize: 256
+      Role: !GetAtt CoordinatorLambdaRole.Arn
+      Environment:
+        Variables:
+          POSTGRES_HOST:
+            Fn::ImportValue: !Sub ${ProjectName}-${Environment}-db-endpoint
+          POSTGRES_PORT: '5432'
+          POSTGRES_USER: postgres
+          POSTGRES_DB: !Sub ${ProjectName}_${Environment}
+          SSM_PASSWORD_PATH: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+          MAX_TASKS_PER_INVOCATION: '10'
+          SSH_TIMEOUT: '10'
+          TASK_TIMEOUT: '300'
+          MAX_TASK_ATTEMPTS: '3'
+          TASK_STALE_THRESHOLD_MINUTES: '30'
+
+  # -------------------------------------------------------
+  # EventBridge Rule (cron trigger)
+  # -------------------------------------------------------
+  DispatchSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-dispatch
+      Description: Triggers scraper coordinator every N minutes
+      ScheduleExpression: !Sub rate(${DispatchIntervalMinutes} minute)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt CoordinatorFunction.Arn
+          Id: ScraperCoordinatorTarget
+
+  SchedulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CoordinatorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DispatchSchedule.Arn
+
+  # -------------------------------------------------------
+  # Secrets Manager (SSH key placeholder)
+  # -------------------------------------------------------
+  SSHKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${ProjectName}/${Environment}/scraper-ssh-default-key
+      Description: Default SSH private key for scraper target instances
+      SecretString: 'PLACEHOLDER - Replace with actual SSH private key PEM'
+
+  # -------------------------------------------------------
+  # SSM Parameters
+  # -------------------------------------------------------
+  CoordinatorFunctionArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${ProjectName}/${Environment}/scraper-coordinator-function-arn
+      Type: String
+      Value: !GetAtt CoordinatorFunction.Arn
+
+Outputs:
+  CoordinatorFunctionArn:
+    Description: Coordinator Lambda ARN
+    Value: !GetAtt CoordinatorFunction.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-coordinator-arn
+
+  CoordinatorFunctionName:
+    Description: Coordinator Lambda function name
+    Value: !Ref CoordinatorFunction
+
+  SSHKeySecretArn:
+    Description: SSH key secret ARN (update with real key)
+    Value: !Ref SSHKeySecret
+
+  DispatchScheduleArn:
+    Description: EventBridge schedule ARN
+    Value: !GetAtt DispatchSchedule.Arn

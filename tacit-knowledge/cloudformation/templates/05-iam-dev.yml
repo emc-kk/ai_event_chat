@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - IAM Roles and Users for Local Development'
+
+Resources:
+  # IAM Role for Local Development
+  SkillRelayDevRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: skillrelay-dev-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - arn:aws:s3:::skill-relay-dev
+                  - arn:aws:s3:::skill-relay-dev/*
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:ListQueues
+                Resource:
+                  - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:skillrelay-development-*
+
+  # IAM User for Local Development
+  SkillRelayDevUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: skillrelay-dev-user
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - arn:aws:s3:::skill-relay-dev
+                  - arn:aws:s3:::skill-relay-dev/*
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:GetQueueUrl
+                  - sqs:ListQueues
+                Resource:
+                  - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:skillrelay-development-*
+        - PolicyName: AssumeDevRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !GetAtt SkillRelayDevRole.Arn
+
+Outputs:
+  SkillRelayDevRoleArn:
+    Description: SkillRelay Dev Role ARN for local development
+    Value: !GetAtt SkillRelayDevRole.Arn
+    Export:
+      Name: skillrelay-dev-role-arn
+
+  SkillRelayDevUserArn:
+    Description: SkillRelay Dev User ARN for local development
+    Value: !GetAtt SkillRelayDevUser.Arn
+    Export:
+      Name: skillrelay-dev-user-arn

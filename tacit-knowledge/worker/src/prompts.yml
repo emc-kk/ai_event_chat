@@ -1,0 +1,416 @@
+vision:
+  pdf_page: |
+    This image is a page from a document. Please transcribe all text within the image.
+
+    Extraction targets: titles, headings, body text, table contents, figure labels, annotations, footnotes, page numbers
+
+    Extract all actual text written, not summaries.
+  image: |
+    Describe the contents of this image and extract any text if present.
+
+plan:
+  generation:
+    initial: |
+      Generate a hearing plan to extract tacit knowledge from experts using counterfactual questioning techniques.
+
+      ## Input Information
+      - **Hearing Name**: {request_name}
+      - **Overview**: {request_description}
+      - **Topic**: {topic_name} - {topic_description}
+
+      ## Provided Documents
+      {document_content}
+
+      ## Counterfactual Questioning Strategy
+
+      Use counterfactual (hypothetical/what-if) questions to reveal tacit knowledge that experts don't consciously recognize.
+      By presenting alternative scenarios, experts are forced to articulate the reasons behind their usual practices.
+
+      ### 1. Absence Counterfactuals - "What if X didn't exist/wasn't available?"
+      These questions reveal dependencies and critical elements by imagining their absence.
+      - "If you couldn't use [tool/resource], how would you proceed?"
+      - "What would happen if [standard step] was skipped?"
+      - "If [key information] wasn't available, what would you do instead?"
+      - "How did people handle this before [current method] existed?"
+
+      ### 2. Reversal Counterfactuals - "What if the opposite were true?"
+      These questions expose hidden assumptions and boundary conditions.
+      - "What if [common condition] was reversed? How would your approach change?"
+      - "If [typical constraint] didn't apply, would you do things differently?"
+      - "What would break if you did the exact opposite of what you normally do?"
+
+      ### 3. Extreme Scenario Counterfactuals - "What if conditions were extreme?"
+      These questions reveal adaptive strategies and priority hierarchies.
+      - "If you only had half the usual time, what would you prioritize?"
+      - "If resources were unlimited, what would you do differently?"
+      - "What's the minimum viable version of this process?"
+      - "What would you do if this had to be done by someone with no experience?"
+
+      ### 4. Failure Counterfactuals - "What if things went wrong?"
+      These questions uncover risk awareness and recovery strategies.
+      - "What's the worst that could happen if [step] fails? How would you recover?"
+      - "If you had to redo this from the beginning, what would you change?"
+      - "What mistakes did you make when learning this? How did you overcome them?"
+      - "What warning signs indicate something is about to go wrong?"
+
+      ### 5. Alternative Path Counterfactuals - "What if you chose differently?"
+      These questions reveal decision criteria and trade-off reasoning.
+      - "Why didn't you choose [alternative approach]? What made you reject it?"
+      - "Are there situations where [your usual method] wouldn't work?"
+      - "If someone suggested [different approach], what would be your concerns?"
+      - "What would need to change for you to switch to a different method?"
+
+      ### 6. Temporal Counterfactuals - "What if the timing was different?"
+      These questions expose sequence dependencies and timing criticality.
+      - "What if you did [step B] before [step A]? What would happen?"
+      - "When is it too late to [action]? How do you know?"
+      - "What would change if you had to do this much earlier/later?"
+
+      ## Multi-Scenario Depth Strategy
+
+      For each hypothesis, generate multiple scenario combinations to extract richer tacit knowledge.
+      Combine the base counterfactual with different constraint dimensions:
+
+      ### Constraint Dimensions for Scenario Combinations
+
+      **1. Resource Constraints**
+      - Limited budget
+      - Missing tools or software
+      - Reduced personnel/team size
+
+      **2. Time Constraints**
+      - Urgent deadlines
+      - Compressed schedules
+      - Long-term vs short-term trade-offs
+
+      **3. Skill/Experience Constraints**
+      - Novice team members
+      - Cross-functional handoffs
+      - Knowledge transfer scenarios
+
+      **4. Environmental Constraints**
+      - Remote work limitations
+      - System outages
+      - Communication barriers
+
+      **5. Scope Constraints**
+      - Partial requirements
+      - MVP/minimum viable approach
+      - Scalability concerns
+
+      ### Multi-Scenario Question Format
+
+      For each hypothesis, generate 2-3 scenario combinations using this structure:
+
+      ```
+      ## Hypothesis N: [Hypothesis Title]
+      **Base Counterfactual Type**: [Which of the 6 types]
+      **Target Knowledge**: [What tacit knowledge this aims to extract]
+
+      ### Scenario N-1: Base Scenario
+      [Base counterfactual question]
+
+      ### Scenario N-2: + Time Constraint
+      [Base question + "What if time was also limited?"]
+
+      ### Scenario N-3: + Skill Constraint
+      [Base question + "What if only inexperienced members were available?"]
+      ```
+
+      ## Question Generation Guidelines
+
+      1. **Analyze the provided documents** to identify:
+         - Key procedures and their steps
+         - Tools, resources, and dependencies
+         - Decision points and criteria
+         - Common conditions and constraints
+
+      2. **Generate hypothesis-based questions** that:
+         - Reference concrete elements from the documents
+         - Challenge the implicit "why" behind documented practices
+         - Explore edge cases not covered in the documents
+         - Reveal tacit criteria for success/failure
+
+      3. **Apply scenario combinations** that:
+         - Add realistic constraint dimensions to base hypotheses
+         - Reveal priority hierarchies and trade-off reasoning
+         - Expose different decision paths for different situations
+         - Avoid redundant or overly similar combinations
+
+      4. **Structure questions to build understanding**:
+         - Start with absence counterfactuals (foundational dependencies)
+         - Progress to reversal and extreme scenarios (boundaries and priorities)
+         - End with failure and alternative path questions (deep expertise)
+
+      ## Output Requirements
+      - Generate 8-12 hypotheses based on the documents
+      - Each hypothesis should have 2-3 scenario combinations using the multi-scenario format above
+      - Group hypotheses by the type of tacit knowledge they aim to extract
+      - Include brief rationale for why each hypothesis is valuable
+      - Structure in Markdown format with clear headings using the multi-scenario format
+      - Output in Japanese
+
+      Output only the hearing plan content.
+    rehearing: |
+      Generate a re-hearing plan using counterfactual questioning to deepen tacit knowledge extraction.
+
+      ## Input Information
+      - **Hearing Name**: {request_name}
+      - **Overview**: {request_description}
+      - **Topic**: {topic_name} - {topic_description}
+
+      ## Previous Hearing Plans
+      {previous_plans}
+
+      ## QA from Previous Hearings
+      {previous_qa}
+
+      ## Comments (Areas to Focus On)
+      {new_comment}
+
+      ## Counterfactual Deep-Dive Strategy
+
+      Based on previous answers, use counterfactual questions to extract deeper tacit knowledge:
+
+      ### 1. Challenge Stated Reasons
+      When an expert explained "why" in previous answers, probe deeper:
+      - "You mentioned doing X because of Y. What if Y wasn't a factor - would you still do X?"
+      - "If [stated reason] didn't apply, what other reasons would justify this approach?"
+
+      ### 2. Explore Unstated Boundaries
+      When an expert described a process, explore its limits:
+      - "You described [process]. At what point would this approach break down?"
+      - "What conditions would make you abandon [mentioned method] entirely?"
+
+      ### 3. Examine Alternative Histories
+      When an expert shared a decision or experience:
+      - "Looking back, if you had chosen [alternative], how might things have turned out?"
+      - "What would have to be different for [rejected option] to be the better choice?"
+
+      ### 4. Probe Implicit Dependencies
+      When an expert mentioned tools, resources, or conditions:
+      - "You relied on [resource/tool]. What would you do if it suddenly became unavailable?"
+      - "How much of your success depends on [mentioned factor]?"
+
+      ### 5. Test Generalizability
+      When an expert gave specific examples:
+      - "Would your approach change if [specific detail] was different?"
+      - "Does this apply to [related but different scenario]?"
+
+      ## Multi-Scenario Depth Strategy
+
+      Based on previous answers, identify gaps and generate deeper scenario combinations:
+
+      ### 1. Unexplored Constraint Combinations
+      From previous answers, find which constraint dimensions were NOT explored:
+      - If time constraint was discussed, add skill or resource constraints
+      - If resources were discussed, add time or environment constraints
+      - Generate combined scenarios: "What if [X] AND [Y] happened together?"
+
+      ### 2. Conditional Dependencies
+      When expert gave conditional answers like "it depends on the situation":
+      - Create specific scenario combinations to clarify the conditions
+      - Ask: "About that 'situation' - specifically, what if [condition A] AND [condition B]?"
+
+      ### 3. Trade-off Clarification
+      When expert mentioned trade-offs:
+      - Explore the boundaries: "How far is acceptable? What if [additional constraint] was added?"
+      - Probe the decision criteria: "What criteria do you use for that judgment?"
+
+      ### 4. Cross-Hypothesis Scenarios
+      Combine insights from different hypotheses:
+      - "Combining what you said about [topic A] and [topic B], what if both constraints existed?"
+      - Create compound scenarios that reveal deeper interaction patterns
+
+      ### Multi-Scenario Question Format
+
+      For each hypothesis, generate 2-3 scenario combinations using this structure:
+
+      ```
+      ## Hypothesis N: [Hypothesis Title]
+      **Deep-Dive Target**: [Previous answer or statement to challenge]
+      **Target Knowledge**: [What deeper tacit knowledge this aims to extract]
+
+      ### Scenario N-1: Adding Unexplored Constraint
+      [Previous context + new constraint dimension]
+
+      ### Scenario N-2: Compound Scenario
+      [Multiple constraints combined]
+
+      ### Scenario N-3: Cross-Hypothesis
+      [Combining insights from different hypotheses]
+      ```
+
+      ## Requirements
+      - **Prioritize exploring areas mentioned in comments**
+      - Never repeat questions or scenarios that have already been explored
+      - Build counterfactual questions directly from previous answers
+      - Each hypothesis should challenge or extend what was previously stated
+      - Generate 6-10 new hypotheses with multi-scenario depth
+      - Each hypothesis should have 2-3 scenario combinations
+      - Focus on unexplored constraint combinations from previous hearings
+      - Include rationale for why each hypothesis will reveal deeper knowledge
+      - Structure in Markdown format using the multi-scenario format above
+      - Output in Japanese
+
+      Output only the hearing plan content.
+
+manual:
+  generation:
+    prompt: |
+      Generate a business operations manual based on the provided materials.
+
+      **IMPORTANT: Output must be in Japanese.**
+
+      ## Topic Information
+      - Topic Name: {topic_name}
+      - Description: {topic_description}
+
+      ## Uploaded Documents
+      {document_content}
+
+      ## Meeting Notes / Procedure Information
+      {input_text}
+
+      ## Instructions
+      Based on the documents and meeting notes above, create a business operations manual with the following structure:
+
+      1. **Document Structure**
+         - Purpose and Overview
+         - Prerequisites and Required Materials
+         - Procedures (numbered steps)
+         - Notes and Key Points
+         - Troubleshooting (if applicable)
+         - References (list of cited sources)
+
+      2. **Writing Guidelines**
+         - Output in Markdown format
+         - Use numbered lists for procedures
+         - Highlight important notes with bold or emphasis
+         - Add explanations for technical terms when necessary
+
+      3. **Source Conflict Handling**
+         When information from different sources (uploaded files, video transcriptions, meeting notes) is consistent, simply merge them into a unified description WITHOUT any source attribution.
+
+         However, when information CONFLICTS between sources, you MUST:
+            - Do NOT silently discard either version
+            - Present both versions explicitly, each clearly tagged with its source
+            - Use the following source labels:
+              - Video/audio transcriptions → `（動画: ファイル名.mp4）`
+              - Uploaded files → `（ファイル名.xlsx）` etc.
+              - Meeting notes / input text → `（ヒアリング記録）`
+              - Existing manual content → `（既存マニュアル）`
+            - For significant conflicts, separate into labeled blocks:
+              ```
+              **〇〇.xlsx による手順:**
+              1. ...
+
+              **動画（△△.mp4）による手順:**
+              1. ...
+              ```
+            - For minor differences, note inline:
+              `〇〇は3日以内に実施する（※〇〇.xlsx）。なお、動画（△△.mp4）では5日以内と説明されている。`
+
+         At the end of the manual, include a "## 参考資料" section listing all source materials used.
+
+      4. **Quality Standards**
+         - Clear descriptions that beginners can understand
+         - Complete procedures without missing steps
+         - Practical content usable in real work
+         - All sources should be represented — do not omit content from any provided material
+
+      Output only the manual content in Japanese, without any preamble or explanation.
+
+  chapter_generation:
+    prompt: |
+      Analyze the following video/audio transcription and divide it into meaningful chapters (sections).
+
+      **IMPORTANT: Output title and description must be in Japanese.**
+
+      ## Transcription Data
+      {transcription_text}
+
+      ## Rules
+      - Divide chapters at natural content boundaries
+      - Each chapter should be approximately 20 seconds to 3 minutes
+      - title should be concise (within 20 characters in Japanese)
+      - description should be a summary of the content (within 100 characters in Japanese)
+      - start_second and end_second should be based on transcription timestamps
+      - Adjacent chapters should be continuous (no gaps)
+      - sequence should be assigned starting from 1
+
+      {schema_description}
+
+    schema_description: |
+      ## Output Format
+      Output according to the following JSON schema:
+      {response_schema}
+
+qa_optimization:
+  generation:
+    prompt: |
+      Generate search-optimized QA data from hearing conversation history.
+
+      ## Purpose
+      Analyze conversation history and convert to QA pairs in a format that's easy to search later.
+
+      ## Input Data
+      {qa_pairs}
+
+      ## Output Requirements
+      Generate the following for each QA pair:
+
+      1. **question**: Question organized in a searchable format
+         - Maintain the intent of the original question while making it clear and searchable
+         - Separate into different rows if there are multiple situation patterns
+
+      2. **keyword_category**: Related keywords (comma-separated)
+
+      3. **question_intent**: Type of question
+         - Specification confirmation / Troubleshooting / Operation method / Configuration method / Improvement request, etc.
+
+      4. **related_situation**: Situation or context where the question arises
+
+      5. **answer**: The original answer text as-is
+         - **CRITICAL: Preserve the original answer verbatim. Do NOT rephrase, expand, elaborate, add details, or restructure the answer.**
+         - Copy the answer exactly as it appears in the conversation. Only minimal formatting cleanup (e.g., fixing typos) is allowed.
+         - Do NOT add bullet points, numbered lists, or sub-sections that were not in the original answer.
+         - Do NOT add technical details, explanations, or context that the respondent did not explicitly state.
+
+      {schema_description}
+    schema_description: |
+      Output in JSON format:
+      {response_schema}
+
+      - If multiple situation patterns are extracted from one conversation, output as separate rows
+      - Apply consistent classification to similar questions
+      - CRITICAL: The "answer" field must preserve the original respondent's answer verbatim. Never expand or elaborate on it.
+  update:
+    prompt: |
+      Add new conversation history to existing QA data.
+
+      ## Existing QA Data
+      {existing_chart_rows}
+
+      ## New Conversation History
+      {new_qa_pairs}
+
+      ## Output Requirements
+      - Keep existing data as-is unless it duplicates
+      - Add QA extracted from new conversations
+      - Maintain existing classification system
+
+      Format for each QA pair:
+      1. **question**: Question organized in a searchable format
+      2. **keyword_category**: Related keywords (comma-separated)
+      3. **question_intent**: Type of question
+      4. **related_situation**: Situation or context where the question arises
+      5. **answer**: The original answer text as-is (NEVER rephrase, expand, or elaborate — preserve verbatim)
+
+      {schema_description}
+    schema_description: |
+      Output in JSON format:
+      {response_schema}
+
+      - Include both existing rows and new rows
+      - Merge or update duplicates

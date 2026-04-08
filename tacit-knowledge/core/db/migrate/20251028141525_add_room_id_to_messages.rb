@@ -1,0 +1,5 @@
+class AddRoomIdToMessages < ActiveRecord::Migration[8.0]
+  def change
+    add_column :messages, :room_id, :string
+  end
+end

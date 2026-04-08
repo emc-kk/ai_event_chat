@@ -38,8 +38,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_28_000000) do
     t.index ["completion_time"], name: "index_quiz_results_on_completion_time"
     t.index ["correct_count"], name: "index_quiz_results_on_correct_count"
     t.index ["email"], name: "index_quiz_results_on_email"
+    t.index ["quiz", "score"], name: "index_quiz_results_on_quiz_and_score", order: { score: :desc }
     t.index ["quiz"], name: "index_quiz_results_on_quiz"
-    t.index ["score"], name: "index_quiz_results_on_score"
   end
 
 end

@@ -1,0 +1,66 @@
+<%= form_with(model: @request, local: true, class: "needs-validation", novalidate: true, data: { turbo: false }) do |f| %>
+  <% if @request.errors.any? %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% @request.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :topic_id, "トピックの選択", class: "form-label fw-bold required" %>
+    <%= f.select :topic_id, options_for_select(@topics, @request.topic_id), {}, class: "form-select", placeholder: "ヒアリングしたい業務やノウハウの名称" %>
+    <div class="invalid-feedback">
+      トピックを選択してください。
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :respondent_id, "熟練者の選択", class: "form-label fw-bold required" %>
+    <%= f.select :respondent_id, options_for_select(@respondents, @request.respondent_id), {}, class: "form-select", placeholder: "このトピックについて、熟練者に最初に投げかける質問を入力します。" %>
+    <div class="invalid-feedback">
+      熟練者を選択してください。
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :name, "ヒアリング名", class: "form-label fw-bold required" %>
+    <%= f.text_field :name, class: "form-control", placeholder: "ヒアリング名を入力" %>
+    <div class="invalid-feedback">
+      ヒアリング名を入力してください。
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :description, "概要", class: "form-label fw-bold" %>
+    <%= f.text_area :description, class: "form-control", rows: 3, placeholder: "概要を入力" %>
+  </div>
+
+  <div class="mb-3">
+    <%= render "shared/data_source_picker" %>
+  </div>
+
+  <% if @request.persisted? && @request.request_documents.any? %>
+    <div class="mb-3">
+      <small class="text-muted">既存の添付ファイル（レガシー）:</small>
+      <div class="existing-file-list">
+        <% @request.request_documents.each do |document| %>
+          <div class="existing-file-item d-flex align-items-center justify-content-between border rounded p-2 mb-1 bg-light">
+            <div class="file-info d-flex align-items-center">
+              <i class="bi bi-file-earmark me-2"></i>
+              <span class="file-name"><%= File.basename(document.key) %></span>
+            </div>
+            <%= link_to "削除", remove_document_request_path(@request, document_id: document.id), method: :delete, class: "btn btn-sm btn-outline-danger", data: { turbo_method: :delete, turbo: true, turbo_confirm: "本当に削除しますか？" } %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <%= link_to "キャンセル", topics_path, class: "btn btn-secondary" %>
+    <%= f.submit (@request.new_record? ? "作成" : "更新"), class: "btn btn-primary", id: "submit-button" %>
+  </div>
+<% end %>

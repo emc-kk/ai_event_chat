@@ -1,0 +1,67 @@
+# JEPX スポット市場価格
+# 現在年度 + 前年度のCSVデータを日次/週次で取得
+
+jobs:
+  - id: fuji-jepx-spot-current
+    name: "JEPX スポット市場価格（当年度）"
+    description: "JEPXスポット市場のシステムプライスおよびエリアプライスを日次取得"
+    status: active
+    source:
+      type: csv_download
+      url: https://www.jepx.jp/_download.php
+      method: post
+      form_data:
+        dir: spot_summary
+        file: "spot_summary_{current_fy}.csv"  # sync_jobs.py が動的置換
+      encoding: shift_jis
+    extraction:
+      columns:
+        - { source: "受渡日", name: delivery_date, type: text }
+        - { source: "時刻コード", name: time_code, type: number }
+        - { source: "システムプライス", name: system_price, type: number }
+        - { source: "エリアプライス北海道", name: hokkaido_price, type: number }
+        - { source: "エリアプライス東北", name: tohoku_price, type: number }
+        - { source: "エリアプライス東京", name: tokyo_price, type: number }
+        - { source: "エリアプライス中部", name: chubu_price, type: number }
+        - { source: "エリアプライス北陸", name: hokuriku_price, type: number }
+        - { source: "エリアプライス関西", name: kansai_price, type: number }
+        - { source: "エリアプライス中国", name: chugoku_price, type: number }
+        - { source: "エリアプライス四国", name: shikoku_price, type: number }
+        - { source: "エリアプライス九州", name: kyushu_price, type: number }
+    schedule:
+      cron: "0 23,11 * * *"  # JST 8:00, 20:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60
+
+  - id: fuji-jepx-spot-previous
+    name: "JEPX スポット市場価格（前年度）"
+    description: "JEPXスポット市場の前年度データを週次取得"
+    status: active
+    source:
+      type: csv_download
+      url: https://www.jepx.jp/_download.php
+      method: post
+      form_data:
+        dir: spot_summary
+        file: "spot_summary_{previous_fy}.csv"
+      encoding: shift_jis
+    extraction:
+      columns:
+        - { source: "受渡日", name: delivery_date, type: text }
+        - { source: "時刻コード", name: time_code, type: number }
+        - { source: "システムプライス", name: system_price, type: number }
+        - { source: "エリアプライス北海道", name: hokkaido_price, type: number }
+        - { source: "エリアプライス東北", name: tohoku_price, type: number }
+        - { source: "エリアプライス東京", name: tokyo_price, type: number }
+        - { source: "エリアプライス中部", name: chubu_price, type: number }
+        - { source: "エリアプライス北陸", name: hokuriku_price, type: number }
+        - { source: "エリアプライス関西", name: kansai_price, type: number }
+        - { source: "エリアプライス中国", name: chugoku_price, type: number }
+        - { source: "エリアプライス四国", name: shikoku_price, type: number }
+        - { source: "エリアプライス九州", name: kyushu_price, type: number }
+    schedule:
+      cron: "0 23 * * 1"  # JST 月曜 8:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60

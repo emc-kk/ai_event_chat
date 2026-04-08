@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - App Runner Services'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+Resources:
+  # App Runner Service (Core Rails)
+  CoreAppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub ${ProjectName}-${Environment}-core
+      SourceConfiguration:
+        ImageRepository:
+          ImageIdentifier: !Sub
+            - ${ECRUri}:latest
+            - ECRUri: !ImportValue
+                Fn::Sub: ${ProjectName}-core-ecr-uri
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: 3000
+            RuntimeEnvironmentSecrets:
+              - Name: POSTGRES_PASSWORD
+                Value: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+              - Name: RAILS_MASTER_KEY
+                Value: !Sub /${ProjectName}/${Environment}/RAILS_MASTER_KEY
+              - Name: CLOUDFRONT_PRIVATE_KEY
+                Value: !Sub /${ProjectName}/${Environment}/CLOUDFRONT_PRIVATE_KEY
+              - Name: AI_SERVER_API_SECRET_KEY
+                Value: !Sub /${ProjectName}/${Environment}/AI_SERVER_API_SECRET_KEY
+            RuntimeEnvironmentVariables:
+              - Name: RAILS_ENV
+                Value: !Ref Environment
+              - Name: POSTGRES_HOST
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-db-endpoint
+              - Name: POSTGRES_USER
+                Value: postgres
+              - Name: POSTGRES_DB
+                Value: !Sub ${ProjectName}_${Environment}
+              - Name: AWS_REGION
+                Value: !Ref AWS::Region
+              - Name: AWS_S3_BUCKET
+                Value: skill-relay-dev
+              - Name: SQS_DOCUMENT_PROCESSING_QUEUE_URL
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-document-processing-queue-url
+              - Name: AI_SERVER_URL
+                Value: https://api.skillrelay.ai
+              - Name: AI_SERVER_URL_FROM_CONTAINER
+                Value: https://api.skillrelay.ai
+              - Name: APP_HOST
+                Value: skillrelay.ai
+              - Name: VIDEO_URL
+                Value: https://video.skillrelay.ai
+              - Name: CLOUDFRONT_PRIVATE_KEY_ID
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-cloudfront-public-key-id
+        AutoDeploymentsEnabled: true
+        AuthenticationConfiguration:
+          AccessRoleArn: !ImportValue
+            Fn::Sub: ${ProjectName}-${Environment}-apprunner-access-role-arn
+      InstanceConfiguration:
+        Cpu: 1 vCPU
+        Memory: 2 GB
+        InstanceRoleArn: !ImportValue
+          Fn::Sub: ${ProjectName}-${Environment}-apprunner-instance-role-arn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /up
+        Interval: 10
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 5
+      ObservabilityConfiguration:
+        ObservabilityEnabled: true
+        ObservabilityConfigurationArn: !ImportValue
+          Fn::Sub: ${ProjectName}-${Environment}-core-observability-arn
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-core-apprunner
+    DependsOn: AIServerAppRunnerService
+
+  # App Runner Service (AI Server)
+  AIServerAppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub ${ProjectName}-${Environment}-ai-server
+      SourceConfiguration:
+        ImageRepository:
+          ImageIdentifier: !Sub
+            - ${ECRUri}:latest
+            - ECRUri: !ImportValue
+                Fn::Sub: ${ProjectName}-ai-server-ecr-uri
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: 3000
+            RuntimeEnvironmentSecrets:
+              - Name: OPENAI_API_KEY
+                Value: !Sub /${ProjectName}/${Environment}/OPENAI_API_KEY
+              - Name: POSTGRES_PASSWORD
+                Value: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+              - Name: COHERE_API_KEY
+                Value: !Sub /${ProjectName}/${Environment}/COHERE_API_KEY
+            RuntimeEnvironmentVariables:
+              - Name: NODE_ENV
+                Value: !Ref Environment
+              - Name: POSTGRES_HOST
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-db-endpoint
+              - Name: POSTGRES_PORT
+                Value: "5432"
+              - Name: POSTGRES_USER
+                Value: postgres
+              - Name: POSTGRES_DB
+                Value: !Sub ${ProjectName}_${Environment}
+              - Name: AWS_REGION
+                Value: !Ref AWS::Region
+              - Name: AWS_S3_BUCKET
+                Value: skill-relay-dev
+              - Name: BASIC_AUTH_USER
+                Value: admin
+              - Name: BASIC_AUTH_PASSWORD
+                Value: "EZ2mhqyRWAmg"
+        AutoDeploymentsEnabled: true
+        AuthenticationConfiguration:
+          AccessRoleArn: !ImportValue
+            Fn::Sub: ${ProjectName}-${Environment}-ai-server-apprunner-access-role-arn
+      InstanceConfiguration:
+        Cpu: 1 vCPU
+        Memory: 2 GB
+        InstanceRoleArn: !ImportValue
+          Fn::Sub: ${ProjectName}-${Environment}-ai-server-apprunner-instance-role-arn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /api/health
+        Interval: 10
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 20
+      ObservabilityConfiguration:
+        ObservabilityEnabled: true
+        ObservabilityConfigurationArn: !ImportValue
+          Fn::Sub: ${ProjectName}-${Environment}-ai-observability-arn
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-ai-server-apprunner
+
+Outputs:
+  CoreAppRunnerServiceUrl:
+    Description: Core App Runner Service URL
+    Value: !GetAtt CoreAppRunnerService.ServiceUrl
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-core-apprunner-url
+
+  CoreAppRunnerServiceArn:
+    Description: Core App Runner Service ARN
+    Value: !GetAtt CoreAppRunnerService.ServiceArn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-core-apprunner-arn
+
+  CoreAppRunnerServiceId:
+    Description: Core App Runner Service ID
+    Value: !GetAtt CoreAppRunnerService.ServiceId
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-core-apprunner-id
+
+  AIServerAppRunnerServiceUrl:
+    Description: AI Server App Runner Service URL
+    Value: !GetAtt AIServerAppRunnerService.ServiceUrl
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-ai-server-apprunner-url
+
+  AIServerAppRunnerServiceArn:
+    Description: AI Server App Runner Service ARN
+    Value: !GetAtt AIServerAppRunnerService.ServiceArn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-ai-server-apprunner-arn
+
+  AIServerAppRunnerServiceId:
+    Description: AI Server App Runner Service ID
+    Value: !GetAtt AIServerAppRunnerService.ServiceId
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-ai-server-apprunner-id

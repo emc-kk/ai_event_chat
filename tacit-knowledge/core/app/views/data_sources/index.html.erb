@@ -1,0 +1,3 @@
+<div id="datasource-app" data-company-id="<%= current_company_id %>" data-privileged-admin="<%= privileged_admin? %>" data-is-admin="<%= admin_or_company_admin? %>" <% if privileged_admin? %>data-companies="<%= Company.status_active.order(:name).select(:id, :name).map { |c| { id: c.id, name: c.name } }.to_json %>"<% end %>></div>
+
+<%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>

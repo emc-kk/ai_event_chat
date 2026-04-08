@@ -1,0 +1,79 @@
+# 会社A所属の企業管理者ユーザー
+company_a_user_admin:
+  id: "01TEST_USER_CA_ADMIN_0000"
+  name: "ユーザー管理者A"
+  email: "user_admin_a@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  role: 9
+  company_id: "01TEST_COMPANY_A_000000000"
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_user_admin_a"
+  creator_type: "Admin"
+  creator_id: "01TEST_COMP_A_ADMIN_00000"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社A所属の一般ユーザー（editor権限あり）
+company_a_editor:
+  id: "01TEST_USER_CA_EDITOR_000"
+  name: "編集者ユーザーA"
+  email: "editor_a@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  role: 1
+  company_id: "01TEST_COMPANY_A_000000000"
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_editor_a"
+  creator_type: "Admin"
+  creator_id: "01TEST_COMP_A_ADMIN_00000"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社A所属の一般ユーザー（viewer権限のみ）
+company_a_viewer:
+  id: "01TEST_USER_CA_VIEWER_000"
+  name: "閲覧者ユーザーA"
+  email: "viewer_a@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  role: 0
+  company_id: "01TEST_COMPANY_A_000000000"
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_viewer_a"
+  creator_type: "Admin"
+  creator_id: "01TEST_COMP_A_ADMIN_00000"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社A所属の一般ユーザー（権限なし）
+company_a_no_perm:
+  id: "01TEST_USER_CA_NOPERM_000"
+  name: "権限なしユーザーA"
+  email: "noperm_a@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  role: 0
+  company_id: "01TEST_COMPANY_A_000000000"
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_noperm_a"
+  creator_type: "Admin"
+  creator_id: "01TEST_COMP_A_ADMIN_00000"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社B所属のユーザー（クロスカンパニーテスト用）
+company_b_user:
+  id: "01TEST_USER_CB_ADMIN_0000"
+  name: "ユーザーB"
+  email: "user_b@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  role: 9
+  company_id: "01TEST_COMPANY_B_000000000"
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_user_b"
+  creator_type: "Admin"
+  creator_id: "01TEST_PRIV_ADMIN_00000000"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

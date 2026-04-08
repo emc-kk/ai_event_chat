@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+# Remove or create stale pid file
+if [ -f /rails/tmp/pids/server.pid ]; then
+  rm /rails/tmp/pids/server.pid
+fi
+
+# If running the rails server, prepare the database
+if [ "${1}" == "./bin/rails" ] && [ "${2}" == "server" ]; then
+  ./bin/rails db:prepare
+
+  if [ "$PREVIEW_ENV" = "true" ]; then
+    echo "Preview environment detected. Running seed_fu (idempotent)..."
+    ./bin/rails db:seed_fu
+  elif ./bin/rails runner 'exit(Admin.count == 0 ? 0 : 1)'; then
+    echo "Database is empty. Running seed_fu..."
+    ./bin/rails db:seed_fu
+  else
+    echo "Database already seeded. Skipping seed_fu."
+  fi
+fi
+
+exec "${@}"

@@ -1,0 +1,160 @@
+<div class="container-fluid py-4"
+     data-controller="manual-detail"
+     data-manual-detail-update-path-value="<%= topic_manual_path(@topic, @manual) %>"
+     data-manual-detail-status-path-value="<%= topic_manual_video_status_path(@topic, @manual, @manual.request) %>">
+  <div class="row">
+    <%# 左サイドバー %>
+    <div class="col-auto">
+      <div class="d-flex flex-column gap-2" data-manual-detail-target="buttons">
+        <% if @is_video %>
+          <%= link_to topic_manual_video_path(topic_id: @topic, manual_id: @manual, id: @document),
+                      class: "to-video btn btn-primary d-flex align-items-center gap-2 #{!@manual.request.status_completed? ? 'disabled' : ''}" do %>
+            <i class="bi bi-play-fill" style="font-size: 16px;"></i>
+            動画を見る
+          <% end %>
+        <% else %>
+          <button type="button"
+                  class="btn btn-outline-primary d-flex align-items-center gap-2"
+                  data-bs-toggle="modal"
+                  data-bs-target="#videoUploadModal">
+            <i class="bi bi-camera-video-fill" style="font-size: 16px;"></i>
+            動画を登録
+          </button>
+        <% end %>
+        <button type="button"
+                class="btn btn-primary d-flex align-items-center gap-2"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#recreate"
+                role="button"
+        >
+          <i class="bi bi-arrow-repeat" style="font-size: 16px;"></i>
+          再生成
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-2"
+                data-action="click->manual-detail#edit"
+                data-manual-detail-target="toEditorButton"
+        >
+          <i class="bi bi-pencil-fill" style="font-size: 16px;"></i>
+          編集する
+        </button>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center gap-2 d-none"
+                data-action="click->manual-detail#save"
+                data-manual-detail-target="toPreviewButton"
+        >
+          <i class="bi bi-floppy-fill" style="font-size: 16px;"></i>
+          保存する
+        </button>
+      </div>
+    </div>
+
+    <%# メインコンテンツ %>
+    <div class="col">
+      <div class="card">
+        <div id="manual-main" class="card-body p-4" data-manual-detail-target="main"></div>
+
+        <div class="d-none" data-manual-detail-target="editorWrapper">
+          <textarea class="form-control" rows="15" data-manual-detail-target="editor"><%= @manual.body %></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%# 動画アップロードモーダル（動画未登録時のみ表示） %>
+<% unless @is_video %>
+<div class="modal fade"
+     id="videoUploadModal"
+     tabindex="-1"
+     aria-labelledby="videoUploadModalLabel"
+     aria-hidden="true"
+     data-controller="manual-video-upload"
+     data-manual-video-upload-max-size-value="<%= 500.megabytes %>"
+     data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content manual-video-upload-modal">
+      <div class="modal-header">
+        <h5 class="modal-title" id="videoUploadModalLabel">動画の登録</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+      </div>
+      <div class="modal-body">
+        <%= form_with url: topic_manual_videos_path(topic_id: @topic, manual_id: @manual),
+                      method: :post,
+                      multipart: true,
+                      data: {
+                        manual_video_upload_target: 'form',
+                        action: 'submit->manual-video-upload#validateBeforeSubmit'
+                      } do |f| %>
+
+          <%# ドロップゾーン %>
+          <div class="upload-dropzone"
+               data-manual-video-upload-target="dropzone"
+               data-action="click->manual-video-upload#openFileDialog
+                            dragover->manual-video-upload#dragOver
+                            dragleave->manual-video-upload#dragLeave
+                            drop->manual-video-upload#drop">
+            <div class="upload-dropzone__icon">
+              <%= content_tag :svg, xmlns: 'http://www.w3.org/2000/svg',
+                              width: '48', height: '48', fill: 'currentColor', viewBox: '0 0 16 16' do %>
+                <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3H14.5a2 2 0 0 1 2 2v1.5H.54z"/>
+                <path d="M.54 5.5H16.5v7.5a2 2 0 0 1-2 2H2.5a2 2 0 0 1-2-2V5.5z"/>
+              <% end %>
+            </div>
+            <div class="upload-dropzone__text">ファイルをドラッグ＆ドロップ</div>
+            <div class="upload-dropzone__hint">MP4, MOV など（最大500MB）</div>
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    data-action="click->manual-video-upload#openFileDialog:stop">
+              またはファイルを選択する
+            </button>
+          </div>
+
+          <%= f.file_field :file,
+                           name: 'video[file]',
+                           accept: 'video/*',
+                           class: 'd-none',
+                           data: {
+                             manual_video_upload_target: 'fileInput',
+                             action: 'change->manual-video-upload#fileSelected'
+                           } %>
+
+          <%# 選択されたファイル情報 %>
+          <div class="selected-file-info"
+               data-manual-video-upload-target="fileInfo"
+               hidden>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <strong data-manual-video-upload-target="fileName"></strong>
+                <span class="text-muted ms-2" data-manual-video-upload-target="fileSize"></span>
+              </div>
+              <button type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      data-action="click->manual-video-upload#removeFile">
+                削除
+              </button>
+            </div>
+          </div>
+
+          <%# アップロードボタン %>
+          <%= f.submit 'アップロードを実行する',
+                       class: 'btn btn-primary w-100 mt-3',
+                       data: { manual_video_upload_target: 'submitBtn' },
+                       disabled: true %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# ローディング %>
+  <div class="loading" data-manual-video-upload-target="loading" hidden>
+    <div class="spinner"></div>
+  </div>
+</div>
+<% end %>
+
+<%# マニュアル再作成表示用 %>
+<%= render "recreate" %>
+
+<%# チャットウィンドウ %>
+<%#= render "topics/manuals/chat/main" %>

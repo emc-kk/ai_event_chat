@@ -1,0 +1,220 @@
+{
+  "team_name": "インフラ投資審査部 第一グループ",
+  "department": "大和エナジー・インフラ",
+  "data_confidence": "高",
+  "total_sessions": 156,
+  "members": [
+    {
+      "id": "member-001",
+      "name": "田中 一郎",
+      "role": "グループマネージャー",
+      "years_experience": 18,
+      "specialization": "再生可能エネルギー全般",
+      "total_sessions": 52,
+      "profile": {
+        "risk_sensitivity": 0.82,
+        "data_dependency": 0.68,
+        "precedent_dependency": 0.35,
+        "independence": 0.88,
+        "uncertainty_tolerance": 0.72,
+        "industry_understanding": 0.91
+      },
+      "bias_tendency": {
+        "primary": "overconfidence",
+        "secondary": null,
+        "frequency_score": 0.15,
+        "note": "経験豊富ゆえに自信過剰になる場面がまれにある"
+      },
+      "profile_history": [
+        { "month": "2025-09", "profile": { "risk_sensitivity": 0.80, "data_dependency": 0.70, "precedent_dependency": 0.38, "independence": 0.85, "uncertainty_tolerance": 0.70, "industry_understanding": 0.88 } },
+        { "month": "2025-12", "profile": { "risk_sensitivity": 0.81, "data_dependency": 0.69, "precedent_dependency": 0.36, "independence": 0.87, "uncertainty_tolerance": 0.71, "industry_understanding": 0.90 } },
+        { "month": "2026-02", "profile": { "risk_sensitivity": 0.82, "data_dependency": 0.68, "precedent_dependency": 0.35, "independence": 0.88, "uncertainty_tolerance": 0.72, "industry_understanding": 0.91 } }
+      ]
+    },
+    {
+      "id": "member-002",
+      "name": "鈴木 花子",
+      "role": "シニアアナリスト",
+      "years_experience": 12,
+      "specialization": "財務モデリング・リスク定量化",
+      "total_sessions": 38,
+      "profile": {
+        "risk_sensitivity": 0.90,
+        "data_dependency": 0.92,
+        "precedent_dependency": 0.55,
+        "independence": 0.65,
+        "uncertainty_tolerance": 0.38,
+        "industry_understanding": 0.75
+      },
+      "bias_tendency": {
+        "primary": "anchoring",
+        "secondary": "confirmation",
+        "frequency_score": 0.25,
+        "note": "初期の財務モデルに引きずられやすい"
+      },
+      "profile_history": [
+        { "month": "2025-09", "profile": { "risk_sensitivity": 0.88, "data_dependency": 0.90, "precedent_dependency": 0.58, "independence": 0.62, "uncertainty_tolerance": 0.40, "industry_understanding": 0.72 } },
+        { "month": "2025-12", "profile": { "risk_sensitivity": 0.89, "data_dependency": 0.91, "precedent_dependency": 0.56, "independence": 0.64, "uncertainty_tolerance": 0.39, "industry_understanding": 0.74 } },
+        { "month": "2026-02", "profile": { "risk_sensitivity": 0.90, "data_dependency": 0.92, "precedent_dependency": 0.55, "independence": 0.65, "uncertainty_tolerance": 0.38, "industry_understanding": 0.75 } }
+      ]
+    },
+    {
+      "id": "member-003",
+      "name": "佐藤 健太",
+      "role": "アソシエイト",
+      "years_experience": 5,
+      "specialization": "太陽光・風力プロジェクト",
+      "total_sessions": 28,
+      "profile": {
+        "risk_sensitivity": 0.45,
+        "data_dependency": 0.50,
+        "precedent_dependency": 0.85,
+        "independence": 0.30,
+        "uncertainty_tolerance": 0.40,
+        "industry_understanding": 0.62
+      },
+      "bias_tendency": {
+        "primary": "confirmation",
+        "secondary": "authority",
+        "frequency_score": 0.55,
+        "note": "過去の成功案件パターンに固執し、上司の判断に依存する傾向が強い"
+      },
+      "profile_history": [
+        { "month": "2025-09", "profile": { "risk_sensitivity": 0.50, "data_dependency": 0.48, "precedent_dependency": 0.78, "independence": 0.38, "uncertainty_tolerance": 0.45, "industry_understanding": 0.55 } },
+        { "month": "2025-12", "profile": { "risk_sensitivity": 0.48, "data_dependency": 0.49, "precedent_dependency": 0.82, "independence": 0.33, "uncertainty_tolerance": 0.42, "industry_understanding": 0.58 } },
+        { "month": "2026-02", "profile": { "risk_sensitivity": 0.45, "data_dependency": 0.50, "precedent_dependency": 0.85, "independence": 0.30, "uncertainty_tolerance": 0.40, "industry_understanding": 0.62 } }
+      ],
+      "bias_history": [
+        {
+          "date": "2025-12-10",
+          "hearing_id": "hearing-034",
+          "hearing_name": "九州メガソーラー案件",
+          "bias_type": "confirmation",
+          "trigger_text": "前回の宮崎案件もこのパターンで成功したので問題ないと思います",
+          "socratic_response": "逆に、この前提が当てはまらなかったケースはありますか？",
+          "result": "corrected",
+          "pbm_step": 2
+        },
+        {
+          "date": "2025-12-22",
+          "hearing_id": "hearing-037",
+          "hearing_name": "東北風力発電案件",
+          "bias_type": "authority",
+          "trigger_text": "部長が問題ないと言っているので大丈夫だと思います",
+          "socratic_response": "その方の意見を除外した場合、データや事実だけから同じ結論に至りますか？",
+          "result": "corrected",
+          "pbm_step": 3
+        },
+        {
+          "date": "2026-01-08",
+          "hearing_id": "hearing-040",
+          "hearing_name": "関西バイオマス案件",
+          "bias_type": "confirmation",
+          "trigger_text": "過去の類似案件は全て成功しているので今回も問題ないです",
+          "socratic_response": "類似規模のインフラで失敗した事例はありますか？",
+          "result": "partially_corrected",
+          "pbm_step": 2
+        },
+        {
+          "date": "2026-01-15",
+          "hearing_id": "hearing-042",
+          "hearing_name": "北海道太陽光案件",
+          "bias_type": "confirmation",
+          "trigger_text": "いつも通りのアプローチで進めれば大丈夫です",
+          "socratic_response": "逆に、この前提が当てはまらなかったケースはありますか？",
+          "result": "not_corrected",
+          "pbm_step": 1
+        },
+        {
+          "date": "2026-01-22",
+          "hearing_id": "hearing-044",
+          "hearing_name": "四国風力案件",
+          "bias_type": "confirmation",
+          "trigger_text": "前回もうまくいったパターンなので今回も大丈夫です",
+          "socratic_response": "この前提が崩れた場合のリスクは？",
+          "result": "not_corrected",
+          "pbm_step": 3
+        },
+        {
+          "date": "2026-02-05",
+          "hearing_id": "hearing-047",
+          "hearing_name": "中部メガソーラー案件",
+          "bias_type": "confirmation",
+          "trigger_text": "毎回このやり方で成功しているので変える必要はないです",
+          "socratic_response": "もし市場環境が大きく変わった場合でも、同じアプローチが有効でしょうか？",
+          "result": "not_corrected",
+          "pbm_step": 2
+        }
+      ],
+      "coaching_narrative": "佐藤さんは確証バイアスの傾向が顕著で、過去の成功パターンに過度に依存しています。特に直近3ヶ月間で、ソクラテス式補正質問に対して改善が見られず、むしろ前例依存度が上昇しています（0.78→0.85）。同時に独立性スコアが低下（0.38→0.30）しており、上司の判断への依存も強まっています。\n\n根本的な課題は、成功体験の汎化（特定の成功要因を他案件にも無条件に適用する思考パターン）です。各案件の固有リスクを独立に評価する訓練が必要です。",
+      "recommended_interventions": [
+        "田中マネージャーとの月次1on1面談で、過去の失敗案件分析を共同実施",
+        "異なる業種・規模の案件を意図的にアサインし、パターン依存を崩す",
+        "各ヒアリングの冒頭で「この案件が過去案件と異なる点」を3つ挙げるルールを設定",
+        "鈴木シニアアナリストとのペア審査で、データに基づく独立判断の練習"
+      ]
+    },
+    {
+      "id": "member-004",
+      "name": "山田 美咲",
+      "role": "アナリスト",
+      "years_experience": 2,
+      "specialization": "ESG評価・環境デューデリジェンス",
+      "total_sessions": 20,
+      "profile": {
+        "risk_sensitivity": 0.55,
+        "data_dependency": 0.60,
+        "precedent_dependency": 0.65,
+        "independence": 0.45,
+        "uncertainty_tolerance": 0.35,
+        "industry_understanding": 0.48
+      },
+      "bias_tendency": {
+        "primary": "authority",
+        "secondary": "recency",
+        "frequency_score": 0.35,
+        "note": "経験不足により上位者への依存が自然に高い。成長過程"
+      },
+      "profile_history": [
+        { "month": "2025-09", "profile": { "risk_sensitivity": 0.45, "data_dependency": 0.50, "precedent_dependency": 0.72, "independence": 0.35, "uncertainty_tolerance": 0.30, "industry_understanding": 0.35 } },
+        { "month": "2025-12", "profile": { "risk_sensitivity": 0.50, "data_dependency": 0.55, "precedent_dependency": 0.68, "independence": 0.40, "uncertainty_tolerance": 0.32, "industry_understanding": 0.42 } },
+        { "month": "2026-02", "profile": { "risk_sensitivity": 0.55, "data_dependency": 0.60, "precedent_dependency": 0.65, "independence": 0.45, "uncertainty_tolerance": 0.35, "industry_understanding": 0.48 } }
+      ]
+    },
+    {
+      "id": "member-005",
+      "name": "高橋 誠",
+      "role": "テクニカルスペシャリスト",
+      "years_experience": 20,
+      "specialization": "発電設備技術評価",
+      "total_sessions": 18,
+      "profile": {
+        "risk_sensitivity": 0.70,
+        "data_dependency": 0.95,
+        "precedent_dependency": 0.60,
+        "independence": 0.40,
+        "uncertainty_tolerance": 0.55,
+        "industry_understanding": 0.95
+      },
+      "bias_tendency": {
+        "primary": "anchoring",
+        "secondary": "overconfidence",
+        "frequency_score": 0.20,
+        "note": "技術的な数値に強く固着する傾向。専門領域では過信も"
+      },
+      "profile_history": [
+        { "month": "2025-09", "profile": { "risk_sensitivity": 0.68, "data_dependency": 0.93, "precedent_dependency": 0.62, "independence": 0.38, "uncertainty_tolerance": 0.53, "industry_understanding": 0.93 } },
+        { "month": "2025-12", "profile": { "risk_sensitivity": 0.69, "data_dependency": 0.94, "precedent_dependency": 0.61, "independence": 0.39, "uncertainty_tolerance": 0.54, "industry_understanding": 0.94 } },
+        { "month": "2026-02", "profile": { "risk_sensitivity": 0.70, "data_dependency": 0.95, "precedent_dependency": 0.60, "independence": 0.40, "uncertainty_tolerance": 0.55, "industry_understanding": 0.95 } }
+      ]
+    }
+  ],
+  "team_average": {
+    "risk_sensitivity": 0.68,
+    "data_dependency": 0.73,
+    "precedent_dependency": 0.60,
+    "independence": 0.54,
+    "uncertainty_tolerance": 0.48,
+    "industry_understanding": 0.74
+  }
+}

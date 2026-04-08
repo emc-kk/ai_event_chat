@@ -1,0 +1,42 @@
+<div class="col-md-10 p-4 p-lg-5 w-100 pt-lg-0">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">会社詳細</h5>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">会社名</dt>
+        <dd class="col-sm-9"><%= @company.name %></dd>
+
+        <dt class="col-sm-3">説明</dt>
+        <dd class="col-sm-9"><%= @company.description || "-" %></dd>
+
+        <dt class="col-sm-3">ステータス</dt>
+        <dd class="col-sm-9">
+          <% if @company.status_active? %>
+            <span class="badge bg-success">有効</span>
+          <% else %>
+            <span class="badge bg-secondary">無効</span>
+          <% end %>
+        </dd>
+
+        <dt class="col-sm-3">管理者数</dt>
+        <dd class="col-sm-9"><%= @company.admins.count %></dd>
+
+        <dt class="col-sm-3">ユーザー数</dt>
+        <dd class="col-sm-9"><%= @company.users.count %></dd>
+
+        <dt class="col-sm-3">トピック数</dt>
+        <dd class="col-sm-9"><%= @company.topics.count %></dd>
+
+        <dt class="col-sm-3">作成日</dt>
+        <dd class="col-sm-9"><%= l(@company.created_at, format: :long) %></dd>
+      </dl>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <%= link_to "戻る", companies_path, class: "btn btn-secondary" %>
+        <%= link_to "編集", edit_company_path(@company), class: "btn btn-primary" %>
+      </div>
+    </div>
+  </div>
+</div>

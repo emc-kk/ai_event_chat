@@ -1,0 +1,393 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-0">
+        <i class="bi bi-shield-lock me-2"></i><%= @title %>
+      </h4>
+      <% if @permissible.respond_to?(:company) && @permissible.company.present? %>
+        <small class="text-muted"><i class="bi bi-building me-1"></i><%= @permissible.company.name %></small>
+      <% end %>
+    </div>
+    <%= link_to @back_path, class: "btn btn-outline-secondary" do %>
+      <i class="bi bi-arrow-left me-1"></i>戻る
+    <% end %>
+  </div>
+
+  <% if flash[:notice] %>
+    <div class="alert alert-success"><%= flash[:notice] %></div>
+  <% end %>
+  <% if flash[:alert] %>
+    <div class="alert alert-danger"><%= flash[:alert] %></div>
+  <% end %>
+
+  <!-- 権限追加フォーム -->
+  <% if @can_edit_permissions %>
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>権限を追加</h5>
+      </div>
+      <div class="card-body">
+        <%= form_with(url: permissions_path(permissible_type: @permissible.class.name, permissible_id: @permissible.id),
+                      model: Permission.new, local: true, class: "row g-3 align-items-end") do |form| %>
+          <% if privileged_admin? && @permissible.company_id.blank? %>
+            <div class="col-12">
+              <div class="alert alert-warning py-2 mb-2">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                このリソースには会社が設定されていません。権限追加時に会社を指定してください。
+              </div>
+            </div>
+            <div class="col-md-3">
+              <%= form.label :company_id, "会社", class: "form-label" %>
+              <%= form.select :company_id,
+                              Company.status_active.order(:name).map { |c| [c.name, c.id] },
+                              { include_blank: "会社を選択" },
+                              class: "form-select", required: true %>
+            </div>
+          <% end %>
+          <% if admin_or_company_admin? %>
+            <div class="col-md-3">
+              <%= form.label :grantee_type, "対象の種類", class: "form-label" %>
+              <%= form.select :grantee_type,
+                              [["管理者 (Admin)", "Admin"], ["ユーザー (User)", "User"], ["グループ (UserGroup)", "UserGroup"]],
+                              {},
+                              class: "form-select",
+                              id: "grantee_type_select" %>
+            </div>
+            <div class="col-md-4">
+              <%= form.label :grantee_id, "対象者", class: "form-label" %>
+              <div id="admin-grantee-select">
+                <select class="form-select grantee-select" name="permission[grantee_id]">
+                  <option value="">選択してください</option>
+                  <% @available_admins.each do |a| %>
+                    <option value="<%= a.id %>" data-company-id="<%= a.company_id %>"><%= a.name %><%= " [#{a.company.name}]" if a.company.present? %></option>
+                  <% end %>
+                </select>
+              </div>
+              <div id="user-grantee-select" style="display: none;">
+                <select class="form-select grantee-select" name="permission[grantee_id]" disabled>
+                  <option value="">選択してください</option>
+                  <% @available_users.each do |u| %>
+                    <option value="<%= u.id %>" data-company-id="<%= u.company_id %>"><%= u.name %> (<%= u.role_i18n rescue u.role %>)<%= " [#{u.company.name}]" if u.company.present? %></option>
+                  <% end %>
+                </select>
+              </div>
+              <div id="group-grantee-select" style="display: none;">
+                <select class="form-select grantee-select" name="permission[grantee_id]" disabled>
+                  <option value="">選択してください</option>
+                  <% @available_groups.each do |g| %>
+                    <option value="<%= g.id %>" data-company-id="<%= g.company_id %>"><%= g.name %> (<%= g.members_count %>名)<%= " [#{g.company.name}]" if g.company.present? %></option>
+                  <% end %>
+                </select>
+              </div>
+            </div>
+          <% else %>
+            <%# Ownerユーザーの場合はUserまたはグループを選択可能 %>
+            <div class="col-md-3">
+              <%= form.label :grantee_type, "対象の種類", class: "form-label" %>
+              <%= form.select :grantee_type,
+                              [["ユーザー (User)", "User"], ["グループ (UserGroup)", "UserGroup"]],
+                              {},
+                              class: "form-select",
+                              id: "grantee_type_select" %>
+            </div>
+            <div class="col-md-4">
+              <%= form.label :grantee_id, "対象者", class: "form-label" %>
+              <div id="user-grantee-select-owner">
+                <select class="form-select grantee-select" name="permission[grantee_id]">
+                  <option value="">選択してください</option>
+                  <% @available_users.each do |u| %>
+                    <option value="<%= u.id %>" data-company-id="<%= u.company_id %>"><%= u.name %> (<%= u.role_i18n rescue u.role %>)<%= " [#{u.company.name}]" if u.company.present? %></option>
+                  <% end %>
+                </select>
+              </div>
+              <div id="group-grantee-select-owner" style="display: none;">
+                <select class="form-select grantee-select" name="permission[grantee_id]" disabled>
+                  <option value="">選択してください</option>
+                  <% @available_groups.each do |g| %>
+                    <option value="<%= g.id %>" data-company-id="<%= g.company_id %>"><%= g.name %> (<%= g.members_count %>名)<%= " [#{g.company.name}]" if g.company.present? %></option>
+                  <% end %>
+                </select>
+              </div>
+            </div>
+          <% end %>
+          <div class="col-md-3">
+            <%= form.label :role, "ロール", class: "form-label" %>
+            <%= form.select :role,
+                            [["閲覧者", "viewer"], ["編集者", "editor"], ["オーナー", "owner"]],
+                            {},
+                            class: "form-select" %>
+          </div>
+          <div class="col-md-2">
+            <%= form.submit "追加", class: "btn btn-primary w-100" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- 直接設定された権限 -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0"><i class="bi bi-key me-2"></i>直接設定された権限</h5>
+    </div>
+    <div class="card-body">
+      <% if @permissions.any? %>
+        <table class="table table-bordered mb-0">
+          <thead>
+            <tr>
+              <th>種類</th>
+              <th>対象者</th>
+              <th>ロール</th>
+              <th>付与者</th>
+              <th>付与日</th>
+              <% if @can_edit_permissions %><th>操作</th><% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @permissions.each do |perm| %>
+              <tr>
+                <td>
+                  <% badge_color = case perm.grantee_type
+                                   when "Admin" then "primary"
+                                   when "UserGroup" then "success"
+                                   else "info"
+                                   end %>
+                  <% badge_label = case perm.grantee_type
+                                   when "Admin" then "管理者"
+                                   when "UserGroup" then "グループ"
+                                   else "ユーザー"
+                                   end %>
+                  <span class="badge bg-<%= badge_color %>">
+                    <%= badge_label %>
+                  </span>
+                </td>
+                <td>
+                  <%= perm.grantee&.name || "(削除済み)" %>
+                  <% if perm.grantee_type == "UserGroup" && perm.grantee.present? %>
+                    <small class="text-muted">(<%= perm.grantee.members_count %>名)</small>
+                  <% end %>
+                  <% if perm.grantee.present? && perm.grantee.respond_to?(:company) && perm.grantee.company.present? %>
+                    <small class="text-muted">[<%= perm.grantee.company.name %>]</small>
+                  <% end %>
+                </td>
+                <td>
+                  <% if @can_edit_permissions %>
+                    <%= form_with(url: permission_path(perm, permissible_type: @permissible.class.name, permissible_id: @permissible.id),
+                                  method: :patch, local: true, class: "d-inline") do |f| %>
+                      <%= f.select :role,
+                                  [["閲覧者", "viewer"], ["編集者", "editor"], ["オーナー", "owner"]],
+                                  { selected: perm.role },
+                                  class: "form-select form-select-sm d-inline-block w-auto",
+                                  onchange: "this.form.submit()" %>
+                    <% end %>
+                  <% else %>
+                    <span class="badge bg-secondary">
+                      <%= { "viewer" => "閲覧者", "editor" => "編集者", "owner" => "オーナー" }[perm.role] %>
+                    </span>
+                  <% end %>
+                </td>
+                <td><%= perm.granted_by&.name || "-" %></td>
+                <td><%= perm.created_at.strftime("%Y/%m/%d %H:%M") %></td>
+                <% if @can_edit_permissions %>
+                  <td>
+                    <%= link_to permission_path(perm, permissible_type: @permissible.class.name, permissible_id: @permissible.id),
+                                method: :delete,
+                                data: { turbo_method: :delete, turbo_confirm: "この権限を削除しますか？" },
+                                class: "btn btn-sm btn-outline-danger" do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="text-muted mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          直接設定された権限はありません。
+          <% if @permissible.is_a?(TopicFolder) || @permissible.is_a?(DataSourceFolder) %>
+            Admin のみアクセスできます。
+          <% else %>
+            <% if @permissible.respond_to?(:folder) && @permissible.folder.present? %>
+              フォルダ「<%= @permissible.folder.name %>」の権限が継承されます。
+            <% else %>
+              Admin のみアクセスできます。
+            <% end %>
+          <% end %>
+        </p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- 継承された権限 -->
+  <% if @inherited_permissions.any? %>
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-arrow-down-circle me-2"></i>継承された権限
+          <small class="text-muted">（上位フォルダから）</small>
+        </h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-bordered table-striped mb-0">
+          <thead>
+            <tr>
+              <th>継承元</th>
+              <th>種類</th>
+              <th>対象者</th>
+              <th>ロール</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @inherited_permissions.each do |perm| %>
+              <tr class="table-light">
+                <td>
+                  <i class="bi bi-folder me-1"></i>
+                  <%= perm.permissible&.name || "(不明)" %>
+                </td>
+                <td>
+                  <% badge_color = case perm.grantee_type
+                                   when "Admin" then "primary"
+                                   when "UserGroup" then "success"
+                                   else "info"
+                                   end %>
+                  <% badge_label = case perm.grantee_type
+                                   when "Admin" then "管理者"
+                                   when "UserGroup" then "グループ"
+                                   else "ユーザー"
+                                   end %>
+                  <span class="badge bg-<%= badge_color %>">
+                    <%= badge_label %>
+                  </span>
+                </td>
+                <td>
+                  <%= perm.grantee&.name || "(削除済み)" %>
+                  <% if perm.grantee_type == "UserGroup" && perm.grantee.present? %>
+                    <small class="text-muted">(<%= perm.grantee.members_count %>名)</small>
+                  <% end %>
+                  <% if perm.grantee.present? && perm.grantee.respond_to?(:company) && perm.grantee.company.present? %>
+                    <small class="text-muted">[<%= perm.grantee.company.name %>]</small>
+                  <% end %>
+                </td>
+                <td>
+                  <span class="badge bg-secondary">
+                    <%= { "viewer" => "閲覧者", "editor" => "編集者", "owner" => "オーナー" }[perm.role] %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function initGranteeTypeSwitch() {
+    var granteeTypeSelect = document.getElementById("grantee_type_select");
+    if (!granteeTypeSelect) return;
+
+    // Admin用の3つのセレクト
+    var adminSelect = document.getElementById("admin-grantee-select");
+    var userSelect = document.getElementById("user-grantee-select");
+    var groupSelect = document.getElementById("group-grantee-select");
+
+    // Owner User用の2つのセレクト
+    var userSelectOwner = document.getElementById("user-grantee-select-owner");
+    var groupSelectOwner = document.getElementById("group-grantee-select-owner");
+
+    // 会社選択ドロップダウン（company_idなしリソース用）
+    var companySelect = document.querySelector('select[name="permission[company_id]"]');
+
+    function hideAllSelects() {
+      var selects = [adminSelect, userSelect, groupSelect, userSelectOwner, groupSelectOwner];
+      selects.forEach(function(el) {
+        if (el) {
+          el.style.display = "none";
+          var sel = el.querySelector("select");
+          if (sel) {
+            sel.disabled = true;
+            sel.name = "";
+          }
+        }
+      });
+    }
+
+    function showSelect(el) {
+      if (el) {
+        el.style.display = "";
+        var sel = el.querySelector("select");
+        if (sel) {
+          sel.disabled = false;
+          sel.name = "permission[grantee_id]";
+        }
+      }
+    }
+
+    // 会社選択に連動してドロップダウンの選択肢をフィルタリング
+    function filterOptionsByCompany(selectedCompanyId) {
+      if (!companySelect) return; // 会社選択がない場合はフィルタ不要
+
+      var allSelects = [adminSelect, userSelect, groupSelect, userSelectOwner, groupSelectOwner];
+      allSelects.forEach(function(wrapper) {
+        if (!wrapper) return;
+        var sel = wrapper.querySelector("select");
+        if (!sel) return;
+
+        Array.from(sel.options).forEach(function(opt) {
+          if (!opt.value) return; // 「選択してください」はスキップ
+          var optCompanyId = opt.getAttribute("data-company-id");
+          if (!selectedCompanyId) {
+            // 会社未選択: 全て表示
+            opt.style.display = "";
+          } else {
+            // 選択された会社に一致するもの、またはcompany_idがない（特権管理者等）もの
+            opt.style.display = (optCompanyId === selectedCompanyId || !optCompanyId) ? "" : "none";
+          }
+        });
+
+        // フィルタ後、選択中のoptionが非表示になった場合はリセット
+        if (sel.selectedOptions[0] && sel.selectedOptions[0].style.display === "none") {
+          sel.value = "";
+        }
+      });
+    }
+
+    granteeTypeSelect.addEventListener("change", function() {
+      hideAllSelects();
+
+      switch (this.value) {
+        case "Admin":
+          showSelect(adminSelect);
+          break;
+        case "User":
+          showSelect(userSelect || userSelectOwner);
+          break;
+        case "UserGroup":
+          showSelect(groupSelect || groupSelectOwner);
+          break;
+      }
+
+      // 会社フィルタを再適用
+      if (companySelect) {
+        filterOptionsByCompany(companySelect.value);
+      }
+    });
+
+    // 会社選択変更時にフィルタ適用
+    if (companySelect) {
+      companySelect.addEventListener("change", function() {
+        filterOptionsByCompany(this.value);
+      });
+    }
+
+    // 初期表示
+    granteeTypeSelect.dispatchEvent(new Event("change"));
+  }
+
+  // DOMContentLoaded と turbo:load の両方に対応
+  document.addEventListener("DOMContentLoaded", initGranteeTypeSwitch);
+  document.addEventListener("turbo:load", initGranteeTypeSwitch);
+</script>

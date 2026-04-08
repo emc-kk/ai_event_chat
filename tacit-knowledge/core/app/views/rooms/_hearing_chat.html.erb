@@ -1,0 +1,62 @@
+<%# ヒアリングチャット画面 %>
+<div class="container-fluid rooms-show__container">
+  <%# ヘッダー %>
+  <div class="row rooms-show__header">
+    <div class="col-12 p-3 border-bottom bg-white">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="flex-grow-1">
+          <div class="fw-bold fs-4"><%= title %></div>
+          <% if subtitle.present? %>
+            <div class="text-muted small mt-1"><%= subtitle %></div>
+          <% end %>
+        </div>
+        <div class="d-flex align-items-center gap-3 flex-shrink-0">
+          <% if !room.is_finished && (request_record&.status_inhearing? || request_record&.status_rehearing?) %>
+            <div data-controller="finish-hearing" data-finish-hearing-request-id-value="<%= request_record.id %>">
+              <button class="btn btn-danger btn-sm" data-action="click->finish-hearing#finish">
+                ヒアリングを終了
+              </button>
+            </div>
+          <% end %>
+          <%= link_to "戻る", back_path, class: "btn btn-outline-secondary btn-sm" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# 矛盾確認 or チャット本体 %>
+  <% if request_record&.status_awaiting_verification? && has_conflicts %>
+    <div class="row rooms-show__body--scrollable">
+      <div class="col-12 p-4"
+           data-controller="conflict-resolution"
+           data-conflict-resolution-request-id-value="<%= request_record.id %>">
+        <h5 class="mb-3">矛盾確認</h5>
+        <div data-conflict-resolution-target="panel">
+          <div class="text-center py-4">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">読み込み中...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% else %>
+    <div class="row rooms-show__body">
+      <div class="p-0 h-100" data-mounted="false">
+        <div
+          id="chat-app"
+          class="h-100"
+          data-room-id="<%= room.id %>"
+          data-request-id="<%= room.request_id || '' %>"
+          data-topic-id="<%= room.topic_id || '' %>"
+          data-room-type="hearing"
+          data-status="<%= request_record&.status || '' %>"
+          data-admin="<%= current_admin? %>"
+          data-ai-server-url="<%= ENV['AI_SERVER_URL'] %>"
+          data-ai-api-key="<%= ENV['AI_SERVER_API_SECRET_KEY'] %>"
+          data-chat-mounted="false"
+        ></div>
+      </div>
+    </div>
+  <% end %>
+</div>

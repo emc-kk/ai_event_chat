@@ -1,0 +1,2 @@
+module Topics::ManualsHelper
+end

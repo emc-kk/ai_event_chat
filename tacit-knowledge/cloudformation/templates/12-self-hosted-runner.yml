@@ -1,0 +1,689 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - Self-hosted GitHub Actions Runner Pool (3 EC2 instances, on-demand start/stop)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.small, t3.medium, t3.large]
+    Description: EC2 instance type (t3.medium = 2vCPU/4GB recommended minimum)
+
+  VolumeSize:
+    Type: Number
+    Default: 50
+    MinValue: 20
+    MaxValue: 100
+    Description: EBS volume size per instance in GB (Docker images + layer cache)
+
+  KeyName:
+    Type: String
+    Default: ''
+    Description: EC2 Key Pair name for SSH access (optional)
+
+  GitHubRepo:
+    Type: String
+    Default: emc-kk/skillrelay
+    Description: GitHub repository (owner/repo)
+
+  GitHubRunnerVersion:
+    Type: String
+    Default: '2.322.0'
+    Description: GitHub Actions Runner version
+
+Conditions:
+  HasKeyName: !Not [!Equals [!Ref KeyName, '']]
+
+Resources:
+  # =============================================================================
+  # Security Group
+  # =============================================================================
+  RunnerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for GitHub Actions self-hosted runner
+      VpcId:
+        Fn::ImportValue: !Sub ${ProjectName}-${Environment}-vpc-id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 185.221.134.93/32
+          Description: SSH from Moriwaki VPN
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 118.70.161.162/32
+          Description: SSH from ITS Office
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-runner-sg
+
+  # =============================================================================
+  # IAM Role (same permissions as GitHubActionsRole in 04-iam.yml)
+  # =============================================================================
+  RunnerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Environment}-runner-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: RunnerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # ECR: push/pull images
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:DescribeImages
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
+                Resource: '*'
+              # App Runner: deploy services
+              - Effect: Allow
+                Action:
+                  - apprunner:ListServices
+                  - apprunner:StartDeployment
+                  - apprunner:DescribeService
+                  - apprunner:CreateService
+                  - apprunner:DeleteService
+                  - apprunner:UpdateService
+                  - apprunner:TagResource
+                  - apprunner:UntagResource
+                Resource: '*'
+              # CloudWatch Logs
+              - Effect: Allow
+                Action:
+                  - logs:GetLogEvents
+                  - logs:CreateLogGroup
+                  - logs:DeleteLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:TagLogGroup
+                  - logs:UntagLogGroup
+                  - logs:DescribeLogGroups
+                  - logs:ListTagsLogGroup
+                  - logs:TagResource
+                  - logs:UntagResource
+                  - logs:ListTagsForResource
+                Resource: '*'
+              # IAM: PassRole for App Runner / ECS / Lambda roles
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-apprunner-access-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-apprunner-instance-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-ai-server-apprunner-access-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-ai-server-apprunner-instance-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-ecs-task-execution-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-ecs-task-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-mock-*-worker-lambda-role
+              # ECS
+              - Effect: Allow
+                Action:
+                  - ecs:UpdateService
+                  - ecs:DescribeServices
+                  - ecs:DescribeTaskDefinition
+                  - ecs:RegisterTaskDefinition
+                Resource: '*'
+              # CloudFormation: preview stacks
+              - Effect: Allow
+                Action:
+                  - cloudformation:ListStacks
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:GetTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                Resource:
+                  - !Sub arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${ProjectName}-mock-*/*
+              # SQS: preview queues
+              - Effect: Allow
+                Action:
+                  - sqs:CreateQueue
+                  - sqs:DeleteQueue
+                  - sqs:GetQueueAttributes
+                  - sqs:SetQueueAttributes
+                  - sqs:TagQueue
+                  - sqs:UntagQueue
+                  - sqs:GetQueueUrl
+                Resource:
+                  - !Sub arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:${ProjectName}-mock-*
+              # S3: preview buckets
+              - Effect: Allow
+                Action:
+                  - s3:CreateBucket
+                  - s3:DeleteBucket
+                  - s3:PutBucketTagging
+                  - s3:PutLifecycleConfiguration
+                  - s3:GetLifecycleConfiguration
+                  - s3:ListBucket
+                  - s3:DeleteObject
+                  - s3:ListBucketVersions
+                  - s3:GetBucketLocation
+                Resource:
+                  - !Sub arn:aws:s3:::${ProjectName}-preview-*
+                  - !Sub arn:aws:s3:::${ProjectName}-preview-*/*
+              # SSM: parameter access (DB credentials, runner PAT)
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+              # Lambda: preview workers
+              - Effect: Allow
+                Action:
+                  - lambda:CreateFunction
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:GetFunction
+                  - lambda:GetFunctionConfiguration
+                  - lambda:DeleteFunction
+                  - lambda:TagResource
+                  - lambda:UntagResource
+                  - lambda:ListTags
+                  - lambda:AddPermission
+                  - lambda:RemovePermission
+                Resource:
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-mock-*-worker
+              # Lambda: event source mapping
+              - Effect: Allow
+                Action:
+                  - lambda:CreateEventSourceMapping
+                  - lambda:DeleteEventSourceMapping
+                  - lambda:GetEventSourceMapping
+                  - lambda:UpdateEventSourceMapping
+                  - lambda:ListEventSourceMappings
+                Resource: '*'
+              # IAM: roles for preview Lambda
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:GetRolePolicy
+                  - iam:TagRole
+                  - iam:UntagRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-mock-*-worker-lambda-role
+
+  RunnerInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub ${ProjectName}-${Environment}-runner-profile
+      Roles:
+        - !Ref RunnerRole
+
+  # =============================================================================
+  # Launch Template (shared config for all runner instances)
+  # =============================================================================
+  RunnerLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub ${ProjectName}-${Environment}-runner-template
+      LaunchTemplateData:
+        InstanceType: !Ref InstanceType
+        ImageId: !Sub '{{resolve:ssm:/aws/service/canonical/ubuntu/server/22.04/stable/current/amd64/hvm/ebs-gp2/ami-id}}'
+        SecurityGroupIds:
+          - !Ref RunnerSecurityGroup
+        IamInstanceProfile:
+          Name: !Ref RunnerInstanceProfile
+        KeyName: !If [HasKeyName, !Ref KeyName, !Ref 'AWS::NoValue']
+        InstanceInitiatedShutdownBehavior: stop
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpTokens: required
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeSize: !Ref VolumeSize
+              VolumeType: gp3
+              Encrypted: true
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Role
+                Value: github-runner
+              - Key: Project
+                Value: !Ref ProjectName
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            set -euo pipefail
+            exec > >(tee /var/log/runner-setup.log) 2>&1
+
+            echo "=== [1/9] System update ==="
+            apt-get update -y
+            apt-get upgrade -y
+
+            echo "=== [2/9] Install Docker CE ==="
+            apt-get install -y ca-certificates curl gnupg lsb-release
+            install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            chmod a+r /etc/apt/keyrings/docker.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+            apt-get update -y
+            apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            usermod -aG docker ubuntu
+
+            # Docker daemon config: log rotation
+            cat > /etc/docker/daemon.json <<'DOCKERCFG'
+            {
+              "log-driver": "json-file",
+              "log-opts": {
+                "max-size": "10m",
+                "max-file": "3"
+              }
+            }
+            DOCKERCFG
+            systemctl restart docker
+
+            echo "=== [3/9] Setup 4GB swap ==="
+            fallocate -l 4G /swapfile
+            chmod 600 /swapfile
+            mkswap /swapfile
+            swapon /swapfile
+            echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+            echo "=== [4/9] Install tools ==="
+            apt-get install -y git jq unzip acl
+
+            echo "=== [5/9] Install AWS CLI v2 ==="
+            curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+            unzip -q /tmp/awscliv2.zip -d /tmp
+            /tmp/aws/install
+            rm -rf /tmp/aws /tmp/awscliv2.zip
+
+            echo "=== [6/9] Setup GitHub Actions Runner ==="
+            RUNNER_VERSION="${GitHubRunnerVersion}"
+            RUNNER_DIR=/opt/actions-runner
+            mkdir -p $RUNNER_DIR
+            cd $RUNNER_DIR
+            curl -fsSL -o actions-runner.tar.gz \
+              "https://github.com/actions/runner/releases/download/v$RUNNER_VERSION/actions-runner-linux-x64-$RUNNER_VERSION.tar.gz"
+            tar xzf actions-runner.tar.gz
+            rm actions-runner.tar.gz
+            chown -R ubuntu:ubuntu $RUNNER_DIR
+
+            echo "=== [7/9] Register runner (dynamic name from instance ID) ==="
+            # Get instance ID via IMDSv2
+            IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 300")
+            EC2_INSTANCE_ID=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+            RUNNER_SUFFIX=$(echo $EC2_INSTANCE_ID | tail -c 9)
+            RUNNER_NAME="${ProjectName}-runner-$RUNNER_SUFFIX"
+            echo "Runner name: $RUNNER_NAME (instance: $EC2_INSTANCE_ID)"
+
+            RUNNER_PAT=$(aws ssm get-parameter \
+              --name /${ProjectName}/${Environment}/GITHUB_RUNNER_PAT \
+              --with-decryption --query 'Parameter.Value' --output text \
+              --region ${AWS::Region})
+
+            REG_TOKEN=$(curl -fsSL -X POST \
+              -H "Authorization: Bearer $RUNNER_PAT" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${GitHubRepo}/actions/runners/registration-token" \
+              | jq -r .token)
+
+            sudo -u ubuntu $RUNNER_DIR/config.sh \
+              --url "https://github.com/${GitHubRepo}" \
+              --token "$REG_TOKEN" \
+              --name "$RUNNER_NAME" \
+              --labels "self-hosted,linux,x64,ec2" \
+              --unattended \
+              --replace
+
+            # Install and start as systemd service
+            $RUNNER_DIR/svc.sh install ubuntu
+            $RUNNER_DIR/svc.sh start
+
+            echo "=== [8/9] Setup idle monitor (auto-shutdown) ==="
+            cat > /opt/actions-runner/idle-monitor.sh <<'IDLEMON'
+            #!/bin/bash
+            # Auto-shutdown when runner is idle for 5 minutes.
+            # Checks for Runner.Worker process (spawned during active jobs).
+            IDLE_TIMEOUT=300
+            CHECK_INTERVAL=30
+
+            echo "idle-monitor: started (timeout=$IDLE_TIMEOUT s)"
+            idle_since=$(date +%s)
+
+            while true; do
+                sleep $CHECK_INTERVAL
+                if pgrep -f "Runner.Worker" > /dev/null 2>&1; then
+                    idle_since=$(date +%s)
+                    continue
+                fi
+                now=$(date +%s)
+                idle_duration=$((now - idle_since))
+                if [ $idle_duration -ge $IDLE_TIMEOUT ]; then
+                    echo "idle-monitor: idle for $idle_duration s, shutting down"
+                    logger -t idle-monitor "Shutting down after $idle_duration s idle"
+                    sudo shutdown -h now
+                    exit 0
+                fi
+            done
+            IDLEMON
+
+            chmod +x /opt/actions-runner/idle-monitor.sh
+            chown ubuntu:ubuntu /opt/actions-runner/idle-monitor.sh
+
+            # Derive the systemd service name for the runner (dynamic)
+            ORG_REPO=$(echo "${GitHubRepo}" | tr '/' '-')
+            RUNNER_SVC="actions.runner.$ORG_REPO.$RUNNER_NAME.service"
+            echo "Runner systemd service: $RUNNER_SVC"
+
+            cat > /etc/systemd/system/idle-monitor.service <<SVCUNIT
+            [Unit]
+            Description=GitHub Actions Runner Idle Monitor (auto-shutdown)
+            After=$RUNNER_SVC
+
+            [Service]
+            Type=simple
+            User=root
+            ExecStart=/opt/actions-runner/idle-monitor.sh
+            Restart=on-failure
+            RestartSec=10
+
+            [Install]
+            WantedBy=multi-user.target
+            SVCUNIT
+
+            systemctl daemon-reload
+            systemctl enable idle-monitor.service
+            systemctl start idle-monitor.service
+
+            echo "=== [9/9] Setup Docker cleanup cron ==="
+            # Create cache directory for Docker buildx
+            mkdir -p /home/ubuntu/docker-cache
+            chown ubuntu:ubuntu /home/ubuntu/docker-cache
+
+            # Daily cleanup at 3:00 AM JST (18:00 UTC)
+            cat > /etc/cron.d/docker-cleanup <<'CRON'
+            0 18 * * * root docker system prune -af --filter 'until=72h' 2>&1 | logger -t docker-cleanup
+            CRON
+
+            echo "=== Setup complete ==="
+
+  # =============================================================================
+  # EC2 Instances (pool of 3 runners for parallel deployments)
+  # =============================================================================
+  RunnerInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref RunnerLaunchTemplate
+        Version: !GetAtt RunnerLaunchTemplate.LatestVersionNumber
+      SubnetId:
+        Fn::ImportValue: !Sub ${ProjectName}-${Environment}-public-subnet-1-id
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-runner-1
+
+  RunnerInstance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref RunnerLaunchTemplate
+        Version: !GetAtt RunnerLaunchTemplate.LatestVersionNumber
+      SubnetId:
+        Fn::ImportValue: !Sub ${ProjectName}-${Environment}-public-subnet-2-id
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-runner-2
+
+  RunnerInstance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref RunnerLaunchTemplate
+        Version: !GetAtt RunnerLaunchTemplate.LatestVersionNumber
+      SubnetId:
+        Fn::ImportValue: !Sub ${ProjectName}-${Environment}-public-subnet-2-id
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-runner-3
+
+  # =============================================================================
+  # Lambda: Runner Starter (triggered by GitHub webhook)
+  # =============================================================================
+  RunnerStarterLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Environment}-runner-starter-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EC2Control
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ec2:StartInstances
+                Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/Role: github-runner
+        - PolicyName: SSMGetWebhookSecret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/GITHUB_WEBHOOK_SECRET
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ProjectName}-${Environment}-runner-starter*
+
+  RunnerStarterLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ProjectName}-${Environment}-runner-starter
+      RetentionInDays: 14
+
+  RunnerStarterLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: RunnerStarterLambdaLogGroup
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-runner-starter
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt RunnerStarterLambdaRole.Arn
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          RUNNER_TAG_KEY: Role
+          RUNNER_TAG_VALUE: github-runner
+          SSM_WEBHOOK_SECRET: !Sub /${ProjectName}/${Environment}/GITHUB_WEBHOOK_SECRET
+      Code:
+        ZipFile: |
+          import json, hashlib, hmac, os, boto3
+
+          ec2 = boto3.client('ec2')
+          ssm = boto3.client('ssm')
+          _secret = None
+
+          def get_secret():
+              global _secret
+              if _secret is None:
+                  r = ssm.get_parameter(Name=os.environ['SSM_WEBHOOK_SECRET'], WithDecryption=True)
+                  _secret = r['Parameter']['Value']
+              return _secret
+
+          def verify(body, sig):
+              if not sig:
+                  return False
+              expected = 'sha256=' + hmac.new(
+                  get_secret().encode(), body.encode(), hashlib.sha256
+              ).hexdigest()
+              return hmac.compare_digest(expected, sig)
+
+          def handler(event, context):
+              body = event.get('body', '')
+              headers = {k.lower(): v for k, v in event.get('headers', {}).items()}
+              sig = headers.get('x-hub-signature-256', '')
+
+              if not verify(body, sig):
+                  print('Invalid signature')
+                  return {'statusCode': 401, 'body': 'Invalid signature'}
+
+              payload = json.loads(body)
+              action = payload.get('action', '')
+              labels = payload.get('workflow_job', {}).get('labels', [])
+              print(f'action={action} labels={labels}')
+
+              if action != 'queued' or 'ec2' not in labels:
+                  return {'statusCode': 200, 'body': f'Ignored: action={action}'}
+
+              # Find all stopped runner instances by tag
+              tag_key = os.environ['RUNNER_TAG_KEY']
+              tag_value = os.environ['RUNNER_TAG_VALUE']
+
+              response = ec2.describe_instances(
+                  Filters=[
+                      {'Name': f'tag:{tag_key}', 'Values': [tag_value]},
+                      {'Name': 'instance-state-name', 'Values': ['stopped']}
+                  ]
+              )
+              stopped_ids = [
+                  i['InstanceId']
+                  for r in response['Reservations']
+                  for i in r['Instances']
+              ]
+
+              if stopped_ids:
+                  ec2.start_instances(InstanceIds=stopped_ids)
+                  print(f'Starting {len(stopped_ids)} instances: {stopped_ids}')
+                  return {'statusCode': 200, 'body': f'Starting {len(stopped_ids)} instances'}
+
+              # Check running/pending instances
+              response = ec2.describe_instances(
+                  Filters=[
+                      {'Name': f'tag:{tag_key}', 'Values': [tag_value]},
+                      {'Name': 'instance-state-name', 'Values': ['running', 'pending']}
+                  ]
+              )
+              running = sum(1 for r in response['Reservations'] for _ in r['Instances'])
+              print(f'{running} instances already running/pending')
+              return {'statusCode': 200, 'body': f'{running} instances already running'}
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-runner-starter
+
+  # =============================================================================
+  # API Gateway: GitHub Webhook Endpoint
+  # =============================================================================
+  WebhookApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${ProjectName}-${Environment}-runner-webhook
+      ProtocolType: HTTP
+      Description: GitHub webhook endpoint for starting EC2 runner pool on-demand
+
+  WebhookApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebhookApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt RunnerStarterLambda.Arn
+      PayloadFormatVersion: '2.0'
+
+  WebhookApiRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebhookApi
+      RouteKey: POST /webhook
+      Target: !Sub integrations/${WebhookApiIntegration}
+
+  WebhookApiStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebhookApi
+      StageName: '$default'
+      AutoDeploy: true
+
+  WebhookLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RunnerStarterLambda
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebhookApi}/*/*/webhook
+
+Outputs:
+  RunnerInstance1Id:
+    Description: EC2 Instance 1 ID
+    Value: !Ref RunnerInstance1
+
+  RunnerInstance2Id:
+    Description: EC2 Instance 2 ID
+    Value: !Ref RunnerInstance2
+
+  RunnerInstance3Id:
+    Description: EC2 Instance 3 ID
+    Value: !Ref RunnerInstance3
+
+  RunnerSecurityGroupId:
+    Description: Runner Security Group ID
+    Value: !Ref RunnerSecurityGroup
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-runner-sg-id
+
+  WebhookUrl:
+    Description: GitHub webhook URL (register in repo Settings > Webhooks)
+    Value: !Sub https://${WebhookApi}.execute-api.${AWS::Region}.amazonaws.com/webhook

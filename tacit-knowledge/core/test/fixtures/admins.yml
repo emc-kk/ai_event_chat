@@ -1,0 +1,25 @@
+# 特権管理者（company_id=nil）
+privileged_admin:
+  id: "01TEST_PRIV_ADMIN_00000000"
+  name: "特権管理者"
+  email: "privileged@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  company_id: null
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_priv_admin"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社A所属の企業管理者
+company_a_admin:
+  id: "01TEST_COMP_A_ADMIN_00000"
+  name: "企業管理者A"
+  email: "admin_a@test.com"
+  password_digest: <%= BCrypt::Password.create("Test1234!") %>
+  status: 0
+  company_id: "01TEST_COMPANY_A_000000000"
+  confirmed_at: <%= Time.current %>
+  session_token: "test_session_comp_a_admin"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

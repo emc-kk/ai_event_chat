@@ -1,0 +1,6 @@
+<div id="scraper-admin-app"
+     data-companies="<%= @companies.select(:id, :name).map { |c| { id: c.id, name: c.name } }.to_json %>"
+     <% if @ai_server_url.present? %>data-ai-server-url="<%= @ai_server_url %>"<% end %>>
+</div>
+
+<%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>

@@ -1,0 +1,48 @@
+<% if @subfolders.any? %>
+  <div class="row mb-3 g-2">
+    <% @subfolders.each do |folder| %>
+      <div class="col-auto">
+        <div class="card border-0 shadow-sm" style="min-width: 160px;">
+          <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+            <i class="bi bi-folder-fill text-warning fs-5"></i>
+            <%= link_to folder.name, topics_path(folder_id: folder.id), class: "text-decoration-none text-dark fw-semibold" %>
+            <span class="badge bg-secondary rounded-pill ms-auto"><%= folder.topics_count %></span>
+            <% can_edit = admin_or_company_admin? || folder.editable_by?(current_user, session[:user_type]) %>
+            <% can_manage = admin_or_company_admin? || folder.owned_by?(current_user, session[:user_type]) %>
+            <% if can_edit || can_manage %>
+              <div class="dropdown" style="position: relative; z-index: 2;">
+                <button class="btn btn-sm btn-link text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <% if can_edit %>
+                    <li>
+                      <a class="dropdown-item" href="#" onclick="openFolderRenameModal('<%= folder.id %>', '<%= j(folder.name) %>'); return false;">
+                        <i class="bi bi-pencil me-2"></i>名前の変更
+                      </a>
+                    </li>
+                  <% end %>
+                  <% if can_manage %>
+                    <li>
+                      <%= link_to permissions_path(permissible_type: "TopicFolder", permissible_id: folder.id), class: "dropdown-item" do %>
+                        <i class="bi bi-shield-lock me-2"></i>権限設定
+                      <% end %>
+                    </li>
+                  <% end %>
+                  <% if can_edit %>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item text-danger" href="#" onclick="openFolderDeleteModal('<%= folder.id %>', '<%= j(folder.name) %>', <%= folder.topics_count %>); return false;">
+                        <i class="bi bi-trash me-2"></i>削除
+                      </a>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>

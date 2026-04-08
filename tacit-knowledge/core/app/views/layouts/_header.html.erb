@@ -1,0 +1,20 @@
+<% provide(:title, @title) %>
+
+<div class="content-header">
+  <div class="d-flex align-items-center">
+    <% if @back_path.present? %>
+      <%= link_to @back_path, class: 'back-btn' do %>
+        <span class="back-btn-icon">
+          <%= image_tag "common/back-btn.svg" %>
+        </span>
+        <span class="back-btn-text">
+          <%= @title %>
+        </span>
+      <% end %>
+    <% else %>
+      <h2><%= @title %></h2>
+      <span class="vertical-hr"></span>
+      <h4><%= current_user.name %></h4>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+.c-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 100%;
+  border-radius: 6px;
+  background: linear-gradient(#00A7FF, #0063A0);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 0.6875rem 2.875rem;
+  text-decoration: none;
+
+  &.--back {
+    background: #A6A6A6;
+  }
+
+  //フォーム内の削除ボタン
+  &.--delete {
+    color: #171E2B;
+    background: #FFE6E7;
+    border: 1px solid #FFBDBE;
+  }
+
+  //ユーザー削除、ヒアリング終了ボタン用
+  &.--finish {
+    background: linear-gradient(#FF1014, #990003);
+  }
+
+  &__container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 32px;
+  }
+}

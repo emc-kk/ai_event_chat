@@ -1,0 +1,58 @@
+<%# Data Source Picker - shared component for selecting files from data sources %>
+<%# Usage: render "shared/data_source_picker" %>
+<div data-controller="data-source-picker" data-data-source-picker-multiple-value="true">
+  <%# Trigger button %>
+  <div class="mb-3">
+    <label class="form-label fw-bold">データソースからファイルを選択</label>
+    <div>
+      <button type="button" class="btn btn-outline-primary btn-sm"
+              data-action="click->data-source-picker#open">
+        <i class="bi bi-database"></i> データソースから選択
+      </button>
+    </div>
+  </div>
+
+  <%# Selected files display %>
+  <div data-data-source-picker-target="selectedList" class="mb-3">
+    <p class="text-muted small mb-0">データソースから選択されていません。</p>
+  </div>
+
+  <%# Hidden inputs container %>
+  <div data-data-source-picker-target="fileIdsInput"></div>
+
+  <%# Picker Modal %>
+  <div class="modal fade" tabindex="-1" data-data-source-picker-target="modal">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-database"></i> データソースからファイルを選択</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+          <%# Breadcrumb %>
+          <nav class="px-3 pt-2">
+            <ol class="breadcrumb mb-2" data-data-source-picker-target="breadcrumb">
+              <li class="breadcrumb-item active">ルート</li>
+            </ol>
+          </nav>
+
+          <%# Content area %>
+          <div class="list-group list-group-flush" data-data-source-picker-target="body"
+               style="max-height: 400px; overflow-y: auto;">
+            <p class="text-muted text-center py-4">読み込み中...</p>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <span class="ds-picker-count text-muted small">0 ファイル選択中</span>
+          <div>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+            <button type="button" class="btn btn-primary"
+                    data-action="click->data-source-picker#confirm">
+              選択を確定
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

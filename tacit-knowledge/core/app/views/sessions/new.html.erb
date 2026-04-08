@@ -1,0 +1,60 @@
+<% provide(:title, 'ログイン') %>
+
+<div class="login">
+  <div class="align-items-center d-flex justify-content-center logo">
+    <%#= image_tag "logo.svg", class: "logo" %>
+  </div>
+  <%= form_for(:session, url: login_path, data: { turbo: false }, class: "login-form") do |f| %>
+    <div class="login-field">
+      <%= f.label :account, "メールアドレス" %>
+      <%= f.text_field :account, class: "form-control", placeholder: "email@example.com" %>
+    </div>
+    <div class="login-field">
+      <%= f.label :password, "パスワード" %>
+      <%= f.password_field :password, class: "form-control", placeholder: "••••••••" %>
+    </div>
+    <div class="login-submit">
+      <%= f.submit "ログイン", class: "btn btn-secondary login-btn" %>
+    </div>
+    <% if @unconfirmed_email.present? %>
+      <div class="login-confirm-alert">
+        <div class="alert alert-warning text-center" role="alert">
+          <p class="mb-2">確認メールが届いていませんか？</p>
+          <%= form_tag(confirmation_path, method: :post, data: { turbo: false }) do %>
+            <%= hidden_field_tag :email, @unconfirmed_email %>
+            <%= hidden_field_tag :type, @user_type %>
+            <%= submit_tag "確認メールを再送信", class: "btn btn-outline-warning btn-sm" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    <div class="login-links">
+      <%= link_to "確認メールを再送信", new_confirmation_path %>
+    </div>
+  <% end %>
+
+  <% if Rails.env.development? %>
+    <div class="dev-quick-login">
+      <div class="dev-quick-login-header" onclick="this.parentElement.classList.toggle('open')">
+        🔧 DEV: クイックログイン
+        <span class="dev-switcher-arrow">▼</span>
+      </div>
+      <div class="dev-quick-login-body">
+        <% User.order(:role, :email).each do |user| %>
+          <button type="button" class="dev-quick-login-btn"
+                  onclick="document.getElementById('session_account').value='<%= user.email %>';document.getElementById('session_password').value='Password1!';">
+            <span><%= user.name %></span>
+            <span class="dev-role-badge <%= user.role %>"><%= user.role %></span>
+          </button>
+        <% end %>
+        <% Admin.order(:email).each do |admin| %>
+          <button type="button" class="dev-quick-login-btn"
+                  onclick="document.getElementById('session_account').value='<%= admin.email %>';document.getElementById('session_password').value='Password1!';">
+            <span><%= admin.name || admin.email %></span>
+            <span class="dev-role-badge admin">admin</span>
+          </button>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

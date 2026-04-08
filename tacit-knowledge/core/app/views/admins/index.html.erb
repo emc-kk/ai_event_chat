@@ -1,0 +1,73 @@
+<div class="col-md-10 p-4 p-lg-5 w-100 pt-lg-0">
+  <div class="d-flex justify-content-end">
+    <%= link_to "+ 新規管理者登録", new_admin_path, class: "btn bg-secondary text-white mb-4" %>
+  </div>
+  <div class="table-container">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>氏名</th>
+          <th>メールアドレス</th>
+          <th>確認状態</th>
+          <% if privileged_admin? %>
+            <th>会社</th>
+          <% end %>
+          <th>アクション</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @admins.any? %>
+          <% @admins.each do |admin| %>
+            <tr>
+              <td><%= admin.name %></td>
+              <td><%= admin.email %></td>
+              <td>
+                <% if admin.confirmed? %>
+                  <span class="badge bg-success">確認済み</span>
+                <% else %>
+                  <span class="badge bg-warning text-dark">未確認</span>
+                  <div class="d-flex gap-1 mt-1">
+                    <%= button_to "確認済みにする", confirm_admin_path(admin), method: :patch,
+                        class: "btn btn-outline-success btn-sm",
+                        data: { confirm: "#{admin.name} を確認済みに変更しますか？" } %>
+                    <%= button_to "メール再送", resend_confirmation_admin_path(admin), method: :patch,
+                        class: "btn btn-outline-secondary btn-sm" %>
+                  </div>
+                <% end %>
+              </td>
+              <% if privileged_admin? %>
+                <td>
+                  <% if admin.company_id.nil? %>
+                    <span class="badge bg-warning text-dark">特権</span>
+                  <% else %>
+                    <%= admin.company&.name || "ID: #{admin.company_id}" %>
+                  <% end %>
+                </td>
+              <% end %>
+              <td>
+                <div class="d-flex gap-2">
+                  <%= button_to "編集", edit_admin_path(admin), method: :get, class: "btn bg-secondary text-white btn-sm" %>
+                  <% unless admin.id == current_user.id %>
+                    <%= button_to "削除", admin_path(admin), method: :delete,
+                        class: "btn text-danger btn-sm",
+                        data: { confirm: "本当に削除しますか？" } %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="<%= privileged_admin? ? 5 : 4 %>" class="text-center text-muted py-4">
+              <i class="fas fa-inbox fa-2x mb-2"></i><br>
+              データがありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-end mt-4">
+    <%= paginate @admins %>
+  </div>
+</div>

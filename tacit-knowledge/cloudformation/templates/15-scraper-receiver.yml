@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Scraper Receiver Lambda — スクレイパーからの結果を受け取りDBに保存する。
+  Lambda Function URL でHTTPSエンドポイントとして公開。
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+
+  Environment:
+    Type: String
+    Default: production
+
+Resources:
+  # -------------------------------------------------------
+  # IAM Role
+  # -------------------------------------------------------
+  ReceiverLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Environment}-scraper-receiver-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: SSMParameterAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+
+  # -------------------------------------------------------
+  # Lambda Function
+  # -------------------------------------------------------
+  ReceiverFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-scraper-receiver
+      Runtime: python3.11
+      Handler: handler.lambda_handler
+      Code:
+        S3Bucket: !Sub ${ProjectName}-${Environment}-datasource
+        S3Key: receiver/receiver.zip
+      Timeout: 30
+      MemorySize: 128
+      Role: !GetAtt ReceiverLambdaRole.Arn
+      Environment:
+        Variables:
+          POSTGRES_HOST:
+            Fn::ImportValue: !Sub ${ProjectName}-${Environment}-db-endpoint
+          POSTGRES_PORT: '5432'
+          POSTGRES_USER: postgres
+          POSTGRES_DB: !Sub ${ProjectName}_${Environment}
+          SSM_PASSWORD_PATH: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+          MAX_TASK_ATTEMPTS: '3'
+
+  # -------------------------------------------------------
+  # Lambda Function URL
+  # -------------------------------------------------------
+  ReceiverFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt ReceiverFunction.Arn
+      AuthType: NONE
+      Cors:
+        AllowOrigins:
+          - '*'
+        AllowMethods:
+          - POST
+        AllowHeaders:
+          - Authorization
+          - Content-Type
+
+  ReceiverFunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ReceiverFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: '*'
+      FunctionUrlAuthType: NONE
+
+Outputs:
+  ReceiverFunctionUrl:
+    Description: Receiver Lambda Function URL
+    Value: !GetAtt ReceiverFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-receiver-url
+
+  ReceiverFunctionArn:
+    Description: Receiver Lambda ARN
+    Value: !GetAtt ReceiverFunction.Arn

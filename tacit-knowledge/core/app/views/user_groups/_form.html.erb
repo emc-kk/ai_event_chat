@@ -1,0 +1,38 @@
+<div class="card">
+  <div class="card-body">
+    <%= form_with(model: user_group, local: true) do |form| %>
+      <% if user_group.errors.any? %>
+        <div class="alert alert-danger">
+          <ul class="mb-0">
+            <% user_group.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if privileged_admin? %>
+        <div class="mb-3">
+          <%= form.label :company_id, "会社", class: "form-label" %>
+          <%= form.collection_select :company_id, Company.status_active.order(:name), :id, :name,
+                                     { prompt: "会社を選択してください" },
+                                     class: "form-select" %>
+        </div>
+      <% end %>
+
+      <div class="mb-3">
+        <%= form.label :name, "グループ名", class: "form-label" %>
+        <%= form.text_field :name, class: "form-control", placeholder: "例: 営業部チーム" %>
+      </div>
+
+      <div class="mb-3">
+        <%= form.label :description, "説明", class: "form-label" %>
+        <%= form.text_area :description, class: "form-control", rows: 3, placeholder: "グループの説明（任意）" %>
+      </div>
+
+      <div class="d-flex justify-content-end">
+        <%= form.submit user_group.persisted? ? "更新" : "作成", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

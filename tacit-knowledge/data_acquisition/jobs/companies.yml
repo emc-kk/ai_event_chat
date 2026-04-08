@@ -1,0 +1,8 @@
+# 企業マスタ: ディレクトリ名 → companies テーブルのマッピング
+# sync_jobs.py がこのファイルを読み、対応する company_id を解決する
+
+companies:
+  fuji-electric:
+    id: "01JQFUJIELECTRIC01"
+    name: "富士電機株式会社"
+    description: "エネルギー・環境事業のデータ取得対象企業"

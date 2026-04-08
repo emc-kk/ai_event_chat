@@ -1,0 +1,15 @@
+# テスト会社A
+company_a:
+  id: "01TEST_COMPANY_A_000000000"
+  name: "テスト会社A"
+  status: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# テスト会社B（クロスカンパニーテスト用）
+company_b:
+  id: "01TEST_COMPANY_B_000000000"
+  name: "テスト会社B"
+  status: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

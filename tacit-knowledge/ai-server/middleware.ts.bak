@@ -1,0 +1,88 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+const BASIC_AUTH_USER = process.env.BASIC_AUTH_USER || 'admin';
+const BASIC_AUTH_PASSWORD = process.env.BASIC_AUTH_PASSWORD || 'password';
+
+const API_SECRET_KEY = process.env.NEXT_PUBLIC_API_SECRET_KEY || '';
+
+const PROTECTED_PATHS = ['/', '/sharp-finance'];
+
+function isProtectedPath(pathname: string): boolean {
+  return PROTECTED_PATHS.some(path => {
+    if (path === '/') {
+      return pathname === '/';
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
+  });
+}
+
+function checkBasicAuth(request: NextRequest): boolean {
+  const authHeader = request.headers.get('authorization');
+
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return false;
+  }
+
+  const base64Credentials = authHeader.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+  const [user, password] = credentials.split(':');
+
+  return user === BASIC_AUTH_USER && password === BASIC_AUTH_PASSWORD;
+}
+
+function requireBasicAuth(): NextResponse {
+  return new NextResponse('Authentication required', {
+    status: 401,
+    headers: {
+      'WWW-Authenticate': 'Basic realm="Secure Area"',
+    },
+  });
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Handle CORS preflight requests
+  if (pathname.startsWith('/api/') && request.method === 'OPTIONS') {
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
+
+  // Skip auth checks in development
+  if (process.env.NODE_ENV !== 'development') {
+    if (pathname.startsWith('/api/') && pathname !== '/api/health') {
+      const apiKey = request.headers.get('x-api-key') || '';
+      if (!API_SECRET_KEY || apiKey !== API_SECRET_KEY) {
+        return new NextResponse('Forbidden', { status: 403 });
+      }
+    }
+
+    if (isProtectedPath(pathname)) {
+      if (!checkBasicAuth(request)) {
+        return requireBasicAuth();
+      }
+    }
+  }
+
+  const response = NextResponse.next();
+
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: ['/', '/sharp-finance/:path*', '/api/:path*'],
+};

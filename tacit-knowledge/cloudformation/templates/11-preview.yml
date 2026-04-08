@@ -1,0 +1,377 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - Preview Environment (mock branch)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: production
+    Description: Base environment to inherit config from
+
+  MockSlug:
+    Type: String
+    Description: Slug derived from mock branch name (e.g., feature-name)
+
+  CoreImageTag:
+    Type: String
+    Description: ECR image tag for Core service (e.g., mock-feature-name)
+
+  AIServerImageTag:
+    Type: String
+    Description: ECR image tag for AI Server service (e.g., mock-feature-name)
+
+  PreviewDatabase:
+    Type: String
+    Description: PostgreSQL database name for preview isolation (e.g., skillrelay_mock_feature_name)
+
+  WorkerImageUri:
+    Type: String
+    Default: ''
+    Description: Full ECR URI with tag for Worker Lambda container image (empty = no Lambda)
+
+Conditions:
+  HasWorkerImage: !Not [!Equals [!Ref WorkerImageUri, '']]
+
+Resources:
+  # S3 Bucket for Preview (isolated from production)
+  PreviewS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${ProjectName}-preview-${MockSlug}
+      LifecycleConfiguration:
+        Rules:
+          - Id: AutoExpire
+            Status: Enabled
+            ExpirationInDays: 30
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+
+  # SQS Queue for Preview (isolated from production)
+  DocumentProcessingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ProjectName}-mock-${MockSlug}-document-processing
+      VisibilityTimeout: 900
+      MessageRetentionPeriod: 1209600
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DocumentProcessingDLQ.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+
+  DocumentProcessingDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ProjectName}-mock-${MockSlug}-document-processing-dlq
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+
+  # App Runner Service (Core Rails) - Preview
+  CoreAppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub sr-m-${MockSlug}-core
+      SourceConfiguration:
+        ImageRepository:
+          ImageIdentifier: !Sub
+            - ${ECRUri}:${CoreImageTag}
+            - ECRUri: !ImportValue
+                Fn::Sub: ${ProjectName}-core-ecr-uri
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: 3000
+            RuntimeEnvironmentSecrets:
+              - Name: POSTGRES_PASSWORD
+                Value: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+              - Name: RAILS_MASTER_KEY
+                Value: !Sub /${ProjectName}/${Environment}/RAILS_MASTER_KEY
+              - Name: AI_SERVER_API_SECRET_KEY
+                Value: !Sub /${ProjectName}/${Environment}/AI_SERVER_API_SECRET_KEY
+            RuntimeEnvironmentVariables:
+              - Name: RAILS_ENV
+                Value: production
+              - Name: POSTGRES_HOST
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-db-endpoint
+              - Name: POSTGRES_USER
+                Value: postgres
+              - Name: POSTGRES_DB
+                Value: !Ref PreviewDatabase
+              - Name: PREVIEW_ENV
+                Value: "true"
+              - Name: ADMIN_EMAIL
+                Value: preview@skillrelay.ai
+              - Name: ADMIN_PASSWORD
+                Value: Preview@2026
+              - Name: AWS_REGION
+                Value: !Ref AWS::Region
+              - Name: AWS_S3_BUCKET
+                Value: !Ref PreviewS3Bucket
+              - Name: SQS_DOCUMENT_PROCESSING_QUEUE_URL
+                Value: !Ref DocumentProcessingQueue
+              - Name: AI_SERVER_URL
+                Value: !Sub https://${AIServerAppRunnerService.ServiceUrl}
+              - Name: AI_SERVER_URL_FROM_CONTAINER
+                Value: !Sub https://${AIServerAppRunnerService.ServiceUrl}
+              - Name: APP_HOST
+                Value: preview.skillrelay.ai
+              - Name: VIDEO_URL
+                Value: https://video.skillrelay.ai
+              - Name: CLOUDFRONT_PRIVATE_KEY_ID
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-cloudfront-public-key-id
+        AutoDeploymentsEnabled: false
+        AuthenticationConfiguration:
+          AccessRoleArn: !ImportValue
+            Fn::Sub: ${ProjectName}-${Environment}-apprunner-access-role-arn
+      InstanceConfiguration:
+        Cpu: 1 vCPU
+        Memory: 2 GB
+        InstanceRoleArn: !ImportValue
+          Fn::Sub: ${ProjectName}-${Environment}-apprunner-instance-role-arn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /up
+        Interval: 20
+        Timeout: 10
+        HealthyThreshold: 1
+        UnhealthyThreshold: 10
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-mock-${MockSlug}-core
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+    DependsOn: AIServerAppRunnerService
+
+  # App Runner Service (AI Server) - Preview
+  AIServerAppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Sub sr-m-${MockSlug}-ai
+      SourceConfiguration:
+        ImageRepository:
+          ImageIdentifier: !Sub
+            - ${ECRUri}:${AIServerImageTag}
+            - ECRUri: !ImportValue
+                Fn::Sub: ${ProjectName}-ai-server-ecr-uri
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: 3000
+            RuntimeEnvironmentSecrets:
+              - Name: OPENAI_API_KEY
+                Value: !Sub /${ProjectName}/${Environment}/OPENAI_API_KEY
+              - Name: POSTGRES_PASSWORD
+                Value: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+              - Name: COHERE_API_KEY
+                Value: !Sub /${ProjectName}/${Environment}/COHERE_API_KEY
+            RuntimeEnvironmentVariables:
+              - Name: NODE_ENV
+                Value: production
+              - Name: POSTGRES_HOST
+                Value: !ImportValue
+                  Fn::Sub: ${ProjectName}-${Environment}-db-endpoint
+              - Name: POSTGRES_PORT
+                Value: "5432"
+              - Name: POSTGRES_USER
+                Value: postgres
+              - Name: POSTGRES_DB
+                Value: !Ref PreviewDatabase
+              - Name: AWS_REGION
+                Value: !Ref AWS::Region
+              - Name: AWS_S3_BUCKET
+                Value: !Ref PreviewS3Bucket
+              - Name: USE_NEW_TOPIC_LINKS
+                Value: "true"
+        AutoDeploymentsEnabled: false
+        AuthenticationConfiguration:
+          AccessRoleArn: !ImportValue
+            Fn::Sub: ${ProjectName}-${Environment}-ai-server-apprunner-access-role-arn
+      InstanceConfiguration:
+        Cpu: 1 vCPU
+        Memory: 2 GB
+        InstanceRoleArn: !ImportValue
+          Fn::Sub: ${ProjectName}-${Environment}-ai-server-apprunner-instance-role-arn
+      HealthCheckConfiguration:
+        Protocol: HTTP
+        Path: /api/health
+        Interval: 10
+        Timeout: 5
+        HealthyThreshold: 1
+        UnhealthyThreshold: 20
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-mock-${MockSlug}-ai-server
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+
+  # =================================================================
+  # Worker Lambda (SQS Consumer) - preview only
+  # =================================================================
+
+  WorkerLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: HasWorkerImage
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ProjectName}-mock-${MockSlug}-worker
+      RetentionInDays: 14
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+
+  WorkerLambdaRole:
+    Type: AWS::IAM::Role
+    Condition: HasWorkerImage
+    Properties:
+      RoleName: !Sub ${ProjectName}-mock-${MockSlug}-worker-lambda-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchLogs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${ProjectName}-mock-${MockSlug}-worker*
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource:
+                  - !GetAtt DocumentProcessingQueue.Arn
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${PreviewS3Bucket}/*
+                  - !Sub arn:aws:s3:::${PreviewS3Bucket}
+        - PolicyName: SSMAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+
+  WorkerLambdaFunction:
+    Type: AWS::Lambda::Function
+    Condition: HasWorkerImage
+    Properties:
+      FunctionName: !Sub ${ProjectName}-mock-${MockSlug}-worker
+      PackageType: Image
+      Code:
+        ImageUri: !Ref WorkerImageUri
+      Role: !GetAtt WorkerLambdaRole.Arn
+      Timeout: 900
+      MemorySize: 2048
+      EphemeralStorage:
+        Size: 2048
+      Environment:
+        Variables:
+          ENV: production
+          POSTGRES_HOST: !ImportValue
+            Fn::Sub: ${ProjectName}-${Environment}-db-endpoint
+          POSTGRES_USER: postgres
+          POSTGRES_DB: !Ref PreviewDatabase
+          POSTGRES_PORT: '5432'
+          SSM_POSTGRES_PASSWORD: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+          AWS_S3_BUCKET: !Ref PreviewS3Bucket
+          SQS_DOCUMENT_PROCESSING_QUEUE_URL: !Ref DocumentProcessingQueue
+          SSM_OPENAI_API_KEY: !Sub /${ProjectName}/${Environment}/OPENAI_API_KEY
+          SSM_COHERE_API_KEY: !Sub /${ProjectName}/${Environment}/COHERE_API_KEY
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Preview
+          Value: 'true'
+        - Key: MockSlug
+          Value: !Ref MockSlug
+    DependsOn: WorkerLambdaLogGroup
+
+  WorkerSQSEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: HasWorkerImage
+    Properties:
+      EventSourceArn: !GetAtt DocumentProcessingQueue.Arn
+      FunctionName: !Ref WorkerLambdaFunction
+      BatchSize: 1
+      MaximumBatchingWindowInSeconds: 0
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
+      Enabled: true
+
+Outputs:
+  CoreUrl:
+    Description: Core App Runner Service URL
+    Value: !GetAtt CoreAppRunnerService.ServiceUrl
+
+  AIServerUrl:
+    Description: AI Server App Runner Service URL
+    Value: !GetAtt AIServerAppRunnerService.ServiceUrl
+
+  CoreServiceArn:
+    Description: Core App Runner Service ARN
+    Value: !GetAtt CoreAppRunnerService.ServiceArn
+
+  AIServerServiceArn:
+    Description: AI Server App Runner Service ARN
+    Value: !GetAtt AIServerAppRunnerService.ServiceArn
+
+  PreviewDatabase:
+    Description: PostgreSQL database used for preview isolation
+    Value: !Ref PreviewDatabase
+
+  WorkerLambdaArn:
+    Condition: HasWorkerImage
+    Description: Worker Lambda Function ARN
+    Value: !GetAtt WorkerLambdaFunction.Arn

@@ -1,0 +1,53 @@
+// rooms/show 画面用スタイル
+
+body.rooms-show {
+  height: 100%;
+  overflow: hidden;
+
+  .main-content {
+    margin: 0;
+    margin-left: 280px; // サイドバー幅分
+    height: 100vh !important;
+    min-height: unset !important;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .content-header {
+    display: none !important;
+  }
+}
+
+html:has(body.rooms-show) {
+  height: 100%;
+  overflow: hidden;
+}
+
+.rooms-show__container {
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.rooms-show__header {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.rooms-show__body {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.rooms-show__body--scrollable {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: auto;
+}

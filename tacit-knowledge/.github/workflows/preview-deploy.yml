@@ -1,0 +1,516 @@
+name: Deploy Preview Environment
+
+on:
+  push:
+    branches: ['mock/**']
+
+concurrency:
+  group: preview-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-1
+  PROJECT_NAME: skillrelay
+  ENVIRONMENT: production
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: [self-hosted, linux, x64, ec2]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Generate slug from branch name
+        id: slug
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/mock/}"
+          SLUG=$(echo "$BRANCH" | tr '/' '-' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//' | cut -c1-30)
+          PREVIEW_DB="skillrelay_mock_$(echo "$SLUG" | tr '-' '_')"
+          echo "slug=$SLUG" >> $GITHUB_OUTPUT
+          echo "preview_db=$PREVIEW_DB" >> $GITHUB_OUTPUT
+          echo "image_tag=mock-${SLUG}" >> $GITHUB_OUTPUT
+
+      - name: Detect changed services
+        id: changes
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+          IMAGE_TAG: ${{ steps.slug.outputs.image_tag }}
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 2>/dev/null || echo "FULL_BUILD")
+
+          if [ "$CHANGED" = "FULL_BUILD" ]; then
+            echo "core=true" >> $GITHUB_OUTPUT
+            echo "ai_server=true" >> $GITHUB_OUTPUT
+            echo "worker=true" >> $GITHUB_OUTPUT
+            echo "any_build=true" >> $GITHUB_OUTPUT
+            echo "First commit or shallow clone - building all services"
+            exit 0
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          CORE=$(echo "$CHANGED" | grep -q '^core/' && echo true || echo false)
+          AI_SERVER=$(echo "$CHANGED" | grep -q '^ai-server/' && echo true || echo false)
+          WORKER=$(echo "$CHANGED" | grep -q '^worker/' && echo true || echo false)
+
+          # Shared files (cloudformation, workflows, etc.) trigger all builds
+          SHARED=$(echo "$CHANGED" | grep -qvE '^(core/|ai-server/|worker/)' && echo true || echo false)
+          if [ "$SHARED" = "true" ]; then
+            CORE=true
+            AI_SERVER=true
+            WORKER=true
+            echo "Shared files changed - building all services"
+          fi
+
+          # If no service-specific changes, skip all builds
+          if [ "$CORE" = "false" ] && [ "$AI_SERVER" = "false" ] && [ "$WORKER" = "false" ]; then
+            echo "any_build=false" >> $GITHUB_OUTPUT
+          else
+            echo "any_build=true" >> $GITHUB_OUTPUT
+          fi
+
+          echo "core=$CORE" >> $GITHUB_OUTPUT
+          echo "ai_server=$AI_SERVER" >> $GITHUB_OUTPUT
+          echo "worker=$WORKER" >> $GITHUB_OUTPUT
+          echo "Build decisions: core=$CORE ai_server=$AI_SERVER worker=$WORKER"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Force full build if stack does not exist
+        id: stack-check
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+        run: |
+          STACK_NAME="${{ env.PROJECT_NAME }}-mock-${SLUG}"
+          STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+
+          if [ "$STACK_STATUS" = "NOT_FOUND" ] || [ "$STACK_STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STACK_STATUS" = "DELETE_COMPLETE" ]; then
+            echo "Stack not found or failed — forcing full build for first deploy"
+            echo "force_full=true" >> $GITHUB_OUTPUT
+          else
+            echo "Stack exists ($STACK_STATUS) — using incremental build"
+            echo "force_full=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------------------------------------------------
+      # Build Docker images (with local cache on EBS)
+      # -----------------------------------------------------------------------
+      - name: Pre-build cleanup
+        run: |
+          # Clean up old Docker images and build cache (full prune to fix corrupted cache)
+          docker system prune -af
+          docker buildx prune -af 2>/dev/null || true
+          rm -rf /home/ubuntu/docker-cache/core
+
+          # Validate local buildx cache directories (remove if corrupted)
+          for cache_dir in /home/ubuntu/docker-cache/*/; do
+            [ -d "$cache_dir" ] || continue
+            if [ ! -f "${cache_dir}index.json" ]; then
+              echo "Removing corrupted cache: $cache_dir (missing index.json)"
+              rm -rf "$cache_dir"
+            fi
+          done
+
+          echo "Disk usage after cleanup:"
+          df -h /
+
+      - name: Build and push Core image
+        if: steps.changes.outputs.core == 'true' || steps.stack-check.outputs.force_full == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: core
+          file: core/Dockerfile.prod
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-core:${{ steps.slug.outputs.image_tag }}
+          build-args: AI_SERVER_URL=https://placeholder.local
+          cache-from: type=local,src=/home/ubuntu/docker-cache/core
+          cache-to: type=local,dest=/home/ubuntu/docker-cache/core,mode=max
+          provenance: false
+
+      - name: Build and push AI Server image
+        if: steps.changes.outputs.ai_server == 'true' || steps.stack-check.outputs.force_full == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: ai-server
+          file: ai-server/Dockerfile.prod
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-ai-server:${{ steps.slug.outputs.image_tag }}
+          build-args: NEXT_PUBLIC_API_SECRET_KEY=${{ secrets.NEXT_PUBLIC_API_SECRET_KEY || '81dc28f7d136f1c2c0880a5cee48c4580070fdbd6984aafe475d88e87f1a70a8' }}
+          cache-from: type=local,src=/home/ubuntu/docker-cache/ai-server
+          cache-to: type=local,dest=/home/ubuntu/docker-cache/ai-server,mode=max
+          provenance: false
+
+      - name: Build and push Worker Lambda image
+        if: steps.changes.outputs.worker == 'true' || steps.stack-check.outputs.force_full == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: worker
+          file: worker/Dockerfile.lambda
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-worker:${{ steps.slug.outputs.image_tag }}
+          cache-from: type=local,src=/home/ubuntu/docker-cache/worker
+          cache-to: type=local,dest=/home/ubuntu/docker-cache/worker,mode=max
+          provenance: false
+
+      # -----------------------------------------------------------------------
+      # Create PostgreSQL database
+      # -----------------------------------------------------------------------
+      - name: Create PostgreSQL database
+        env:
+          PREVIEW_DB: ${{ steps.slug.outputs.preview_db }}
+        run: |
+          POSTGRES_HOST=$(aws ssm get-parameter \
+            --name /${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/POSTGRES_HOST \
+            --query 'Parameter.Value' --output text)
+          POSTGRES_PASSWORD=$(aws ssm get-parameter \
+            --name /${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/POSTGRES_PASSWORD \
+            --with-decryption --query 'Parameter.Value' --output text)
+
+          # Create database if it doesn't exist (idempotent)
+          docker run --rm \
+            -e PGPASSWORD=$POSTGRES_PASSWORD \
+            postgres:17-alpine \
+            psql -h $POSTGRES_HOST -U postgres \
+              -d postgres \
+              -tc "SELECT 1 FROM pg_database WHERE datname = '${PREVIEW_DB}'" \
+            | grep -q 1 \
+            || docker run --rm \
+              -e PGPASSWORD=$POSTGRES_PASSWORD \
+              postgres:17-alpine \
+              psql -h $POSTGRES_HOST -U postgres \
+                -d postgres \
+                -c "CREATE DATABASE ${PREVIEW_DB};"
+
+          # Ensure vector extension exists in the new database
+          docker run --rm \
+            -e PGPASSWORD=$POSTGRES_PASSWORD \
+            postgres:17-alpine \
+            psql -h $POSTGRES_HOST -U postgres \
+              -d ${PREVIEW_DB} \
+              -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+          echo "Database '${PREVIEW_DB}' ensured to exist (data preserved)"
+
+      # -----------------------------------------------------------------------
+      # Deploy CloudFormation stack
+      # -----------------------------------------------------------------------
+      - name: Cleanup failed CloudFormation stack
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+        run: |
+          STACK_NAME="${{ env.PROJECT_NAME }}-mock-${SLUG}"
+          STACK_STATUS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+
+          echo "Stack status: $STACK_STATUS"
+
+          case "$STACK_STATUS" in
+            ROLLBACK_COMPLETE|ROLLBACK_FAILED|DELETE_FAILED|CREATE_FAILED|UPDATE_ROLLBACK_FAILED)
+              echo "Stack '$STACK_NAME' is in $STACK_STATUS state. Deleting before redeploy..."
+              aws cloudformation delete-stack --stack-name $STACK_NAME
+              aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+              echo "Stack deleted."
+              ;;
+            CREATE_IN_PROGRESS|ROLLBACK_IN_PROGRESS|DELETE_IN_PROGRESS|UPDATE_IN_PROGRESS|UPDATE_ROLLBACK_IN_PROGRESS|UPDATE_COMPLETE_CLEANUP_IN_PROGRESS|UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS)
+              echo "Stack '$STACK_NAME' is in $STACK_STATUS state. Waiting for it to stabilize..."
+              aws cloudformation wait stack-exists --stack-name $STACK_NAME 2>/dev/null || true
+              # Re-check status after waiting
+              STACK_STATUS=$(aws cloudformation describe-stacks \
+                --stack-name $STACK_NAME \
+                --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+              echo "Stack status after waiting: $STACK_STATUS"
+              case "$STACK_STATUS" in
+                ROLLBACK_COMPLETE|ROLLBACK_FAILED|DELETE_FAILED|CREATE_FAILED|UPDATE_ROLLBACK_FAILED)
+                  echo "Stack ended in $STACK_STATUS state. Deleting before redeploy..."
+                  aws cloudformation delete-stack --stack-name $STACK_NAME
+                  aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+                  echo "Stack deleted."
+                  ;;
+                NOT_FOUND)
+                  echo "Stack no longer exists. Proceeding with fresh deploy."
+                  ;;
+                *)
+                  echo "Stack is now in $STACK_STATUS state. Proceeding."
+                  ;;
+              esac
+              ;;
+            NOT_FOUND)
+              echo "No existing stack found. Proceeding with fresh deploy."
+              ;;
+            *)
+              echo "No cleanup needed."
+              ;;
+          esac
+
+      - name: Resolve Worker image URI
+        id: worker-image
+        env:
+          IMAGE_TAG: ${{ steps.slug.outputs.image_tag }}
+        run: |
+          REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          WORKER_IMAGE_URI=""
+          # Retry up to 3 times with 10s delay (ECR eventual consistency)
+          for attempt in 1 2 3; do
+            if aws ecr describe-images \
+                 --repository-name ${{ env.PROJECT_NAME }}-worker \
+                 --image-ids imageTag=${IMAGE_TAG} > /dev/null 2>&1; then
+              WORKER_IMAGE_URI="${REGISTRY}/${{ env.PROJECT_NAME }}-worker:${IMAGE_TAG}"
+              echo "Worker image found (attempt ${attempt}): $WORKER_IMAGE_URI"
+              break
+            fi
+            echo "Worker image not found (attempt ${attempt}), waiting 10s..."
+            sleep 10
+          done
+          if [ -z "$WORKER_IMAGE_URI" ]; then
+            echo "Worker image not found for tag ${IMAGE_TAG} after 3 attempts, Lambda will not be created"
+          fi
+          echo "uri=$WORKER_IMAGE_URI" >> $GITHUB_OUTPUT
+
+      - name: Deploy CloudFormation stack
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+          PREVIEW_DB: ${{ steps.slug.outputs.preview_db }}
+          IMAGE_TAG: ${{ steps.slug.outputs.image_tag }}
+          WORKER_IMAGE_URI: ${{ steps.worker-image.outputs.uri }}
+        run: |
+          STACK_NAME="${{ env.PROJECT_NAME }}-mock-${SLUG}"
+          STACK_EXISTS=$(aws cloudformation describe-stacks \
+            --stack-name $STACK_NAME \
+            --query 'Stacks[0].StackStatus' --output text 2>/dev/null || echo "NOT_FOUND")
+
+          if [ "$STACK_EXISTS" = "NOT_FOUND" ]; then
+            echo "Creating new stack (timeout: 20 minutes)..."
+            aws cloudformation create-stack \
+              --stack-name $STACK_NAME \
+              --template-body file://cloudformation/templates/11-preview.yml \
+              --parameters \
+                ParameterKey=ProjectName,ParameterValue=${{ env.PROJECT_NAME }} \
+                ParameterKey=Environment,ParameterValue=${{ env.ENVIRONMENT }} \
+                ParameterKey=MockSlug,ParameterValue=${SLUG} \
+                ParameterKey=CoreImageTag,ParameterValue=${IMAGE_TAG} \
+                ParameterKey=AIServerImageTag,ParameterValue=${IMAGE_TAG} \
+                ParameterKey=PreviewDatabase,ParameterValue=${PREVIEW_DB} \
+                ParameterKey=WorkerImageUri,ParameterValue=${WORKER_IMAGE_URI} \
+              --capabilities CAPABILITY_NAMED_IAM \
+              --timeout-in-minutes 20
+            aws cloudformation wait stack-create-complete --stack-name $STACK_NAME
+          else
+            echo "Updating existing stack..."
+            aws cloudformation deploy \
+              --template-file cloudformation/templates/11-preview.yml \
+              --stack-name $STACK_NAME \
+              --parameter-overrides \
+                ProjectName=${{ env.PROJECT_NAME }} \
+                Environment=${{ env.ENVIRONMENT }} \
+                MockSlug=${SLUG} \
+                CoreImageTag=${IMAGE_TAG} \
+                AIServerImageTag=${IMAGE_TAG} \
+                PreviewDatabase=${PREVIEW_DB} \
+                WorkerImageUri=${WORKER_IMAGE_URI} \
+              --capabilities CAPABILITY_NAMED_IAM \
+              --no-fail-on-empty-changeset
+          fi
+
+      # -----------------------------------------------------------------------
+      # Trigger App Runner redeployment (only for changed services)
+      # -----------------------------------------------------------------------
+      - name: Trigger App Runner redeployment
+        if: steps.changes.outputs.any_build == 'true' || steps.stack-check.outputs.force_full == 'true'
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+          CORE_CHANGED: ${{ steps.changes.outputs.core }}
+          AI_SERVER_CHANGED: ${{ steps.changes.outputs.ai_server }}
+        run: |
+          CORE_ARN=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.PROJECT_NAME }}-mock-${SLUG} \
+            --query "Stacks[0].Outputs[?OutputKey=='CoreServiceArn'].OutputValue" \
+            --output text)
+          AI_ARN=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.PROJECT_NAME }}-mock-${SLUG} \
+            --query "Stacks[0].Outputs[?OutputKey=='AIServerServiceArn'].OutputValue" \
+            --output text)
+
+          ARNS_TO_DEPLOY=()
+
+          if [ "$CORE_CHANGED" = "true" ]; then
+            echo "Triggering redeployment for Core: $CORE_ARN"
+            aws apprunner start-deployment --service-arn "$CORE_ARN"
+            ARNS_TO_DEPLOY+=("$CORE_ARN")
+          else
+            echo "Skipping Core redeployment (no changes)"
+          fi
+
+          if [ "$AI_SERVER_CHANGED" = "true" ]; then
+            echo "Triggering redeployment for AI Server: $AI_ARN"
+            aws apprunner start-deployment --service-arn "$AI_ARN"
+            ARNS_TO_DEPLOY+=("$AI_ARN")
+          else
+            echo "Skipping AI Server redeployment (no changes)"
+          fi
+
+          if [ ${#ARNS_TO_DEPLOY[@]} -eq 0 ]; then
+            echo "No services to redeploy"
+            exit 0
+          fi
+
+          echo "Waiting for deployments to complete..."
+          for ARN in "${ARNS_TO_DEPLOY[@]}"; do
+            while true; do
+              STATUS=$(aws apprunner describe-service --service-arn "$ARN" --query 'Service.Status' --output text)
+              echo "  $(basename $ARN): $STATUS"
+              if [ "$STATUS" = "RUNNING" ]; then break; fi
+              if [ "$STATUS" = "CREATE_FAILED" ] || [ "$STATUS" = "DELETE_FAILED" ]; then
+                echo "Service failed: $STATUS"
+                exit 1
+              fi
+              sleep 15
+            done
+          done
+          echo "All services redeployed successfully"
+
+      # -----------------------------------------------------------------------
+      # Update Lambda function code (if worker image changed)
+      # -----------------------------------------------------------------------
+      - name: Update Worker Lambda function code
+        if: steps.changes.outputs.worker == 'true' && steps.worker-image.outputs.uri != ''
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+          WORKER_IMAGE_URI: ${{ steps.worker-image.outputs.uri }}
+        run: |
+          FUNCTION_NAME="${{ env.PROJECT_NAME }}-mock-${SLUG}-worker"
+          if aws lambda get-function --function-name $FUNCTION_NAME > /dev/null 2>&1; then
+            echo "Updating Lambda function code: $FUNCTION_NAME"
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --image-uri $WORKER_IMAGE_URI
+            echo "Waiting for function update..."
+            aws lambda wait function-updated --function-name $FUNCTION_NAME
+            echo "Lambda function updated successfully"
+          else
+            echo "Lambda function $FUNCTION_NAME not found (first deploy handled by CloudFormation)"
+          fi
+
+      # -----------------------------------------------------------------------
+      # Output deployment URLs
+      # -----------------------------------------------------------------------
+      - name: Get deployment URLs
+        id: urls
+        env:
+          SLUG: ${{ steps.slug.outputs.slug }}
+        run: |
+          CORE_URL=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.PROJECT_NAME }}-mock-${SLUG} \
+            --query "Stacks[0].Outputs[?OutputKey=='CoreUrl'].OutputValue" \
+            --output text)
+          AI_URL=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.PROJECT_NAME }}-mock-${SLUG} \
+            --query "Stacks[0].Outputs[?OutputKey=='AIServerUrl'].OutputValue" \
+            --output text)
+          echo "core_url=$CORE_URL" >> $GITHUB_OUTPUT
+          echo "ai_url=$AI_URL" >> $GITHUB_OUTPUT
+
+      - name: Deployment summary
+        env:
+          CORE_CHANGED: ${{ steps.changes.outputs.core }}
+          AI_SERVER_CHANGED: ${{ steps.changes.outputs.ai_server }}
+          WORKER_CHANGED: ${{ steps.changes.outputs.worker }}
+        run: |
+          echo "## Preview Environment Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | URL |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
+          echo "| Core | https://${{ steps.urls.outputs.core_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| AI Server | https://${{ steps.urls.outputs.ai_url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Setting | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| DB Name | \`${{ steps.slug.outputs.preview_db }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Tag | \`${{ steps.slug.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Core rebuilt | $CORE_CHANGED |" >> $GITHUB_STEP_SUMMARY
+          echo "| AI Server rebuilt | $AI_SERVER_CHANGED |" >> $GITHUB_STEP_SUMMARY
+          echo "| Worker Lambda rebuilt | $WORKER_CHANGED |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To destroy this environment, run the **Destroy Preview Environment** workflow with slug: \`${{ steps.slug.outputs.slug }}\`" >> $GITHUB_STEP_SUMMARY
+
+      # -----------------------------------------------------------------------
+      # Post preview URL to associated PR
+      # -----------------------------------------------------------------------
+      - name: Comment preview URL on PR
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CORE_URL: ${{ steps.urls.outputs.core_url }}
+          AI_URL: ${{ steps.urls.outputs.ai_url }}
+          SLUG: ${{ steps.slug.outputs.slug }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          REPO="${{ github.repository }}"
+          API="https://api.github.com/repos/${REPO}"
+          AUTH="Authorization: token ${GITHUB_TOKEN}"
+
+          # Find open PR for this branch
+          PR_NUMBER=$(curl -sf -H "$AUTH" \
+            "${API}/pulls?head=${{ github.repository_owner }}:${BRANCH}&state=open" \
+            | python3 -c "import sys,json; prs=json.load(sys.stdin); print(prs[0]['number'] if prs else '')")
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found for branch $BRANCH, skipping comment"
+            exit 0
+          fi
+
+          COMMENT_MARKER="<!-- preview-deploy-url -->"
+          COMMENT_BODY=$(cat <<EOF
+          ${COMMENT_MARKER}
+          ## 🚀 Preview Environment
+
+          | Service | URL |
+          |---------|-----|
+          | Core | https://${CORE_URL} |
+          | AI Server | https://${AI_URL} |
+
+          **Branch:** \`${BRANCH}\` | **Slug:** \`${SLUG}\`
+
+          > To destroy: run **Destroy Preview Environment** workflow with slug \`${SLUG}\`
+          EOF
+          )
+
+          # Delete previous preview comment if exists
+          EXISTING_COMMENT_ID=$(curl -sf -H "$AUTH" \
+            "${API}/issues/${PR_NUMBER}/comments?per_page=100" \
+            | python3 -c "
+          import sys, json
+          comments = json.load(sys.stdin)
+          ids = [c['id'] for c in comments if '${COMMENT_MARKER}' in c.get('body','')]
+          print(ids[0] if ids else '')
+          ")
+
+          if [ -n "$EXISTING_COMMENT_ID" ]; then
+            curl -sf -X DELETE -H "$AUTH" "${API}/issues/comments/${EXISTING_COMMENT_ID}"
+            echo "Deleted previous preview comment"
+          fi
+
+          # Post new comment
+          curl -sf -X POST -H "$AUTH" -H "Content-Type: application/json" \
+            -d "$(python3 -c "import json,sys; print(json.dumps({'body': sys.stdin.read()}))" <<< "$COMMENT_BODY")" \
+            "${API}/issues/${PR_NUMBER}/comments"
+          echo "Posted preview URL comment on PR #${PR_NUMBER}"
+
+      # -----------------------------------------------------------------------
+      # Cleanup (self-hosted runner workspace)
+      # -----------------------------------------------------------------------
+      - name: Docker cleanup
+        if: always()
+        run: docker system prune -f --filter 'until=24h'

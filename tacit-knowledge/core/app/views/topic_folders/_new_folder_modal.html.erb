@@ -1,0 +1,35 @@
+<div class="modal fade" id="newFolderModal" tabindex="-1" aria-labelledby="newFolderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <%= form_with url: topic_folders_path, method: :post, local: true do |f| %>
+        <div class="modal-header">
+          <h5 class="modal-title" id="newFolderModalLabel">
+            <i class="bi bi-folder-plus"></i> 新規フォルダ作成
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body">
+          <%= hidden_field_tag "topic_folder[parent_id]", @current_folder&.id %>
+          <% if privileged_admin? %>
+            <div class="mb-3">
+              <%= label_tag "topic_folder[company_id]", "会社", class: "form-label fw-bold" %>
+              <%= select_tag "topic_folder[company_id]",
+                    options_from_collection_for_select(@companies, :id, :name),
+                    class: "form-select",
+                    required: true,
+                    prompt: "会社を選択してください" %>
+            </div>
+          <% end %>
+          <div class="mb-3">
+            <%= f.label :name, "フォルダ名", class: "form-label fw-bold" %>
+            <%= f.text_field :name, class: "form-control", name: "topic_folder[name]", placeholder: "フォルダ名を入力", required: true %>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+          <%= f.submit "作成", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

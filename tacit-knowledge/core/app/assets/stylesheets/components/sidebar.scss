@@ -1,0 +1,238 @@
+// Variables
+$sidebar-bg: #343a40;
+$sidebar-border: #495057;
+$sidebar-text: #adb5bd;
+$sidebar-text-active: #ffffff;
+$sidebar-hover-bg: #495057;
+$sidebar-width: 280px;
+$transition-duration: 0.3s;
+
+// Sidebar component
+.sidebar {
+  background-color: $sidebar-bg;
+  height: 100vh;
+  width: $sidebar-width;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  transition: all $transition-duration ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-footer {
+  border-top: 1px solid $sidebar-border;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid $sidebar-border;
+  
+  h4 {
+    color: $sidebar-text-active;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+.sidebar-menu {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  
+  li {
+    border-bottom: 1px solid $sidebar-border;
+  }
+  
+  a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: $sidebar-text;
+    text-decoration: none;
+    transition: all $transition-duration ease;
+    font-size: 14px;
+    
+    &:hover,
+    &.active {
+      background-color: $sidebar-hover-bg;
+      color: $sidebar-text-active;
+    }
+    
+    i {
+      margin-right: 10px;
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+  }
+}
+
+// 開発環境限定: ユーザー切替パネル
+$dev-accent: #f59e0b;
+
+.dev-user-switcher {
+  border-top: 2px dashed $dev-accent;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba($dev-accent, 0.05);
+}
+
+.dev-switcher-header {
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  color: $dev-accent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.dev-switcher-arrow {
+  margin-left: auto;
+  transition: transform 0.2s;
+  font-size: 10px;
+
+  .dev-user-switcher.open & {
+    transform: rotate(180deg);
+  }
+}
+
+.dev-switcher-body {
+  display: none;
+  margin-top: 8px;
+
+  .dev-user-switcher.open & {
+    display: block;
+  }
+}
+
+.dev-switcher-current {
+  color: $sidebar-text;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba($sidebar-text-active, 0.1);
+
+  strong {
+    color: $sidebar-text-active;
+  }
+}
+
+.dev-switch-form {
+  margin: 2px 0;
+}
+
+.dev-switch-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid rgba($sidebar-text-active, 0.1);
+  border-radius: 4px;
+  color: $sidebar-text;
+  padding: 5px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background $transition-duration ease;
+
+  &:hover {
+    background: rgba($sidebar-text-active, 0.1);
+  }
+
+  &.active {
+    background: rgba($dev-accent, 0.15);
+    border-color: $dev-accent;
+    color: lighten($dev-accent, 10%);
+  }
+}
+
+.dev-role-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: auto;
+  color: white;
+
+  &.admin { background: #7c3aed; }
+  &.company_admin { background: #2563eb; }
+  &.veteran { background: #059669; }
+  &.general { background: #6b7280; }
+}
+
+.dev-company-badge {
+  font-size: 9px;
+  color: $sidebar-text;
+}
+
+// 開発環境限定: ログイン画面クイックログイン
+.dev-quick-login {
+  max-width: 400px;
+  margin: 24px auto;
+  border: 2px dashed $dev-accent;
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba($dev-accent, 0.03);
+}
+
+.dev-quick-login-header {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+  color: $dev-accent;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+
+  .dev-switcher-arrow {
+    margin-left: auto;
+  }
+
+  .dev-quick-login.open & .dev-switcher-arrow {
+    transform: rotate(180deg);
+  }
+}
+
+.dev-quick-login-body {
+  display: none;
+  margin-top: 10px;
+  gap: 4px;
+  flex-direction: column;
+
+  .dev-quick-login.open & {
+    display: flex;
+  }
+}
+
+.dev-quick-login-btn {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  color: #374151;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba($dev-accent, 0.08);
+    border-color: $dev-accent;
+  }
+}

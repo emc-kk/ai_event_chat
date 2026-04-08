@@ -1,0 +1,69 @@
+<%= form_with(model: @template, local: true, class: "needs-validation", novalidate: true, data: { turbo: false, controller: "template-editor" }) do |form| %>
+  <% if @template.errors.any? %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% @template.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :name, "テンプレート名", class: "form-label fw-bold required" %>
+    <%= form.text_field :name, class: "form-control", placeholder: "例: ISO9001 作業手順書", required: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :description, "説明", class: "form-label fw-bold" %>
+    <%= form.text_area :description, class: "form-control", rows: 3, placeholder: "テンプレートの用途・概要を記述してください" %>
+  </div>
+
+  <div class="mb-3">
+    <%= form.label :output_format, "出力形式", class: "form-label fw-bold" %>
+    <%= form.select :output_format,
+                    ManualTemplate.output_formats.keys.map { |k| [k == 'markdown' ? 'Markdown' : 'DOCX', k] },
+                    {},
+                    class: "form-select" %>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label fw-bold">セクション定義</label>
+    <p class="text-muted small">文書に含めるセクションの順序と、各セクションへの生成指示を定義します。</p>
+
+    <div id="sections-container" data-template-editor-target="sectionsContainer">
+      <% sections = @template.sections.presence || [{ 'name' => '', 'instruction' => '' }] %>
+      <% sections.each_with_index do |section, index| %>
+        <div class="card mb-2 section-item" data-index="<%= index %>">
+          <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-grip-vertical text-muted" style="cursor: grab;"></i>
+              <input type="text"
+                     name="manual_template[sections][][name]"
+                     value="<%= section['name'] %>"
+                     class="form-control form-control-sm"
+                     placeholder="セクション名（例: 目的）"
+                     required>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-action="click->template-editor#removeSection">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+            <textarea name="manual_template[sections][][instruction]"
+                      class="form-control form-control-sm"
+                      rows="2"
+                      placeholder="このセクションに何を書くかの生成指示"><%= section['instruction'] %></textarea>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" data-action="click->template-editor#addSection">
+      <i class="bi bi-plus-lg"></i> セクションを追加
+    </button>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <%= link_to "キャンセル", manual_templates_path, class: "btn btn-secondary" %>
+    <%= form.submit (@template.new_record? ? "作成" : "更新"), class: "btn btn-primary" %>
+  </div>
+<% end %>

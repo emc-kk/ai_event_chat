@@ -1,0 +1,70 @@
+# 現在無効なジョブ (URL要修正)
+# status: inactive で登録されるため自動実行されない
+
+jobs:
+  - id: fuji-electricity-rate
+    name: "電気料金 平均単価"
+    description: "電力会社別・契約種別の平均電気料金をPDF/Excelから取得（URL要修正）"
+    status: inactive
+    source:
+      type: pdf_download
+      url: https://www.emsc.meti.go.jp/info/public/
+      method: link_discovery
+    extraction:
+      mode: link_then_table
+      link_pattern: "\\.(pdf|xlsx?)$"
+      table_index: 0
+      columns:
+        - { source: "電力会社", name: utility_company, type: text }
+        - { source: "契約種別", name: contract_type, type: text }
+        - { source: "平均単価", name: average_unit_price, type: number }
+    schedule:
+      cron: "0 23 1 1,4,7,10 *"  # JST 四半期初月1日 8:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 120
+
+  - id: fuji-grid-vacancy
+    name: "系統空容量マッピング"
+    description: "送配電事業者別の系統空容量・接続可能容量（URL要修正: 404）"
+    status: inactive
+    source:
+      type: web_scrape
+      method: selenium
+      url: https://www.tepco.co.jp/pg/consignment/system/pdf_new/map_jyuuryou.html
+    extraction:
+      mode: html_table
+      table_index: 0
+      columns:
+        - { source: "変電所", name: substation, type: text }
+        - { source: "送電線", name: transmission_line, type: text }
+        - { source: "空容量", name: available_capacity_mw, type: number }
+        - { source: "接続可能量", name: connectable_capacity_mw, type: number }
+    schedule:
+      cron: "0 23 1 * *"  # JST 毎月1日 8:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 120
+
+  - id: fuji-balancing-market
+    name: "需給調整市場 約定結果"
+    description: "需給調整市場の商品別約定量・約定単価（URL要修正: 404）"
+    status: inactive
+    source:
+      type: web_scrape
+      method: selenium
+      url: https://www.tdgc.jp/adjustment/
+    extraction:
+      mode: html_table
+      table_index: 0
+      columns:
+        - { source: "商品", name: product_type, type: text }
+        - { source: "約定日", name: settlement_date, type: text }
+        - { source: "エリア", name: area, type: text }
+        - { source: "約定量", name: settled_volume_kw, type: number }
+        - { source: "約定単価", name: settlement_price, type: number }
+    schedule:
+      cron: "0 23,11 * * *"  # JST 8:00, 20:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60

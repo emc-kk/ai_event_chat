@@ -1,0 +1,72 @@
+<div class="col-md-10 p-4 p-lg-5 w-100 pt-lg-0">
+  <div class="d-flex justify-content-end">
+    <% if admin_or_company_admin? %>
+      <%= link_to "+ 新規ユーザー登録", new_user_path, class: "btn bg-secondary text-white mb-4" %>
+    <% end %>
+  </div>
+  <div class="table-container">
+    <table class="table table-hover mb-0">
+      <thead>
+        <tr>
+          <th>氏名</th>
+          <% if privileged_admin? %>
+            <th>会社</th>
+          <% end %>
+          <th>所属部署</th>
+          <th>権限</th>
+          <th>勤続年数</th>
+          <th>社内経歴</th>
+          <th>確認状態</th>
+          <% if admin_or_company_admin? %>
+            <th>アクション</th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% if @users.any? %>
+          <% @users.each do |user| %>
+            <tr>
+              <td><%= user.name %></td>
+              <% if privileged_admin? %>
+                <td>
+                  <%= user.company&.name || "未設定" %>
+                </td>
+              <% end %>
+              <td><%= user.department %></td>
+              <td><%= User.human_attribute_name("role.#{user.role}") %></td>
+              <td><%= user.number %>年</td>
+              <td><%= truncate(user.description, length: 30, separator: '...') %></td>
+              <td>
+                <% if user.confirmed? %>
+                  <span class="badge bg-success">確認済み</span>
+                <% else %>
+                  <span class="badge bg-warning text-dark">未確認</span>
+                <% end %>
+              </td>
+              <% if admin_or_company_admin? %>
+                <td>
+                  <div class="d-flex gap-2">
+                    <%= button_to "編集", edit_user_path(user), method: :get, class: "btn bg-secondary text-white btn-sm" %>
+                    <%= button_to "削除", user_path(user), method: :delete,
+                        class: "btn text-danger btn-sm",
+                        data: { confirm: "本当に削除しますか？" } %>
+                  </div>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        <% else %>
+          <tr>
+            <td colspan="<%= privileged_admin? ? 7 : 6 %>" class="text-center text-muted py-4">
+              <i class="fas fa-inbox fa-2x mb-2"></i><br>
+              データがありません
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <div class="d-flex justify-content-end mt-4">
+    <%= paginate @users %>
+  </div>
+</div>

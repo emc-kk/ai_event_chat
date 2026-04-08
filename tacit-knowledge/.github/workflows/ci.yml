@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, mock/main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    env:
+      RAILS_ENV: test
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+      FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+
+    defaults:
+      run:
+        working-directory: core
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.2
+          bundler-cache: true
+          working-directory: core
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.14.0
+          cache: yarn
+          cache-dependency-path: core/yarn.lock
+
+      - name: Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache assets
+        uses: actions/cache@v4
+        with:
+          path: |
+            core/public/assets
+            core/tmp/cache
+          key: assets-${{ runner.os }}-${{ hashFiles('core/app/assets/**', 'core/app/javascript/**', 'core/yarn.lock') }}
+          restore-keys: |
+            assets-${{ runner.os }}-
+
+      - name: Setup database
+        run: bundle exec rails db:setup
+
+      - name: Run tests
+        run: bundle exec rails test
+
+      - name: Build JavaScript and CSS
+        run: |
+          yarn build
+          yarn build:css
+
+      - name: Build assets
+        run: bundle exec rails assets:precompile
+
+  lint:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: core
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.2
+          bundler-cache: true
+          working-directory: core
+
+      - name: Run RuboCop
+        run: bundle exec rubocop || true
+
+  packwerk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.2
+          bundler-cache: true
+          working-directory: core
+
+      - name: Packwerk validate
+        run: bundle exec packwerk validate
+
+      - name: Packwerk check
+        run: bundle exec packwerk check
+
+  security:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: core
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.2
+          bundler-cache: true
+          working-directory: core
+
+      - name: Run Brakeman
+        run: bundle exec brakeman || true

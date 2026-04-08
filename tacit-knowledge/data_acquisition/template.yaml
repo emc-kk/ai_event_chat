@@ -1,0 +1,239 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SkillRelay Scraper Pipeline — Coordinator + Receiver + Writer + SQS
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+
+  DispatchIntervalMinutes:
+    Type: Number
+    Default: 1
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 128
+    Environment:
+      Variables:
+        POSTGRES_HOST:
+          Fn::ImportValue: !Sub ${ProjectName}-${Environment}-db-endpoint
+        POSTGRES_PORT: '5432'
+        POSTGRES_USER: postgres
+        POSTGRES_DB: !Sub ${ProjectName}_${Environment}
+        SSM_PASSWORD_PATH: !Sub /${ProjectName}/${Environment}/POSTGRES_PASSWORD
+        MAX_TASK_ATTEMPTS: '3'
+
+Resources:
+  # -------------------------------------------------------
+  # SQS Queues (Scraper Results)
+  # -------------------------------------------------------
+  ScraperResultsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ProjectName}-${Environment}-scraper-results
+      VisibilityTimeout: 300
+      MessageRetentionPeriod: 1209600
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt ScraperResultsDLQ.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  ScraperResultsDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${ProjectName}-${Environment}-scraper-results-dlq
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # -------------------------------------------------------
+  # Coordinator Lambda
+  # -------------------------------------------------------
+  CoordinatorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-scraper-coordinator
+      Description: SSH Push coordinator for distributed scraping
+      Handler: handler.lambda_handler
+      CodeUri: coordinator/
+      Timeout: 900
+      MemorySize: 256
+      Environment:
+        Variables:
+          MAX_TASKS_PER_INVOCATION: '10'
+          SSH_TIMEOUT: '10'
+          TASK_TIMEOUT: '300'
+          TASK_STALE_THRESHOLD_MINUTES: '30'
+      Events:
+        DispatchSchedule:
+          Type: Schedule
+          Properties:
+            Schedule: !Sub rate(${DispatchIntervalMinutes} minute)
+            Description: Triggers scraper coordinator
+            Enabled: true
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource:
+                - !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${ProjectName}/${Environment}/scraper-*
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+                - ssm:GetParameters
+                - ssm:GetParametersByPath
+              Resource:
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+            - Effect: Allow
+              Action:
+                - ec2:DescribeInstances
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource:
+                - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-scraper-*
+
+  # -------------------------------------------------------
+  # Receiver Lambda (Function URL)
+  # -------------------------------------------------------
+  ReceiverFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-scraper-receiver
+      Description: Receives scraper results via HTTPS, queues to SQS
+      Handler: handler.lambda_handler
+      CodeUri: receiver/
+      Timeout: 30
+      MemorySize: 128
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - POST
+          AllowHeaders:
+            - Authorization
+            - Content-Type
+      Environment:
+        Variables:
+          SQS_QUEUE_URL: !Ref ScraperResultsQueue
+          RECEIVER_AUTH_TOKEN: !Sub '{{resolve:ssm:/${ProjectName}/${Environment}/scraper-receiver-token}}'
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt ScraperResultsQueue.QueueName
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+
+  # -------------------------------------------------------
+  # Writer Lambda (SQS Trigger)
+  # -------------------------------------------------------
+  WriterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-${Environment}-scraper-writer
+      Description: Batch writes scraper results from SQS to DB
+      Handler: handler.lambda_handler
+      CodeUri: writer/
+      Timeout: 60
+      MemorySize: 256
+      Events:
+        SQSTrigger:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ScraperResultsQueue.Arn
+            BatchSize: 10
+            MaximumBatchingWindowInSeconds: 60
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/*
+
+  # -------------------------------------------------------
+  # Secrets Manager (SSH key placeholder)
+  # -------------------------------------------------------
+  SSHKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub ${ProjectName}/${Environment}/scraper-ssh-default-key
+      Description: Default SSH private key for scraper target instances
+      SecretString: 'PLACEHOLDER - Replace with actual SSH private key PEM'
+
+  # -------------------------------------------------------
+  # SSM Parameters
+  # -------------------------------------------------------
+  CoordinatorFunctionArnParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${ProjectName}/${Environment}/scraper-coordinator-function-arn
+      Type: String
+      Value: !GetAtt CoordinatorFunction.Arn
+
+Outputs:
+  CoordinatorFunctionArn:
+    Description: Coordinator Lambda ARN
+    Value: !GetAtt CoordinatorFunction.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-coordinator-arn
+
+  ReceiverFunctionUrl:
+    Description: Receiver Lambda Function URL
+    Value: !GetAtt ReceiverFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-receiver-url
+
+  ReceiverFunctionArn:
+    Description: Receiver Lambda ARN
+    Value: !GetAtt ReceiverFunction.Arn
+
+  WriterFunctionArn:
+    Description: Writer Lambda ARN
+    Value: !GetAtt WriterFunction.Arn
+
+  ScraperResultsQueueUrl:
+    Description: SQS Queue URL for scraper results
+    Value: !Ref ScraperResultsQueue
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-results-queue-url
+
+  ScraperResultsQueueArn:
+    Description: SQS Queue ARN for scraper results
+    Value: !GetAtt ScraperResultsQueue.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-scraper-results-queue-arn

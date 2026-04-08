@@ -1,0 +1,168 @@
+{
+  "alert_summary": {
+    "total_L1": 5,
+    "total_L2": 2,
+    "total_L3": 0,
+    "period": "2025-12-01 〜 2026-02-16",
+    "trending_bias": "confirmation",
+    "trending_member": "佐藤 健太"
+  },
+  "active_alerts": [
+    {
+      "id": "alert-001",
+      "level": "L2",
+      "level_name": "Resistance",
+      "severity": "warning",
+      "member_id": "member-003",
+      "member_name": "佐藤 健太",
+      "member_role": "アソシエイト",
+      "bias_type": "confirmation",
+      "bias_label": "確証バイアス",
+      "created_at": "2026-02-10T10:00:00Z",
+      "status": "active",
+      "description": "ソクラテス式補正質問に対して4週間にわたり改善が見られません。確証バイアス（過去の成功パターンへの依存）が継続しています。",
+      "recommended_action": "マネージャー（田中一郎）による1on1面談を推奨。過去の失敗案件の分析を通じて、パターン依存の自覚を促してください。",
+      "timeline": [
+        {
+          "date": "2026-01-08",
+          "event_type": "bias_detected",
+          "icon": "alert-triangle",
+          "color": "yellow",
+          "title": "確証バイアス検出",
+          "description": "関西バイオマス案件のヒアリングで検出。「過去の類似案件は全て成功している」という発言。",
+          "hearing_name": "関西バイオマス案件",
+          "result": "partially_corrected"
+        },
+        {
+          "date": "2026-01-08",
+          "event_type": "socratic_injected",
+          "icon": "message-circle",
+          "color": "blue",
+          "title": "ソクラテス式補正",
+          "description": "「類似規模のインフラで失敗した事例はありますか？」— 一部修正されたが、根本的な思考パターンは変わらず。",
+          "result": "partially_corrected"
+        },
+        {
+          "date": "2026-01-15",
+          "event_type": "bias_detected",
+          "icon": "alert-triangle",
+          "color": "yellow",
+          "title": "確証バイアス再検出",
+          "description": "北海道太陽光案件で再検出。「いつも通りのアプローチで進めれば大丈夫です」。",
+          "hearing_name": "北海道太陽光案件",
+          "result": "not_corrected"
+        },
+        {
+          "date": "2026-01-15",
+          "event_type": "socratic_injected",
+          "icon": "message-circle",
+          "color": "blue",
+          "title": "ソクラテス式補正（2回目）",
+          "description": "「逆に、この前提が当てはまらなかったケースはありますか？」— 補正効果なし。L1トレンドアラート発行。",
+          "result": "not_corrected"
+        },
+        {
+          "date": "2026-01-15",
+          "event_type": "alert_issued",
+          "icon": "bell",
+          "color": "blue",
+          "title": "L1トレンドアラート発行",
+          "description": "2週間で確証バイアスが3回検出。ソクラティックテンプレートを変更。"
+        },
+        {
+          "date": "2026-01-22",
+          "event_type": "bias_detected",
+          "icon": "alert-triangle",
+          "color": "orange",
+          "title": "確証バイアス継続",
+          "description": "四国風力案件で再度検出。「前回もうまくいったパターンなので今回も大丈夫です」。テンプレート変更後も改善なし。",
+          "hearing_name": "四国風力案件",
+          "result": "not_corrected"
+        },
+        {
+          "date": "2026-02-05",
+          "event_type": "bias_detected",
+          "icon": "alert-triangle",
+          "color": "red",
+          "title": "確証バイアス4回目",
+          "description": "中部メガソーラー案件。「毎回このやり方で成功しているので変える必要はない」。補正耐性が明確。",
+          "hearing_name": "中部メガソーラー案件",
+          "result": "not_corrected"
+        },
+        {
+          "date": "2026-02-10",
+          "event_type": "alert_escalated",
+          "icon": "alert-octagon",
+          "color": "red",
+          "title": "L2アラートにエスカレーション",
+          "description": "4週間にわたりソクラテス式補正に対して改善なし。管理者への通知と1on1面談を推奨。"
+        }
+      ]
+    },
+    {
+      "id": "alert-002",
+      "level": "L2",
+      "level_name": "Resistance",
+      "severity": "warning",
+      "member_id": "member-003",
+      "member_name": "佐藤 健太",
+      "member_role": "アソシエイト",
+      "bias_type": "authority",
+      "bias_label": "権威バイアス",
+      "created_at": "2026-02-12T14:00:00Z",
+      "status": "active",
+      "description": "上司の判断への過度な依存が継続。独立性スコアが3ヶ月で0.38→0.30に低下。",
+      "recommended_action": "独立判断の練習として、ジュニアメンバー主導の案件分析を割り当てることを推奨。"
+    },
+    {
+      "id": "alert-003",
+      "level": "L1",
+      "level_name": "Trend",
+      "severity": "info",
+      "member_id": "member-002",
+      "member_name": "鈴木 花子",
+      "member_role": "シニアアナリスト",
+      "bias_type": "anchoring",
+      "bias_label": "アンカリング",
+      "created_at": "2026-02-01T09:00:00Z",
+      "status": "monitoring",
+      "description": "初期の財務モデル数値に固着する傾向が直近2週間で3回検出。",
+      "recommended_action": "ソクラティック質問テンプレートを「アンカリング特化型」に微調整。"
+    },
+    {
+      "id": "alert-004",
+      "level": "L1",
+      "level_name": "Trend",
+      "severity": "info",
+      "member_id": "member-005",
+      "member_name": "高橋 誠",
+      "member_role": "テクニカルスペシャリスト",
+      "bias_type": "anchoring",
+      "bias_label": "アンカリング",
+      "created_at": "2026-01-28T11:00:00Z",
+      "status": "monitoring",
+      "description": "技術仕様の初期値に引きずられる傾向。専門領域特有のアンカリング。",
+      "recommended_action": "継続モニタリング。現時点では通常範囲内。"
+    }
+  ],
+  "resolved_alerts": [
+    {
+      "id": "alert-r01",
+      "level": "L1",
+      "member_name": "山田 美咲",
+      "bias_type": "authority",
+      "created_at": "2025-12-15T10:00:00Z",
+      "resolved_at": "2026-01-10T10:00:00Z",
+      "resolution": "メンター制度導入後、独立性スコアが改善（0.35→0.45）"
+    },
+    {
+      "id": "alert-r02",
+      "level": "L1",
+      "member_name": "鈴木 花子",
+      "bias_type": "confirmation",
+      "created_at": "2025-11-20T10:00:00Z",
+      "resolved_at": "2025-12-18T10:00:00Z",
+      "resolution": "反例提示の習慣化により改善"
+    }
+  ]
+}

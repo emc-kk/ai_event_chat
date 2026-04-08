@@ -1,0 +1,72 @@
+<div class="container py-4">
+  <div class="card">
+    <div class="card-body">
+
+      <%= form_for @manual,
+                   url: topic_manuals_path(@topic),
+                   data: {
+                     controller: 'data-source-picker',
+                   } do |f| %>
+        <% if @manual.errors.any? %>
+          <div class="alert alert-danger">
+            <ul class="mb-0">
+              <% @manual.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%# データソースから選択 %>
+        <div class="mb-4">
+          <label class="form-label fw-bold">参照ファイル</label>
+          <p class="text-muted small">データソースからファイルを選択してください。未アップロードの場合はデータソース内で直接アップロードできます。</p>
+          <%= render "shared/data_source_picker" %>
+        </div>
+
+        <%# テキスト入力領域 %>
+        <div class="mb-4">
+          <%= f.label :input_text, 'または、議事メモや手順を直接貼り付け', class: "form-label fw-bold" %>
+          <%= f.text_area :input_text,
+                          id: 'manual_input',
+                          class: "form-control",
+                          rows: 5,
+                          placeholder: "例　ステップ1：スプレッドシートを開く…" %>
+        </div>
+
+        <%# データソースから選択 %>
+        <div class="mb-4">
+          <%= render "shared/data_source_picker" %>
+        </div>
+
+        <%# テンプレート選択 %>
+        <% templates = ManualTemplate.for_company(current_company_id).order(is_preset: :desc, name: :asc) rescue [] %>
+        <% if templates.any? %>
+          <div class="mb-4">
+            <label class="form-label fw-bold">出力テンプレート（任意）</label>
+            <p class="text-muted small">テンプレートを選択すると、指定されたセクション構造に従ってマニュアルが生成されます。未選択の場合は従来の汎用フォーマットで出力されます。</p>
+            <select name="manual[manual_template_id]" class="form-select">
+              <option value="">テンプレートなし（従来フォーマット）</option>
+              <% templates.each do |template| %>
+                <option value="<%= template.id %>"
+                        title="<%= template.description %>">
+                  <%= template.name %><%= template.is_preset? ? '（プリセット）' : '' %>
+                </option>
+              <% end %>
+            </select>
+          </div>
+        <% end %>
+
+        <%# 送信ボタン %>
+        <div class="text-center">
+          <%= f.submit "マニュアルを作成する", class: "btn btn-primary px-4" %>
+        </div>
+
+        <%# ローディング %>
+        <div class="loading" hidden>
+          <div class="spinner"></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,38 @@
+# syntax = docker/dockerfile:1
+
+FROM node:22-slim AS base
+WORKDIR /app
+
+# Install dependencies
+FROM base AS deps
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Build
+FROM base AS builder
+ARG NEXT_PUBLIC_API_SECRET_KEY=""
+ENV NEXT_PUBLIC_API_SECRET_KEY=${NEXT_PUBLIC_API_SECRET_KEY}
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN yarn build
+
+# Production image
+FROM base AS runner
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/lib/prompts/prompts.yml ./lib/prompts/prompts.yml
+COPY --from=builder /app/data/flow.json ./data/flow.json
+COPY --from=builder /app/data/demo ./data/demo
+COPY --from=builder /app/data/clients ./data/clients
+
+EXPOSE 3000
+
+CMD ["yarn", "start"]

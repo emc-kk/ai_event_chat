@@ -1,0 +1,45 @@
+<div class="container py-4">
+  <h4 class="mb-4"><i class="bi bi-people"></i> 知識差分比較 - 対象ヒアリング選択</h4>
+
+  <div class="card">
+    <div class="card-body">
+      <p class="text-muted mb-4">
+        トピック「<strong><%= @topic.name %></strong>」のヒアリング結果から、
+        比較したい対象を2つ以上選択してください。
+      </p>
+
+      <%= form_with url: topic_comparison_sessions_path(@topic), method: :post, local: true do |f| %>
+        <% if @hearing_requests.any? %>
+          <div class="list-group mb-4">
+            <% @hearing_requests.each do |req| %>
+              <label class="list-group-item d-flex align-items-center gap-3">
+                <input type="checkbox" name="request_ids[]" value="<%= req.id %>" class="form-check-input">
+                <div>
+                  <div class="fw-bold">
+                    <%= req.respondent&.name || "（回答者未設定）" %>
+                    <span class="badge bg-secondary ms-2"><%= req.name || "ヒアリング" %></span>
+                  </div>
+                  <small class="text-muted">
+                    <%= req.created_at.strftime('%Y/%m/%d %H:%M') %> |
+                    ステータス: <%= I18n.t("activerecord.attributes.request.statuses.#{req.status}", default: req.status) %>
+                  </small>
+                </div>
+              </label>
+            <% end %>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <%= link_to "キャンセル", topics_path, class: "btn btn-secondary" %>
+            <%= f.submit "比較分析を開始", class: "btn btn-primary" %>
+          </div>
+        <% else %>
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-exclamation-circle" style="font-size: 2rem;"></i>
+            <p class="mt-2">このトピックには比較可能なヒアリング結果がありません。</p>
+            <p>最低2つの完了済みヒアリングが必要です。</p>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

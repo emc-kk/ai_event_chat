@@ -1,0 +1,35 @@
+<div class="col-md-10 p-4 p-lg-5 w-100 pt-lg-0">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="mb-0">管理者詳細</h5>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">氏名</dt>
+        <dd class="col-sm-9"><%= @admin.name %></dd>
+
+        <dt class="col-sm-3">メールアドレス</dt>
+        <dd class="col-sm-9"><%= @admin.email %></dd>
+
+        <% if privileged_admin? %>
+          <dt class="col-sm-3">会社</dt>
+          <dd class="col-sm-9">
+            <% if @admin.company_id.nil? %>
+              <span class="badge bg-warning text-dark">特権管理者</span>
+            <% else %>
+              <%= @admin.company&.name || "ID: #{@admin.company_id}" %>
+            <% end %>
+          </dd>
+        <% end %>
+
+        <dt class="col-sm-3">作成日</dt>
+        <dd class="col-sm-9"><%= l(@admin.created_at, format: :long) %></dd>
+      </dl>
+
+      <div class="d-flex gap-2 justify-content-end">
+        <%= link_to "戻る", admins_path, class: "btn btn-secondary" %>
+        <%= link_to "編集", edit_admin_path(@admin), class: "btn btn-primary" %>
+      </div>
+    </div>
+  </div>
+</div>

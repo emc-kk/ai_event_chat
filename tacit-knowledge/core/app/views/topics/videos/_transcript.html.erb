@@ -1,0 +1,7 @@
+<div class="transcript-item mb-3"
+     data-manual-video-time-param="<%= transcription.start_second %>"
+     data-time="<%= transcription.start_second %>"
+     data-action="click->manual-video#seekToTime">
+  <span class="transcript-time text-muted">[<%= seconds_to_time(transcription.start_second) %>] <%= transcription.speaker %>:</span>
+  <p class="mb-0"><%= transcription.text.html_safe %></p>
+</div>

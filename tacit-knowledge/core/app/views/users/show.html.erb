@@ -1,0 +1,50 @@
+<div class="col-md-10 p-4 p-lg-5 w-100 pt-lg-0">
+  <div class="mb-4">
+    <label class="form-label fw-bold text-muted">メールアドレス</label>
+    <div class="form-control-plaintext border rounded px-3 py-2 bg-light">
+      <%= @user.email %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label fw-bold text-muted">氏名</label>
+    <div class="form-control-plaintext border rounded px-3 py-2 bg-light">
+      <%= @user.name %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label fw-bold text-muted">所属部署</label>
+    <div class="form-control-plaintext border rounded px-3 py-2 bg-light">
+      <%= @user.department.present? ? @user.department : "未設定" %>
+    </div>
+  </div>
+
+  <% if current_admin? %>
+    <div class="mb-4">
+      <label class="form-label fw-bold text-muted">権限</label>
+      <div class="form-control-plaintext border rounded px-3 py-2 bg-light">
+        <%= User.human_attribute_name("role.#{@user.role}") %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <label class="form-label fw-bold text-muted">勤続年数</label>
+    <div class="form-control-plaintext border rounded px-3 py-2 bg-light">
+      <%= @user.number.present? ? "#{@user.number}年" : "未設定" %>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label fw-bold text-muted">社内経歴</label>
+    <div class="form-control-plaintext border rounded px-3 py-2 bg-light" style="min-height: 120px; white-space: pre-wrap;">
+      <%= @user.description.present? ? @user.description : "未設定" %>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <%= link_to "戻る", users_path, class: "btn btn-secondary" %>
+    <%= link_to "編集", edit_user_path(@user), class: "btn btn-primary" %>
+  </div>
+</div>

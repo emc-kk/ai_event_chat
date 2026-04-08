@@ -1,0 +1,88 @@
+<%= form_with(model: @topic, local: true, class: "needs-validation", novalidate: true, data: { turbo: false }) do |form| %>
+  <% if @topic.errors.any? %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% @topic.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form.hidden_field :folder_id %>
+
+  <div class="c-form">
+
+    <% if privileged_admin? && @topic.folder_id.blank? %>
+      <div class="c-form__block">
+        <div class="c-form__block-label required">
+          <%= form.label :company_id, "会社"%>
+        </div>
+        <div class="c-form__block-field --md">
+          <%= form.select :company_id,
+                          Company.status_active.order(:name).map { |c| [c.name, c.id] },
+                          { include_blank: "会社を選択", selected: @topic.company_id },
+                          required: true %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="c-form__block">
+      <div class="c-form__block-label required">
+        <%= form.label :name, "トピック名"%>
+      </div>
+      <div class="c-form__block-field">
+        <%= form.text_field :name, class: "#{'border-danger' if @topic.errors[:name].present? }", placeholder: "ヒアリングしたい業務やノウハウの名称" %>
+      </div>
+      <%# <div class="invalid-feedback">
+        氏名を入力してください。
+      </div> %>
+    </div>
+
+    <div class="c-form__block">
+      <div class="c-form__block-label required">
+        <%= form.label :description, "概要" %>
+      </div>
+      <div class="c-form__block-field">
+        <%= form.text_area :description,
+                        class: "#{'border-danger' if @topic.errors[:description].present? }",
+                        placeholder: "このトピックについて、概要を入力します。初期プロンプトのひな型として利用されます。" %>
+      </div>
+      <%# <div class="invalid-feedback">
+        概要を入力してください。
+      </div> %>
+    </div>
+
+    <div class="c-form__block">
+      <div class="c-form__block-label">
+        <%= form.label :icon_color, "アイコン"%>
+      </div>
+      <div class="c-form__block-field --md">
+        <%= form.select :icon_color,
+                Topic.icon_colors.keys.map { |c| [I18n.t("activerecord.attributes.topic.icon_colors.#{c}"), c] },
+                { include_blank: 'アイコンを選択してください' },
+                { class: "#{'border-danger' if @topic.errors[:icon_color].present? }" } %>
+      </div>
+      <%# <div class="invalid-feedback">
+        アイコンを入力してください。
+      </div> %>
+    </div>
+
+    <div class="c-form__block">
+      <div class="c-form__block-label">
+        データソース
+      </div>
+      <div class="c-form__block-field">
+        <%= render "shared/data_source_picker" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="c-button__container">
+    <%= link_to "キャンセル", topics_path, class: "c-button --back" %>
+    <%= form.submit (@topic.new_record? ? "作成" : "変更を保存する"), class: "c-button" %>
+    <% if @topic.persisted? && (admin_or_company_admin? || @topic.editable_by?(current_user, session[:user_type]))%>
+      <%= link_to "削除する", topic_path(@topic), method: :delete, data: { turbo_method: :delete, turbo: true, turbo_confirm: "本当に削除しますか？" }, class: "c-button --delete" %>
+    <% end %>
+  </div>
+<% end %>

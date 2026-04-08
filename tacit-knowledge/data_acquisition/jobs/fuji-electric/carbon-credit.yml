@@ -1,0 +1,50 @@
+# カーボンクレジット市場データ
+
+jobs:
+  - id: fuji-carbon-credit
+    name: "カーボン・クレジット市場 日次レポート"
+    description: "JPXカーボン・クレジット市場の日次約定結果をPDFから取得"
+    status: active
+    source:
+      type: pdf_download
+      url: https://www.jpx.co.jp/equities/carbon-credit/daily/
+      method: link_discovery
+    extraction:
+      mode: link_then_table
+      link_pattern: "\\.pdf$"
+      table_index: 0
+      columns:
+        - { source: "制度名", name: system_name, type: text }
+        - { source: "分類名", name: category_name, type: text }
+        - { source: "銘柄コード", name: ticker_code, type: text }
+        - { source: "始値", name: open_price, type: number }
+        - { source: "高値", name: high_price, type: number }
+        - { source: "安値", name: low_price, type: number }
+        - { source: "終値", name: close_price, type: number }
+        - { source: "売買", name: volume, type: number }
+    schedule:
+      cron: "0 11 * * 1-5"  # JST 平日 20:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 120
+
+  - id: fuji-jcredit-price
+    name: "J-クレジット 価格推移"
+    description: "J-クレジットのカテゴリ別月次平均価格をHTMLテーブルから取得"
+    status: active
+    source:
+      type: web_scrape
+      url: https://pps-net.org/j-credit
+    extraction:
+      mode: html_table
+      table_index: 2
+      columns:
+        - { source: "日付", name: date, type: text }
+        - { source: "省エネルギー", name: energy_saving_price, type: number }
+        - { source: "再エネ（電力）", name: re_electricity_price, type: number }
+        - { source: "森林", name: forest_price, type: number }
+    schedule:
+      cron: "0 23 * * 1"  # JST 月曜 8:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60

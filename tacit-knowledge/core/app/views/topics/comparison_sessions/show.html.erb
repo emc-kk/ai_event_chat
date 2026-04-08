@@ -1,0 +1,376 @@
+<div class="container-fluid py-4"
+     data-controller="comparison"
+     data-comparison-resolve-url-value="<%= resolve_topic_comparison_session_path(@topic, @comparison_session) %>">
+
+  <%# ヘッダー %>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1"><i class="bi bi-people"></i> 知識差分比較結果</h4>
+      <p class="text-muted mb-0">トピック: <%= @topic.name %></p>
+    </div>
+    <div class="d-flex gap-2">
+      <% if @comparison_session.status_analyzing? %>
+        <span class="badge bg-info fs-6"><i class="bi bi-hourglass-split"></i> 分析中...</span>
+      <% elsif @comparison_session.status_completed? %>
+        <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> 完了</span>
+      <% end %>
+      <%= link_to "比較一覧に戻る", topic_comparison_sessions_path(@topic), class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <% unless @comparison_session.status_analyzing? %>
+    <%# サマリーパネル %>
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card text-center border-success">
+          <div class="card-body">
+            <h2 class="text-success"><%= @elements_consensus.count %></h2>
+            <p class="mb-0 text-muted">一致</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-warning">
+          <div class="card-body">
+            <h2 class="text-warning"><%= @elements_divergence.count %></h2>
+            <p class="mb-0 text-muted">差分</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-danger">
+          <div class="card-body">
+            <h2 class="text-danger"><%= @elements_gap.count %></h2>
+            <p class="mb-0 text-muted">欠落</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card text-center border-primary">
+          <div class="card-body">
+            <h2 class="text-primary"><%= (@comparison_session.consensus_rate.to_f * 100).round(1) %>%</h2>
+            <p class="mb-0 text-muted">一致率</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# 一致セクション %>
+    <% if @elements_consensus.any? %>
+      <div class="card mb-4">
+        <div class="card-header bg-success bg-opacity-10">
+          <h5 class="mb-0 text-success"><i class="bi bi-check-circle-fill"></i> 一致（Consensus）- <%= @elements_consensus.count %>件</h5>
+        </div>
+        <div class="card-body p-0">
+          <% @elements_consensus.each do |element| %>
+            <div class="border-bottom p-3" id="element-<%= element.id %>">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <strong><%= element.knowledge_element %></strong>
+                  <div class="mt-2">
+                    <% element.responses.each do |resp| %>
+                      <div class="text-muted small mb-1">
+                        <span class="badge bg-light text-dark"><%= resp['respondent_name'] %></span>
+                        <%= resp['content'] %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+                <span class="resolution-badge badge bg-success">一致</span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# 差分セクション %>
+    <% if @elements_divergence.any? %>
+      <div class="card mb-4">
+        <div class="card-header bg-warning bg-opacity-10">
+          <h5 class="mb-0 text-warning"><i class="bi bi-exclamation-triangle-fill"></i> 差分（Divergence）- <%= @elements_divergence.count %>件</h5>
+        </div>
+        <div class="card-body p-0">
+          <% @elements_divergence.each do |element| %>
+            <div class="border-bottom p-3" id="element-<%= element.id %>">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong><%= element.knowledge_element %></strong>
+                <span class="resolution-badge badge <%= element.resolution ? 'bg-info' : 'bg-warning' %>">
+                  <%
+                    if element.resolution == 'adopted'
+                      _adopted_resp = element.responses.find { |r| r['request_id'] == element.resolution_detail&.dig('adopted_request_id') }
+                      _label = _adopted_resp ? "#{_adopted_resp['respondent_name']}の回答を採用済み" : '採用済み'
+                    elsif element.resolution
+                      _label = { 'merged_condition' => '条件分岐統合', 'flagged' => '要追加調査' }[element.resolution]
+                    else
+                      _label = '未解決'
+                    end
+                  %>
+                  <%= _label %>
+                </span>
+              </div>
+
+              <%# ベテランごとの回答を横並び表示 %>
+              <div class="row g-2 mb-3">
+                <% element.responses.each do |resp| %>
+                  <div class="col-md-<%= 12 / [element.responses.size, 4].min %>">
+                    <div class="card bg-light">
+                      <div class="card-body py-2 px-3">
+                        <div class="fw-bold small text-primary mb-1"><%= resp['respondent_name'] %></div>
+                        <div class="small"><%= resp['content'] %></div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# アクションボタン %>
+              <% unless element.resolution || @comparison_session.status_completed? %>
+                <div class="action-buttons d-flex gap-2 flex-wrap">
+                  <% element.responses.each do |resp| %>
+                    <button type="button" class="btn btn-sm btn-outline-success"
+                            data-action="click->comparison#resolve"
+                            data-element-id="<%= element.id %>"
+                            data-resolution="adopted"
+                            data-request-id="<%= resp['request_id'] %>"
+                            data-respondent-name="<%= resp['respondent_name'] %>">
+                      <i class="bi bi-check"></i> <%= resp['respondent_name'] %>の回答を採用
+                    </button>
+                  <% end %>
+                  <button type="button" class="btn btn-sm btn-outline-info"
+                          data-action="click->comparison#resolve"
+                          data-element-id="<%= element.id %>"
+                          data-resolution="merged_condition">
+                    <i class="bi bi-arrow-left-right"></i> 条件分岐として統合
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                          data-action="click->comparison#resolve"
+                          data-element-id="<%= element.id %>"
+                          data-resolution="flagged">
+                    <i class="bi bi-flag"></i> 追加調査が必要
+                  </button>
+                </div>
+              <% end %>
+
+              <%# 条件分岐統合モーダル %>
+              <div class="modal fade" id="merge-modal-<%= element.id %>" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">条件分岐として統合</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p class="text-muted small"><%= element.knowledge_element %></p>
+                      <div class="mb-3">
+                        <label class="form-label fw-bold">条件分岐の記述</label>
+                        <textarea id="merge-condition-<%= element.id %>" class="form-control" rows="4"
+                                  placeholder="例: 状況Xの場合はAの手順、状況Yの場合はBの手順"></textarea>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">コメント（任意）</label>
+                        <input type="text" id="merge-comment-<%= element.id %>" class="form-control"
+                               placeholder="統合の理由や備考">
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                      <button type="button" class="btn btn-info"
+                              data-action="click->comparison#confirmMerge"
+                              data-element-id="<%= element.id %>">統合する</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <%# フラグモーダル %>
+              <div class="modal fade" id="flag-modal-<%= element.id %>" tabindex="-1">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">追加調査フラグ</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p class="text-muted small"><%= element.knowledge_element %></p>
+                      <div class="mb-3">
+                        <label class="form-label fw-bold">追加調査が必要な理由</label>
+                        <textarea id="flag-reason-<%= element.id %>" class="form-control" rows="3"
+                                  placeholder="どの点について追加調査が必要か記述してください"></textarea>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                      <button type="button" class="btn btn-warning"
+                              data-action="click->comparison#confirmFlag"
+                              data-element-id="<%= element.id %>">フラグを設定</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <%# 対応方針メモ %>
+              <div class="mt-3">
+                <label class="form-label small text-muted fw-bold">対応方針メモ</label>
+                <div class="input-group">
+                  <textarea class="form-control form-control-sm" rows="2"
+                            id="note-<%= element.id %>"
+                            placeholder="対応方針を記入してください"
+                            <%= 'disabled' if @comparison_session.status_completed? %>><%= element.resolution_note %></textarea>
+                  <% unless @comparison_session.status_completed? %>
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-action="click->comparison#saveNote"
+                            data-element-id="<%= element.id %>">
+                      保存
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# 欠落セクション %>
+    <% if @elements_gap.any? %>
+      <div class="card mb-4">
+        <div class="card-header bg-danger bg-opacity-10">
+          <h5 class="mb-0 text-danger"><i class="bi bi-dash-circle-fill"></i> 欠落（Gap）- <%= @elements_gap.count %>件</h5>
+        </div>
+        <div class="card-body p-0">
+          <% @elements_gap.each do |element| %>
+            <div class="border-bottom p-3" id="element-<%= element.id %>">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong><%= element.knowledge_element %></strong>
+                <span class="resolution-badge badge <%= element.resolution ? 'bg-info' : 'bg-danger' %>">
+                  <%
+                    if element.resolution == 'adopted'
+                      _adopted_resp = element.responses.find { |r| r['request_id'] == element.resolution_detail&.dig('adopted_request_id') }
+                      _label = _adopted_resp ? "#{_adopted_resp['respondent_name']}の知識を採用済み" : '共通知識として採用済み'
+                    elsif element.resolution
+                      _label = { 'flagged' => '要追加確認' }[element.resolution]
+                    else
+                      _label = '未解決'
+                    end
+                  %>
+                  <%= _label %>
+                </span>
+              </div>
+
+              <div class="mb-2">
+                <% element.responses.each do |resp| %>
+                  <div class="small mb-1">
+                    <span class="badge bg-primary"><%= resp['respondent_name'] %></span>
+                    が言及: <%= resp['content'] %>
+                  </div>
+                <% end %>
+              </div>
+
+              <% unless element.resolution || @comparison_session.status_completed? %>
+                <div class="action-buttons d-flex gap-2 flex-wrap">
+                  <% if element.responses.map { |r| r['content'] }.uniq.size <= 1 %>
+                    <button type="button" class="btn btn-sm btn-outline-success"
+                            data-action="click->comparison#resolve"
+                            data-element-id="<%= element.id %>"
+                            data-resolution="adopted"
+                            data-request-id="<%= element.responses.first&.dig('request_id') %>"
+                            data-respondent-name="">
+                      <i class="bi bi-check"></i> 共通知識として採用
+                    </button>
+                  <% else %>
+                    <% element.responses.each do |resp| %>
+                      <button type="button" class="btn btn-sm btn-outline-success"
+                              data-action="click->comparison#resolve"
+                              data-element-id="<%= element.id %>"
+                              data-resolution="adopted"
+                              data-request-id="<%= resp['request_id'] %>"
+                              data-respondent-name="<%= resp['respondent_name'] %>">
+                        <i class="bi bi-check"></i> <%= resp['respondent_name'] %>の知識を採用
+                      </button>
+                    <% end %>
+                  <% end %>
+                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                          data-action="click->comparison#resolve"
+                          data-element-id="<%= element.id %>"
+                          data-resolution="flagged">
+                    <i class="bi bi-flag"></i> 追加確認が必要
+                  </button>
+                </div>
+
+                <%# フラグモーダル %>
+                <div class="modal fade" id="flag-modal-<%= element.id %>" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">追加確認フラグ</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="mb-3">
+                          <label class="form-label fw-bold">追加確認が必要な理由</label>
+                          <textarea id="flag-reason-<%= element.id %>" class="form-control" rows="3"
+                                    placeholder="他のベテランにも確認が必要な理由を記述してください"></textarea>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                        <button type="button" class="btn btn-warning"
+                                data-action="click->comparison#confirmFlag"
+                                data-element-id="<%= element.id %>">フラグを設定</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+
+              <%# 対応方針メモ %>
+              <div class="mt-3">
+                <label class="form-label small text-muted fw-bold">対応方針メモ</label>
+                <div class="input-group">
+                  <textarea class="form-control form-control-sm" rows="2"
+                            id="note-<%= element.id %>"
+                            placeholder="対応方針を記入してください"
+                            <%= 'disabled' if @comparison_session.status_completed? %>><%= element.resolution_note %></textarea>
+                  <% unless @comparison_session.status_completed? %>
+                    <button type="button" class="btn btn-sm btn-outline-primary"
+                            data-action="click->comparison#saveNote"
+                            data-element-id="<%= element.id %>">
+                      保存
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# 完了ボタン %>
+    <% if @comparison_session.status_in_review? %>
+      <div class="text-center mt-4">
+        <% if @comparison_session.all_resolved? %>
+          <%= button_to "レポートを完了する", complete_topic_comparison_session_path(@topic, @comparison_session),
+              method: :post, class: "btn btn-success btn-lg",
+              data: { turbo_confirm: "レポートを完了しますか？完了後も閲覧・編集は可能です。" } %>
+        <% else %>
+          <button class="btn btn-success btn-lg" disabled>
+            <i class="bi bi-lock"></i> 全項目の解決または対応方針の記入が必要です
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  <% else %>
+    <%# 分析中 - 5秒ごとに自動リロード %>
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+      <h5>比較分析を実行中です...</h5>
+      <p class="text-muted">ベテラン間の知識を比較しています。しばらくお待ちください。</p>
+      <p class="text-muted small">分析完了後、自動的に結果が表示されます。</p>
+    </div>
+    <script>
+      setTimeout(function() { window.location.reload(); }, 5000);
+    </script>
+  <% end %>
+</div>

@@ -1,0 +1,15 @@
+<div id="flash-messages">
+  <% if flash.any? %>
+    <div class="col-md-10 p-4 w-100">
+      <% flash.each do |type, message| %>
+        <% bootstrap_class = { "notice" => "alert alert-success", "alert" => "alert alert-danger" }[type] %>
+        <% if bootstrap_class %>
+          <div class="<%= bootstrap_class %> alert-dismissible fade show" role="alert">
+            <%= simple_format(message) %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

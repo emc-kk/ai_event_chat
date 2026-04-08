@@ -1,0 +1,72 @@
+# 非化石証書 オークション結果 + 価格推移
+
+jobs:
+  - id: fuji-nonfossil-fit
+    name: "非化石証書（FIT）オークション結果"
+    description: "FIT非化石証書のオークション約定結果をHTMLテーブルから取得"
+    status: active
+    source:
+      type: web_scrape
+      method: selenium
+      url: https://www.jepx.jp/nonfossil/market-data/
+    extraction:
+      mode: html_table
+      table_index: 0
+      columns:
+        - { source: "取引", name: round, type: text }
+        - { source: "約定日", name: settlement_date, type: text }
+        - { source: "約定量", name: volume_kwh, type: number }
+        - { source: "約定価格", name: settlement_price, type: number }
+        - { source: "約定最高価格", name: max_price, type: number }
+        - { source: "約定最安価格", name: min_price, type: number }
+    schedule:
+      cron: "0 23,11 * * *"  # JST 8:00, 20:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60
+
+  - id: fuji-nonfossil-nonfit
+    name: "非化石証書（非FIT）オークション結果"
+    description: "非FIT非化石証書のオークション約定結果をHTMLテーブルから取得"
+    status: active
+    source:
+      type: web_scrape
+      method: selenium
+      url: https://www.jepx.jp/nonfossil/market-data/
+    extraction:
+      mode: html_table
+      table_index: 1
+      columns:
+        - { source: "取引", name: round, type: text }
+        - { source: "約定日", name: settlement_date, type: text }
+        - { source: "約定量", name: volume_kwh, type: number }
+        - { source: "約定価格", name: settlement_price, type: number }
+        - { source: "約定最高価格", name: max_price, type: number }
+        - { source: "約定最安価格", name: min_price, type: number }
+    schedule:
+      cron: "0 23,11 * * *"  # JST 8:00, 20:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60
+
+  - id: fuji-nonfossil-trends
+    name: "非化石証書 価格推移（pps-net）"
+    description: "FIT非化石証書の時系列オークション価格・量をHTMLテーブルから取得"
+    status: active
+    source:
+      type: web_scrape
+      url: https://pps-net.org/non-fossil
+    extraction:
+      mode: html_table
+      table_index: 3
+      columns:
+        - { source: "約定処理日", name: settlement_date, type: text }
+        - { source: "約定量", name: volume_kwh, type: number }
+        - { source: "約定加重平均価格", name: avg_price, type: number }
+        - { source: "約定最高価格", name: max_price, type: number }
+        - { source: "約定最安価格", name: min_price, type: number }
+    schedule:
+      cron: "0 23 1 * *"  # JST 毎月1日 8:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60

@@ -1,0 +1,272 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/**'
+      - 'ai-server/**'
+      - 'worker/**'
+      - 'data_acquisition/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-1
+  PROJECT_NAME: skillrelay
+  ENVIRONMENT: production
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # Detect which directories have changed
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      ai-server: ${{ steps.filter.outputs.ai-server }}
+      worker: ${{ steps.filter.outputs.worker }}
+      data-acquisition: ${{ steps.filter.outputs.data-acquisition }}
+      scraper-agent: ${{ steps.filter.outputs.scraper-agent }}
+      coordinator: ${{ steps.filter.outputs.coordinator }}
+      deploy-all: ${{ steps.filter.outputs.deploy-all }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for changes
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "core=true" >> $GITHUB_OUTPUT
+            echo "ai-server=true" >> $GITHUB_OUTPUT
+            echo "worker=true" >> $GITHUB_OUTPUT
+            echo "data-acquisition=true" >> $GITHUB_OUTPUT
+            echo "scraper-agent=true" >> $GITHUB_OUTPUT
+            echo "coordinator=true" >> $GITHUB_OUTPUT
+            echo "deploy-all=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if deploy.yml changed (deploy all)
+          if git diff --name-only HEAD~1 HEAD | grep -q '.github/workflows/deploy.yml'; then
+            echo "core=true" >> $GITHUB_OUTPUT
+            echo "ai-server=true" >> $GITHUB_OUTPUT
+            echo "worker=true" >> $GITHUB_OUTPUT
+            echo "data-acquisition=true" >> $GITHUB_OUTPUT
+            echo "scraper-agent=true" >> $GITHUB_OUTPUT
+            echo "coordinator=true" >> $GITHUB_OUTPUT
+            echo "deploy-all=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "deploy-all=false" >> $GITHUB_OUTPUT
+
+          # Check individual directories
+          if git diff --name-only HEAD~1 HEAD | grep -q '^core/'; then
+            echo "core=true" >> $GITHUB_OUTPUT
+          else
+            echo "core=false" >> $GITHUB_OUTPUT
+          fi
+
+          if git diff --name-only HEAD~1 HEAD | grep -q '^ai-server/'; then
+            echo "ai-server=true" >> $GITHUB_OUTPUT
+          else
+            echo "ai-server=false" >> $GITHUB_OUTPUT
+          fi
+
+          if git diff --name-only HEAD~1 HEAD | grep -q '^worker/'; then
+            echo "worker=true" >> $GITHUB_OUTPUT
+          else
+            echo "worker=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Data Acquisition (seed scripts, coordinator, receiver, writer)
+          if git diff --name-only HEAD~1 HEAD | grep -qE '^data_acquisition/(scripts/|coordinator/|receiver/|writer/)'; then
+            echo "data-acquisition=true" >> $GITHUB_OUTPUT
+          else
+            echo "data-acquisition=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Scraper Agent — 別リポジトリ (emc-kk/skillrelay-scraper) に移動済み
+          echo "scraper-agent=false" >> $GITHUB_OUTPUT
+
+          # Coordinator Lambda (coordinator code changes)
+          if git diff --name-only HEAD~1 HEAD | grep -q '^data_acquisition/coordinator/'; then
+            echo "coordinator=true" >> $GITHUB_OUTPUT
+          else
+            echo "coordinator=false" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    needs: changes
+    runs-on: ubuntu-latest
+    if: needs.changes.outputs.core == 'true' || needs.changes.outputs.ai-server == 'true' || needs.changes.outputs.worker == 'true' || needs.changes.outputs.data-acquisition == 'true' || needs.changes.outputs.scraper-agent == 'true' || needs.changes.outputs.coordinator == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY"
+          docker system prune -af
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::778389812638:role/skillrelay-production-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # =============================================================================
+      # Core (Rails)
+      # =============================================================================
+      - name: Build and push Core image
+        if: needs.changes.outputs.core == 'true'
+        id: build-core
+        uses: docker/build-push-action@v6
+        with:
+          context: core
+          file: core/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-core:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-core:latest
+          build-args: AI_SERVER_URL=${{ secrets.AI_SERVER_URL || 'https://api.skillrelay.ai' }}
+          cache-from: type=gha,scope=prod-core
+          cache-to: type=gha,mode=max,scope=prod-core
+
+      # =============================================================================
+      # AI Server (Next.js)
+      # =============================================================================
+      - name: Build and push AI Server image
+        if: needs.changes.outputs.ai-server == 'true'
+        id: build-ai-server
+        uses: docker/build-push-action@v6
+        with:
+          context: ai-server
+          file: ai-server/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-ai-server:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-ai-server:latest
+          build-args: NEXT_PUBLIC_API_SECRET_KEY=${{ secrets.NEXT_PUBLIC_API_SECRET_KEY || '81dc28f7d136f1c2c0880a5cee48c4580070fdbd6984aafe475d88e87f1a70a8' }}
+          cache-from: type=gha,scope=prod-ai-server
+          cache-to: type=gha,mode=max,scope=prod-ai-server
+
+      # =============================================================================
+      # Worker (Python)
+      # =============================================================================
+      - name: Build and push Worker image
+        if: needs.changes.outputs.worker == 'true'
+        id: build-worker
+        uses: docker/build-push-action@v6
+        with:
+          context: worker
+          file: worker/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-worker:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-worker:latest
+          cache-from: type=gha,scope=prod-worker
+          cache-to: type=gha,mode=max,scope=prod-worker
+
+      # =============================================================================
+      # Update ECS Service (Worker)
+      # =============================================================================
+      - name: Update ECS Worker service
+        if: needs.changes.outputs.worker == 'true'
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-cluster \
+            --service ${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-worker \
+            --force-new-deployment
+
+      - name: Run Data Acquisition seed scripts
+        if: needs.changes.outputs.data-acquisition == 'true'
+        continue-on-error: true
+        run: |
+          pip install psycopg2-binary
+
+          POSTGRES_HOST=$(aws ssm get-parameter --name "/${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/POSTGRES_HOST" --query "Parameter.Value" --output text)
+          POSTGRES_PASSWORD=$(aws ssm get-parameter --name "/${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/POSTGRES_PASSWORD" --with-decryption --query "Parameter.Value" --output text)
+
+          cd data_acquisition
+          POSTGRES_HOST=$POSTGRES_HOST \
+          POSTGRES_PORT=5432 \
+          POSTGRES_USER=postgres \
+          POSTGRES_PASSWORD=$POSTGRES_PASSWORD \
+          POSTGRES_DB=skillrelay_${{ env.ENVIRONMENT }} \
+          python scripts/seed_fuji_electric_jobs.py
+
+      # Scraper Agent — 別リポジトリ (emc-kk/skillrelay-scraper) でビルド
+
+      # =============================================================================
+      # Coordinator Lambda (SSH task dispatcher)
+      # =============================================================================
+      - name: Package and deploy Coordinator Lambda
+        if: needs.changes.outputs.coordinator == 'true'
+        run: |
+          cd data_acquisition/coordinator
+
+          # Install dependencies with Lambda-compatible platform (Amazon Linux 2, Python 3.11)
+          pip install \
+            --target ./package \
+            --platform manylinux2014_x86_64 \
+            --implementation cp \
+            --python-version 3.11 \
+            --only-binary=:all: \
+            -r requirements.txt
+
+          # Create deployment zip
+          cd package
+          zip -r /tmp/coordinator-lambda.zip . -q
+          cd ..
+          zip /tmp/coordinator-lambda.zip *.py
+
+          echo "Package size: $(du -sh /tmp/coordinator-lambda.zip | cut -f1)"
+
+          # Update Lambda function code
+          aws lambda update-function-code \
+            --function-name ${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-scraper-coordinator \
+            --zip-file fileb:///tmp/coordinator-lambda.zip
+
+          echo "Coordinator Lambda updated"
+
+      - name: Deployment summary
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Deployment completed!"
+          echo ""
+          echo "Deployed services:"
+          if [ "${{ needs.changes.outputs.core }}" = "true" ]; then
+            echo "  - Core (Rails): $ECR_REGISTRY/${{ env.PROJECT_NAME }}-core:$IMAGE_TAG"
+          fi
+          if [ "${{ needs.changes.outputs.ai-server }}" = "true" ]; then
+            echo "  - AI Server (Next.js): $ECR_REGISTRY/${{ env.PROJECT_NAME }}-ai-server:$IMAGE_TAG"
+          fi
+          if [ "${{ needs.changes.outputs.worker }}" = "true" ]; then
+            echo "  - Worker (Python): $ECR_REGISTRY/${{ env.PROJECT_NAME }}-worker:$IMAGE_TAG"
+          fi
+          if [ "${{ needs.changes.outputs.data-acquisition }}" = "true" ]; then
+            echo "  - Data Acquisition: seed scripts updated"
+          fi
+          # Scraper Agent は別リポジトリ (emc-kk/skillrelay-scraper) でビルド
+          if [ "${{ needs.changes.outputs.coordinator }}" = "true" ]; then
+            echo "  - Coordinator Lambda: ${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-scraper-coordinator"
+          fi
+          echo ""
+          echo "App Runner services will automatically detect and deploy new images."

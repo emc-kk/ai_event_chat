@@ -1,0 +1,161 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - ECS Fargate Service for Worker (Python SQS Consumer)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+Resources:
+  # ECS Cluster
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub ${ProjectName}-${Environment}-cluster
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-ecs-cluster
+
+  # CloudWatch Log Group for Worker
+  WorkerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${ProjectName}-${Environment}-worker
+      RetentionInDays: 30
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-worker-logs
+
+  # ECS Task Definition for Worker
+  WorkerTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${ProjectName}-${Environment}-worker
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: '2048'
+      Memory: '4096'
+      ExecutionRoleArn: !ImportValue
+        Fn::Sub: ${ProjectName}-${Environment}-ecs-task-execution-role-arn
+      TaskRoleArn: !ImportValue
+        Fn::Sub: ${ProjectName}-${Environment}-ecs-task-role-arn
+      ContainerDefinitions:
+        - Name: worker
+          Image: !Sub
+            - ${ECRUri}:latest
+            - ECRUri: !ImportValue
+                Fn::Sub: ${ProjectName}-worker-ecr-uri
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref WorkerLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: worker
+          Environment:
+            - Name: ENV
+              Value: !Ref Environment
+            - Name: POSTGRES_HOST
+              Value: !ImportValue
+                Fn::Sub: ${ProjectName}-${Environment}-db-endpoint
+            - Name: POSTGRES_USER
+              Value: postgres
+            - Name: POSTGRES_DB
+              Value: !Sub ${ProjectName}_${Environment}
+            - Name: POSTGRES_PORT
+              Value: '5432'
+            - Name: AWS_REGION
+              Value: !Ref AWS::Region
+            - Name: AWS_S3_BUCKET
+              Value: skill-relay-dev
+            - Name: SQS_DOCUMENT_PROCESSING_QUEUE_URL
+              Value: !ImportValue
+                Fn::Sub: ${ProjectName}-${Environment}-document-processing-queue-url
+          Secrets:
+            - Name: POSTGRES_PASSWORD
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/POSTGRES_PASSWORD
+            - Name: OPENAI_API_KEY
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/OPENAI_API_KEY
+            - Name: COHERE_API_KEY
+              ValueFrom: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/${Environment}/COHERE_API_KEY
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-worker-task
+
+  # ECS Service for Worker
+  WorkerService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub ${ProjectName}-${Environment}-worker
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref WorkerTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - !ImportValue
+              Fn::Sub: ${ProjectName}-${Environment}-public-subnet-1-id
+            - !ImportValue
+              Fn::Sub: ${ProjectName}-${Environment}-public-subnet-2-id
+          SecurityGroups:
+            - !ImportValue
+              Fn::Sub: ${ProjectName}-${Environment}-ecs-sg-id
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-worker-service
+
+Outputs:
+  ECSClusterName:
+    Description: ECS Cluster Name
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-ecs-cluster-name
+
+  ECSClusterArn:
+    Description: ECS Cluster ARN
+    Value: !GetAtt ECSCluster.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-ecs-cluster-arn
+
+  WorkerServiceName:
+    Description: Worker ECS Service Name
+    Value: !GetAtt WorkerService.Name
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-worker-service-name
+
+  WorkerServiceArn:
+    Description: Worker ECS Service ARN
+    Value: !Ref WorkerService
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-worker-service-arn
+
+  WorkerTaskDefinitionArn:
+    Description: Worker Task Definition ARN
+    Value: !Ref WorkerTaskDefinition
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-worker-task-definition-arn
+
+  WorkerLogGroupName:
+    Description: Worker CloudWatch Log Group Name
+    Value: !Ref WorkerLogGroup
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-worker-log-group-name

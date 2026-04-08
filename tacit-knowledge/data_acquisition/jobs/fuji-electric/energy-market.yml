@@ -1,0 +1,50 @@
+# エネルギー市場関連データ
+
+jobs:
+  - id: fuji-renewable-surcharge
+    name: "再エネ賦課金 年次推移"
+    description: "再生可能エネルギー発電促進賦課金の年度別推移をHTMLテーブルから取得"
+    status: active
+    source:
+      type: web_scrape
+      url: https://pps-net.org/statistics/renewable
+    extraction:
+      mode: html_table
+      table_index: 2
+      columns:
+        - { source: "年度", name: fiscal_year, type: text }
+        - { source: "買い取り単価", name: surcharge_rate, type: number }
+        - { source: "昨年度比", name: yoy_change, type: text }
+        - { source: "標準家庭の負担", name: household_burden, type: number }
+    schedule:
+      cron: "0 23 1 * *"  # JST 毎月1日 8:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60
+
+  - id: fuji-jepx-forward
+    name: "JEPX 先渡市場約定結果"
+    description: "先渡市場の約定単価・約定量を日次取得"
+    status: active
+    source:
+      type: csv_download
+      url: https://www.jepx.jp/_download.php
+      method: post
+      form_data:
+        dir: forward
+        file: "forward_{current_fy}.csv"
+      encoding: shift_jis
+    extraction:
+      columns:
+        - { source: "商品種別", name: product_type, type: text }
+        - { source: "商品名", name: product_name, type: text }
+        - { source: "受渡開始日", name: delivery_start, type: text }
+        - { source: "受渡終了日", name: delivery_end, type: text }
+        - { source: "取引平均値", name: settlement_price, type: number }
+        - { source: "約定総量", name: settled_volume, type: number }
+        - { source: "約定件数", name: settled_count, type: number }
+    schedule:
+      cron: "0 23,11 * * *"  # JST 8:00, 20:00
+    retry:
+      max_attempts: 3
+      backoff_seconds: 60

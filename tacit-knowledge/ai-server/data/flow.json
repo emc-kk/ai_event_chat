@@ -1,0 +1,921 @@
+{
+  "steps": [
+    {
+      "id": "step0",
+      "name": "Step 0: 入口審査",
+      "subSteps": [
+        {
+          "id": "step0-sub0",
+          "name": "①社内・信用情報のスクリーニング",
+          "checkItems": [
+            {
+              "id": "step0-sub0-check0",
+              "question": "社内取引履歴を確認\n過去の取引（SFINCS・CMS）における事故・延滞の有無",
+              "options": [
+                {
+                  "condition": "直近2年以内に貸倒・法的手続き・長期延滞あり",
+                  "result": "REVIEW",
+                  "explanation": "貸倒・法的手続き・長期延滞ありは2年以内に関係なく全てNG\n\n※長期延滞や再契約でも地震や風水災に起因しで当社が已む無しと認めその後再契約している先（再契約に至る経緯をCMSで確認すればわかる）の場合は「直近2年以内にの支払に遅れなし\nもしくは取引なし」ルートに合流",
+                  "nextCheckId": "step0-sub0-check2"
+                },
+                {
+                  "condition": "直近2年以内に短期遅延あり",
+                  "result": "NEXT",
+                  "nextCheckId": "step0-sub0-check1"
+                },
+                {
+                  "condition": "直近2年以内にの支払に遅れなし\nもしくは取引なし\n（現支払中又は支払完済後3ヶ月以内で2年以内に遅れ無し→但し再リースは除く\n取引無しは対象外）",
+                  "result": "NEXT",
+                  "explanation": "過去に多少の遅れがあっても、直近2年が正常なら許容範囲とするため。",
+                  "nextCheckId": "step0-sub0-check2"
+                }
+              ]
+            },
+            {
+              "id": "step0-sub0-check1",
+              "question": "短期遅延回数を確認",
+              "options": [
+                {
+                  "condition": "5回以上",
+                  "result": "NG",
+                  "explanation": "回収不能リスクが極めて高いため"
+                },
+                {
+                  "condition": "1~4回",
+                  "result": "REVIEW",
+                  "explanation": "※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「直近2年以内にの支払に遅れなしもしくは取引なし」ルートに合流",
+                  "nextCheckId": "step0-sub0-check2"
+                }
+              ]
+            },
+            {
+              "id": "step0-sub0-check2",
+              "question": "顧客対応履歴\nCMS会話ログ等における担当者への対応態度",
+              "options": [
+                {
+                  "condition": "暴言、威圧的、粗暴な対応記録あり",
+                  "result": "NG",
+                  "explanation": "コンプライアンスおよび正常な取引関係維持が困難なため。"
+                },
+                {
+                  "condition": "問題なし",
+                  "result": "NEXT",
+                  "explanation": "特段の懸念がないため。",
+                  "nextCheckId": "step0-sub0-check3"
+                }
+              ]
+            },
+            {
+              "id": "step0-sub0-check3",
+              "question": "社内ネガ情報\n社内ブラックリスト（F情報、モニター情報等）との照合",
+              "options": [
+                {
+                  "condition": "「F情報」を確認（生年月日/企業名/電話番号等の照合）し、完全に一致",
+                  "result": "NG"
+                },
+                {
+                  "condition": "「社内支払ネガ情報」で貸倒・法的措置・遅延再契約あり、または税務署・警察・社会保険事務所からシャープファイナンに問い合わせが過去にあった場合",
+                  "result": "REVIEW",
+                  "explanation": "※社内支払ネガ情報は原則NGであるが例外として震災や風水災の被災者で人道的な観点から当社が返済を猶予し、後日再契約などを行っている場合は正常として扱う「該当なし」ルートに合流",
+                  "nextCheckId": "step0-sub1-check0"
+                },
+                {
+                  "condition": "モニター①に該当\n半年に1度（4月・10月）モニターチェック実施。登録月以降のチェック月に保証残があり更新されなければ対象外\n最新状態ではモニター①に該当しなくても、1年前の履歴等で引っかかるケースがあるためCICでの裏取りが必須。",
+                  "result": "REVIEW",
+                  "explanation": "→原則NG\n※以下の例外に合致する場合は減点\n1. 登録日時が 2年以上前である。\n2. 外部情報（CIC）を確認し、異動情報が抹消 されている。 \n\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「該当なし」ルートに合流",
+                  "nextCheckId": "step0-sub1-check0"
+                },
+                {
+                  "condition": "モニター② に該当\nキャッシングを確認（件数と金額を確認）\n※本人の支払い状況をＣＩＣ側で確認。\n※法人：代表者の保証人か、個人事業主本人かその保証人に対してチェック",
+                  "result": "REVIEW",
+                  "explanation": "（件数・金額過多ならNG、許容範囲なら減点）\n\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「該当なし」ルートに合流",
+                  "nextCheckId": "step0-sub1-check0"
+                },
+                {
+                  "condition": "モニター③に該当\n半年に1度（4月・10月）モニターチェック実施。登録月以降のチェック月に保証残があり更新されなければ対象外",
+                  "result": "REVIEW",
+                  "explanation": "→原則NG\n\n※以下の例外に合致する場合は減点\n1. 登録日時が 2年以上前 である。\n2. 外部情報（CIC）を確認し、直近2年以内に遅れがない ことが確認できる。\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「該当なし」ルートに合流",
+                  "nextCheckId": "step0-sub1-check0"
+                },
+                {
+                  "condition": "「TDB・TSR情報該当」「社内登録情報」に該当\n情報登録時期と情報内容によって個別判断\n確定情報か、疑いありというものか、登録時期からどのくらい経過しているか",
+                  "result": "REVIEW",
+                  "explanation": "NGの場合\n例：\nﾘｽｹ中（情報発生から5年以内）\n支払遅延（3年経過の場合は減点）\n架空在庫や循環取引の噂（期間関係なしでNG）\n\n→減点の場合\n取引先破産で焦付発生（5年内で減点、5年経過の場合はOK）\n労災事故で書類送検（3年内で減点、3年経過の場合はOK）\n\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「該当なし」ルートに合流",
+                  "nextCheckId": "step0-sub1-check0"
+                },
+                {
+                  "condition": "該当なし",
+                  "result": "NEXT",
+                  "explanation": "特段の懸念がないため。",
+                  "nextCheckId": "step0-sub1-check0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "step0-sub1",
+          "name": "② 申込内容の適正確認",
+          "checkItems": [
+            {
+              "id": "step0-sub1-check0",
+              "question": "申込金額の確認\n物件（商品全般）相場と申込金額の乖離を確認する\n\n※入替で多額の残債が含まれていることが前提（申込時は商品１つしか入っておらず入替との記載がなければ商品内訳の確認を行うことが前提）",
+              "options": [
+                {
+                  "condition": "商品相場（例：複合機なら通常200万円以内）に対し、申込金額が著しく高い（例：400万～500万円）。",
+                  "result": "NEXT",
+                  "explanation": "金額に不自然な上乗せがあるため、理由を確認する。",
+                  "nextCheckId": "step0-sub1-check1"
+                },
+                {
+                  "condition": "相場相当。",
+                  "result": "NEXT",
+                  "explanation": "正常な商取引とみなす。",
+                  "nextCheckId": "step0-sub2-check0"
+                }
+              ]
+            },
+            {
+              "id": "step0-sub1-check1",
+              "question": "「入替」に伴う残債（上乗せ）の確認\n見積書に「以前の債務（残債）」が含まれていないか精査\n・他社残： 他社リースの残りを清算して乗り換えるため。\n・自社残： シャープファイナンスの既存リースの残りを乗せるため。",
+              "options": [
+                {
+                  "condition": "見積書を確認し、残債が物件価格の半額以上",
+                  "result": "NEXT",
+                  "explanation": "本来の価値と乖離しすぎているため原則NG。",
+                  "nextCheckId": "step0-sub1-check2"
+                },
+                {
+                  "condition": "見積書を確認し、残債が物件価格の半額未満",
+                  "result": "REVIEW",
+                  "explanation": "許容範囲内か、金額そのものの与信審査で判断する。\n\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「相場相当」ルートに合流",
+                  "nextCheckId": "step0-sub2-check0"
+                }
+              ]
+            },
+            {
+              "id": "step0-sub1-check2",
+              "question": "（残債過多時の救済）\n販売店の推進状況確認",
+              "options": [
+                {
+                  "condition": "「主力店以外」",
+                  "result": "NG",
+                  "explanation": "リスク許容不可。"
+                },
+                {
+                  "condition": "「主力店」である\n\n※補足：以下、金額別の決済担当\n2M未満：店担当者のコメント確認し販売店との取引上対応したい旨の確認\n2M～5M：支店長が残債50%以上の取組について決裁したもの\n5M超：事業企画部長の決裁を受けられたもの",
+                  "result": "REVIEW",
+                  "explanation": "主力店の時社内で個別事情勘案し検討\n\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※「相場相当」ルートに合流",
+                  "nextCheckId": "step0-sub2-check0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "step0-sub2",
+          "name": "③ 業種別「営業許可・法的要件」の確認（許認可がないと事業不可）",
+          "checkItems": [
+            {
+              "id": "step0-sub2-check0",
+              "question": "業種別要件（足切りチェック）\n・許可証・登録番号の有無\n・行政処分（入札停止・取消）情報\n・事業報告書の提出状況（NPO等）",
+              "options": [
+                {
+                  "condition": "無許可、処分中、未提出、著しい悪評",
+                  "result": "NG",
+                  "explanation": "事業実態なし、またはコンプラ違反のため\n（業種別の詳細は個別判断表に記載）"
+                },
+                {
+                  "condition": "許可あり・要件クリア",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub0-check0"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step1",
+      "name": "Step 1: データ品質・信憑性チェック",
+      "subSteps": [
+        {
+          "id": "step1-sub0",
+          "name": "①データ鮮度と基本品質の確認",
+          "checkItems": [
+            {
+              "id": "step1-sub0-check0",
+              "question": "COSMOSデータの有無\nTDBデータベースへの登録有無",
+              "options": [
+                {
+                  "condition": "データあり",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub0-check1"
+                },
+                {
+                  "condition": "データなし",
+                  "result": "NEXT",
+                  "explanation": "→次フェーズにて検討",
+                  "nextCheckId": "step1-sub0-check1"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub0-check1",
+              "question": "coⅡ評点と倒産予測値の乖離",
+              "options": [
+                {
+                  "condition": "乖離あり（＝評点45点以上かつ倒産予測値G8〜10）\n\n※定義があるわけではないが高い倒産予測値はcoⅡ45点以下の先に発生することが多いと見ている。45点以上で発生する場合は直近に不安情報の発生や問合せの急増が発生したか新規調査が無く評点見直し出来ていない場合が多い。\n※また評点を急に低下させて信用不安が高くなった場合、対象企業から信用調査機関への責任追及されるリスクもある為評点を急激に変化させないこともある",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub0-check2"
+                },
+                {
+                  "condition": "乖離あり",
+                  "result": "NEXT",
+                  "explanation": "→TDBへ詳細確認\n本業以外の「特別利益」で嵩上げしているか、TDBが財務諸表に出ていないネガティブ情報（裏情報）を掴んでいる可能性があるため。",
+                  "nextCheckId": "step1-sub0-check2"
+                },
+                {
+                  "condition": "乖離なし",
+                  "result": "OK",
+                  "explanation": "整合性が取れている。"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub0-check2",
+              "question": "調査年月日",
+              "options": [
+                {
+                  "condition": "調査年月日の記載なし",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check0"
+                },
+                {
+                  "condition": "2年以内に調査がない",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check0"
+                },
+                {
+                  "condition": "2年以内に調査がある",
+                  "result": "NEXT",
+                  "explanation": "→coⅡ評点と倒産予測値の乖離なしに合流",
+                  "nextCheckId": "step1-sub1-check0"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub0-check3",
+              "question": "ー",
+              "options": [
+                {
+                  "condition": "ー",
+                  "result": "NEXT",
+                  "explanation": "ー",
+                  "nextCheckId": "step1-sub1-check12"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "step1-sub1",
+          "name": "②財務データの精度確認（粉飾・推計の検知）",
+          "checkItems": [
+            {
+              "id": "step1-sub1-check0",
+              "question": "申込先情報を取得する（法人格/業種/代表者/所在地）",
+              "options": [
+                {
+                  "condition": "NPO法人",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check1"
+                },
+                {
+                  "condition": "資産総額登記義務が必要な\n医療/社福/学校 等の法人",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check1"
+                },
+                {
+                  "condition": "測量業者",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check1"
+                },
+                {
+                  "condition": "土木建設",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check1"
+                },
+                {
+                  "condition": "介護全般・社福",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check1"
+                },
+                {
+                  "condition": "その他",
+                  "result": "NEXT",
+                  "explanation": "→coⅡ評点と倒産予測値の乖離なしに合流",
+                  "nextCheckId": "step1-sub1-check1"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check1",
+              "question": "資料：内閣府NPO法人ポータル\n（活動報告/決算/事業内容）\n資料：vanⅡ（coⅡと同じ信用調査会社の情報）\n資料：不動産謄本（会社や代表の保有する資産内容と担保設定状況。中には差押や金融機関以外からの担保設定なども確認出来る事あり）",
+              "options": [
+                {
+                  "condition": "活動実体が薄い/不明瞭",
+                  "result": "REVIEW",
+                  "explanation": "→ NG寄り（要精査）\n\n※NGでなければ、フロー最終の審査時にここで減産された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check2"
+                },
+                {
+                  "condition": "決算が弱い/債務超過等が疑われる",
+                  "result": "REVIEW",
+                  "explanation": "→ NG寄り（要精査）\n\n※NGでなければ、フロー最終の審査時にここで減産された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check2"
+                },
+                {
+                  "condition": "活動継続性が高く財務も良い",
+                  "result": "ADD",
+                  "explanation": "※フロー最終の審査時にここで加点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check2"
+                },
+                {
+                  "condition": "不動産に差押えや不審な担保設定がある",
+                  "result": "NG"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check2",
+              "question": "資料：商業謄本\n（施設網羅/純資産推移）\n資料：vanⅡ（coⅡと同じ信用調査会社の情報）\n資料：不動産謄本（会社や代表の保有する資産内容と担保設定状況。中には差押や金融機関以外からの担保設定なども確認出来る事あり）",
+              "options": [
+                {
+                  "condition": "施設が網羅されている",
+                  "result": "ADD",
+                  "explanation": "→ 実体確認OK（不足/不一致なら要精査）\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check3"
+                },
+                {
+                  "condition": "純資産が増加基調/安定",
+                  "result": "ADD",
+                  "explanation": "→ 加点候補\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check3"
+                },
+                {
+                  "condition": "純資産が減少基調/毀損",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点 or NG候補\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check3"
+                },
+                {
+                  "condition": "不動産に差押えや不審な担保設定がある",
+                  "result": "NG"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check3",
+              "question": "資料：測量要覧（役所に提出の最新業績と自己資本・負債状況）\n資料：vanⅡ（coⅡと同じ信用調査会社の情報）\n資料：不動産謄本（会社や代表の保有する資産内容と担保設定状況。中には差押や金融機関以外からの担保設定なども確認出来る事あり）",
+              "options": [
+                {
+                  "condition": "自己資本が低い",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check4"
+                },
+                {
+                  "condition": "債務回転期間が大きい",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check4"
+                },
+                {
+                  "condition": "自己資本が大きく、財務内容を評価できる",
+                  "result": "ADD",
+                  "explanation": "→ 加点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check4"
+                },
+                {
+                  "condition": "不動産に差押えや不審な担保設定がある",
+                  "result": "NG"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check4",
+              "question": "資料：経審Y（役所に提出の最新業績と自己資本・負債状況）\n資料：vanⅡ（coⅡと同じ信用調査会社の情報）\n資料：不動産謄本（会社や代表の保有する資産内容と担保設定状況。中には差押や金融機関以外からの担保設定なども確認出来る事あり）",
+              "options": [
+                {
+                  "condition": "自己資本が低い",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check5"
+                },
+                {
+                  "condition": "債務回転期間が大きい",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check5"
+                },
+                {
+                  "condition": "自己資本が大きく、財務内容を評価できる",
+                  "result": "ADD",
+                  "explanation": "→ 加点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check5"
+                },
+                {
+                  "condition": "不動産に差押えや不審な担保設定がある",
+                  "result": "NG"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check5",
+              "question": "資料：WAMNET（社会福祉法人は活動報告・決算内容と運営施設を確認する）\n※老人介護と障害者介護で掲載場所が相違している場合もあるため\n※昨今施設内容だけでなく業績確認資料掲載先が増加\n資料：vanⅡ（coⅡと同じ信用調査会社の情報）\n資料：不動産謄本（会社や代表の保有する資産内容と担保設定状況。中には差押や金融機関以外からの担保設定なども確認出来る事あり）",
+              "options": [
+                {
+                  "condition": "施設が網羅されている",
+                  "result": "ADD",
+                  "explanation": "→ 実体確認OK（不足/不一致なら要精査）\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check6"
+                },
+                {
+                  "condition": "純資産が増加基調/安定",
+                  "result": "ADD",
+                  "explanation": "→ 加点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check6"
+                },
+                {
+                  "condition": "純資産が減少基調/毀損",
+                  "result": "DEDUCT",
+                  "explanation": "\"→ 減点 or NG候補\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流\"",
+                  "nextCheckId": "step1-sub1-check6"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check6",
+              "question": "帝国データバンクに表に出ていない情報を確認",
+              "options": [
+                {
+                  "condition": "倒産予測値が悪化している",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check7"
+                },
+                {
+                  "condition": "倒産予測値が悪化していない",
+                  "result": "NEXT",
+                  "explanation": "→coⅡ評点と倒産予測値の乖離なしに合流",
+                  "nextCheckId": "step1-sub1-check7"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check7",
+              "question": "モデルが変更しているかどうか",
+              "options": [
+                {
+                  "condition": "倒産予測値悪化の原因が、モデル変更（coⅡのモデル変更）である",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check8"
+                },
+                {
+                  "condition": "倒産予測値悪化の原因が、モデル変更（coⅡのモデル変更）でない",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check8"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check8",
+              "question": "指名停止（3か月以下）有無\n焦付有無\n支払条件変更有無\nリスケ中かどうか\n支払遅延かどうか\n金融機関撤退かどうか\n許認可取消かどうか\n代表役員逮捕歴",
+              "options": [
+                {
+                  "condition": "指名停止（3か月以下）/ 焦付 / 支払条件変更 等が ある",
+                  "result": "DEDUCT",
+                  "explanation": "→ 減点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と倒産予測値の乖離なしルートに合流",
+                  "nextCheckId": "step1-sub1-check9"
+                },
+                {
+                  "condition": "リスケ中 / 支払遅延 / 金融機関撤退 / 許認可取消 / 代表役員逮捕 等が ある",
+                  "result": "NG"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check9",
+              "question": "coⅡの業績が変化しているか確認",
+              "options": [
+                {
+                  "condition": "変化していない(利益が未詳)、あるいは、変化しているが100万円単位で変化が乏しい\n\n※電話で実際に確認しているが、前年と同じ程度である、という回答が来るため、信ぴょう性がない",
+                  "result": "NEXT",
+                  "explanation": "→調査年月日の記載なしの場合のフローに合流。\nただし、変化していない(利益が未詳)、あるいは、変化しているが100万円単位で変化が乏しいことは変わらないため、「変化していない(利益が未詳)、あるいは、変化しているが100万円単位で変化が乏しいことは変わらない」ルートに来るのが2回目の場合には、「coⅡの業績が変化している」ルートに合流",
+                  "nextCheckId": "step1-sub1-check10"
+                },
+                {
+                  "condition": "変化している",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub1-check10"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check10",
+              "question": "倒産予測モデルの精度（過去3年の倒産予測値推移）\n算出モデルが「MIX」「CCR」「C2」のいずれか\n信憑性の高さ：MIX→ＣＣＲ→C2",
+              "options": [
+                {
+                  "condition": "C2モデル（精度低）\n\n※直接調査無しか調査から2年以上経過しており業績もユーザーからの報告内容から信憑性に欠ける",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub2-check0"
+                },
+                {
+                  "condition": "CCRモデル\n\n※直接調査しているが財務諸表の取得が無く業績・財務内容の裏付け確認が出来ていない",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub2-check0"
+                },
+                {
+                  "condition": "MIXモデル\n\n※直接調査と決算書取得してのものであり業績・財務内容確認しての判断で信憑性が高い",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub2-check0"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check11",
+              "question": "倒産予測値モデルの精度確認のタイミングやトリガーは上記の位置で良いでしょうか？",
+              "options": [
+                {
+                  "condition": "MIXモデル\n\n※直接調査と決算書取得してのものであり業績・財務内容確認しての判断で信憑性が高い",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub0-check0"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub1-check12",
+              "question": "ー",
+              "options": [
+                {
+                  "condition": "ー",
+                  "result": "NEXT",
+                  "explanation": "ー",
+                  "nextCheckId": "step1-sub2-check3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "step1-sub2",
+          "name": "③整合性確認",
+          "checkItems": [
+            {
+              "id": "step1-sub2-check0",
+              "question": "①支払状況\n②支払実積\n③当社契約分の入替\n④主力販売店案件\n⑤ﾕｰｻﾞｰと当社との取引状況や販売店の位置づけ\n⑥他の資料（必要に応じてvanⅡや不動産謄本等の資料も取得）",
+              "options": [
+                {
+                  "condition": "以下①から⑥において「：」より右に記載の状態に1つでも合致する\n①支払状況：良好\n②支払実積：今回与信額程度以上\n③当社契約分の入替：Yes\n④主力販売店案件：Yes\n⑤ﾕｰｻﾞｰと当社との取引状況や販売店の位置づけ：主力先あるいは債権内容が良好\n⑥他の資料：加点材料が確認できる",
+                  "result": "ADD",
+                  "explanation": "→ 加点\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※MIXモデルのルートへ",
+                  "nextCheckId": "step1-sub2-check1"
+                },
+                {
+                  "condition": "以下①から⑥において「：」より右に記載の状態に1つも合致しない\n①支払状況：良好\n②支払実積：今回与信額程度以上\n③当社契約分の入替：Yes\n④主力販売店案件：Yes\n⑤ﾕｰｻﾞｰと当社との取引状況や販売店の位置づけ：主力先あるいは債権内容が良好\n⑥他の資料：加点材料が確認できる",
+                  "result": "NEXT",
+                  "explanation": "→MIXモデルのルートへ",
+                  "nextCheckId": "step1-sub2-check1"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub2-check1",
+              "question": "coⅡ評点と自己資本・売上利益の関係性を確認",
+              "options": [
+                {
+                  "condition": "coⅡ/van Ⅱ評点が低い（＝①coⅡ44点以下　vanⅡ45点以下）のに自己資本が高く（＝自己資本50%が優良、30%以上で良好、10%未満は要注意）、売上に対して極端に高い利益（＝売上の20%以上）を出している時",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub2-check2"
+                },
+                {
+                  "condition": "上記以外の場合",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub2-check2"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub2-check2",
+              "question": "TDBへ確認（vanⅡの調査）\n\n※過去にTDBやTSRから信用不安情報がでておりその後の経過か不明の場合、継続の不安情報等が無いか確認する",
+              "options": [
+                {
+                  "condition": "本業から創出された利益でない（＝特別利益（資産の売却や代表などからの借入金免除益など）等である）あるいは、また表に出ていない裏情報をTDBが入手している",
+                  "result": "REVIEW",
+                  "explanation": "※事業の継続性を脅かすような状況であれば一発NG\n※フロー最終の審査時にここで加点/減点された情報を考慮すること\n※coⅡ評点と自己資本・売上利益の関係性を確認の「上記以外の場合」ルートへ",
+                  "nextCheckId": "step1-sub1-check11"
+                },
+                {
+                  "condition": "本業での利益である",
+                  "result": "NEXT",
+                  "explanation": "→coⅡ評点と自己資本・売上利益の関係性を確認の「上記以外の場合」ルートへ",
+                  "nextCheckId": "step1-sub1-check11"
+                }
+              ]
+            },
+            {
+              "id": "step1-sub2-check3",
+              "question": "ー",
+              "options": [
+                {
+                  "condition": "ー",
+                  "result": "NEXT",
+                  "explanation": "ー",
+                  "nextCheckId": "step2-sub0-check1"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "step2",
+      "name": "Step 2：定量評価・スコアリング",
+      "subSteps": [
+        {
+          "id": "step2-sub0",
+          "name": "①スコアリング・ルート判定",
+          "checkItems": [
+            {
+              "id": "step2-sub0-check0",
+              "question": "coⅡ点数を確認",
+              "options": [
+                {
+                  "condition": "70点以上",
+                  "result": "OK",
+                  "explanation": "理由：\n基本上場会社であるため、会社のIR情報をベースに1億円までは原則OK"
+                },
+                {
+                  "condition": "69-65点以上",
+                  "result": "OK",
+                  "explanation": "理由：\n基本上場会社か地場優良企業から、会社のIR情報vanⅡ財務諸表等をベースに3億円までは上申す"
+                },
+                {
+                  "condition": "64-60点以上",
+                  "result": "OK",
+                  "explanation": "上場や優良企業が多くcoⅡやvanⅡ財務諸表などを活用　1億5千万円まで取組方向で上申"
+                },
+                {
+                  "condition": "59－55点以上",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check0"
+                },
+                {
+                  "condition": "54-50点以上",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check0"
+                },
+                {
+                  "condition": "49-45点以上",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check0"
+                },
+                {
+                  "condition": "44-40点以上",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check0"
+                },
+                {
+                  "condition": "35〜44点",
+                  "result": "NEXT",
+                  "explanation": "COSⅡ以外のルートへ\n\n※COSⅡ以外のルートに行く場合に、COSⅡと同じルートになる場合もあり。その場合には、金額が低い方を優先するものとする。",
+                  "nextCheckId": "step2-sub1-check0"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub0-check1",
+              "question": "ー",
+              "options": [
+                {
+                  "condition": "ー",
+                  "result": "NEXT",
+                  "explanation": "ー",
+                  "nextCheckId": "step2-sub1-check13"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "step2-sub1",
+          "name": "② 定量評価・スコアリング",
+          "checkItems": [
+            {
+              "id": "step2-sub1-check0",
+              "question": "基本5000万円超は決裁権限の問題があり本社上申が必要　３億円までは取組方向で上申\n内容により詳細設定あり",
+              "options": [
+                {
+                  "condition": "本社決裁の場合財務諸表は必要不可欠",
+                  "result": "NEXT",
+                  "explanation": "有利子負債が月商比６か月以下、自己資本30%以上、減価償却実施額と利益で有利子負債の年間返済額を超える事",
+                  "nextCheckId": "step2-sub1-check1"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check1",
+              "question": "本社決裁の場合財務諸表は必要不可欠",
+              "options": [
+                {
+                  "condition": "有利子負債が月商比６か月以下、自己資本30%以上、減価償却実施額と利益で有利子負債の年間返済額を超える事",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check2"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check2",
+              "question": "coⅡの業績の変化を確認",
+              "options": [
+                {
+                  "condition": "業績が変化している",
+                  "result": "NEXT",
+                  "explanation": "直近調査年月日2年以内\n業績1年前まで表示あり\n利益計上\n倒産予測値G1～G2迄",
+                  "nextCheckId": "step2-sub1-check3"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check3",
+              "question": "年商10億円以上\n直近2期利益2千万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n30百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で1億円まで上申検討",
+                  "nextCheckId": "step2-sub1-check4"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check4",
+              "question": "年商5億円以上\n直近2期利益1千万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n25百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で1億円まで上申検討",
+                  "nextCheckId": "step2-sub1-check5"
+                },
+                {
+                  "condition": "→OK\n10百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で20百万円まで検討",
+                  "nextCheckId": "step2-sub1-check5"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check5",
+              "question": "年商5億円以上\n直近2期利益5百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n20百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で50百万円まで上申検討",
+                  "nextCheckId": "step2-sub1-check6"
+                },
+                {
+                  "condition": "→OK\n10百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で20百万円まで検討",
+                  "nextCheckId": "step2-sub1-check6"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check6",
+              "question": "年商10億円以上\n直近2期利益1千万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n20百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で50百万円まで上申検討",
+                  "nextCheckId": "step2-sub1-check7"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check7",
+              "question": "年商10億円以上\n直近2期利益5百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n15百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で30百万円まで検討",
+                  "nextCheckId": "step2-sub1-check8"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check8",
+              "question": "年商3億円以上\n直近2期利益3百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n7百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で15百万円まで検討",
+                  "nextCheckId": "step2-sub1-check9"
+                },
+                {
+                  "condition": "→OK\n5百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で10百万円まで検討",
+                  "nextCheckId": "step2-sub1-check9"
+                },
+                {
+                  "condition": "→OK\n3百万円まで原則取組",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check9"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check9",
+              "question": "年商2億円以上\n直近2期利益2百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n5百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で10百万円まで検討",
+                  "nextCheckId": "step2-sub1-check10"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check10",
+              "question": "年商1億円以上\n直近2期利益1百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n3百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で10百万円まで検討",
+                  "nextCheckId": "step2-sub1-check11"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check11",
+              "question": "年商3億円以上\n直近2期利益5百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n7百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で15百万円まで検討",
+                  "nextCheckId": "step2-sub1-check12"
+                },
+                {
+                  "condition": "→OK\n5百万円まで原則取組",
+                  "result": "NEXT",
+                  "nextCheckId": "step2-sub1-check12"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check12",
+              "question": "年商2億円以上\n直近2期利益1百万円以上",
+              "options": [
+                {
+                  "condition": "→OK\n3百万円まで原則取組",
+                  "result": "NEXT",
+                  "explanation": "財務諸表入手で10百万円まで検討",
+                  "nextCheckId": "step1-sub0-check3"
+                },
+                {
+                  "condition": "→OK\n2百万円まで原則取組",
+                  "result": "NEXT",
+                  "nextCheckId": "step1-sub0-check3"
+                }
+              ]
+            },
+            {
+              "id": "step2-sub1-check13",
+              "question": "ー",
+              "options": [
+                {
+                  "condition": "ー",
+                  "result": "NEXT",
+                  "explanation": "ー"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+<div class="chapter-item p-2 border-bottom"
+     data-action="click->manual-video#seekToChapter"
+     data-manual-video-time-param="<%= chapter.start_second %>"
+     style="cursor: pointer;">
+  <div class="d-flex gap-2">
+    <div class="flex-shrink-0">
+      <img src="<%= thumbnail_url(chapter.thumbnail_path) %>"
+           alt="<%= chapter.title %>"
+           class="rounded"
+           style="width: 80px; height: 45px; object-fit: cover;">
+    </div>
+    <div class="flex-grow-1">
+      <div class="text-info small fw-bold"><%= seconds_to_time(chapter.start_second) %></div>
+      <div class="fw-bold small"><%= substr(chapter.title, 15) %></div>
+      <div class="text-muted small text-truncate-2"><%= substr(chapter.description) %></div>
+    </div>
+  </div>
+</div>

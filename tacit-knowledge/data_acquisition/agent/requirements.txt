@@ -1,0 +1,17 @@
+# SkillRelay Scraper Agent - Target EC2 Dependencies
+# These are installed on each target instance via setup.sh
+
+# Resource monitoring
+psutil>=5.9.0
+
+# HTTP scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# PDF scraping
+pdfplumber>=0.10.0
+
+# Selenium (optional, for JS-rendered pages)
+# selenium>=4.15.0
+# undetected-chromedriver>=3.5.0

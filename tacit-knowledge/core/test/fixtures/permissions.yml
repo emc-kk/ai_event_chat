@@ -1,0 +1,23 @@
+# editorユーザーにeditor権限を付与（辞書編集権限判定に使用）
+editor_permission:
+  id: "01TEST_PERM_EDITOR_000000"
+  company_id: "01TEST_COMPANY_A_000000000"
+  permissible_type: "TopicFolder"
+  permissible_id: "01TEST_TOPIC_FOLDER_A_000"
+  grantee_type: "User"
+  grantee_id: "01TEST_USER_CA_EDITOR_000"
+  role: 1
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# viewerユーザーにviewer権限を付与
+viewer_permission:
+  id: "01TEST_PERM_VIEWER_000000"
+  company_id: "01TEST_COMPANY_A_000000000"
+  permissible_type: "TopicFolder"
+  permissible_id: "01TEST_TOPIC_FOLDER_A_000"
+  grantee_type: "User"
+  grantee_id: "01TEST_USER_CA_VIEWER_000"
+  role: 0
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

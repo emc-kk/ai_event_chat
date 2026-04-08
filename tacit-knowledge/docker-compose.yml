@@ -1,0 +1,128 @@
+name: skillrelay
+
+services:
+  # LocalStack (SQS + S3 emulation)
+  localstack:
+    image: localstack/localstack:3.8
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: sqs,s3
+      DEFAULT_REGION: ap-northeast-1
+    volumes:
+      - ./localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal sqs get-queue-url --queue-name skillrelay-development-document-processing --region ap-northeast-1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  # Rails app
+  app:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    ports:
+      - 3000:3000
+    command: /bin/sh -c "bundle install && yarn install && rm -f tmp/pids/server.pid && bin/dev"
+    depends_on:
+      postgres:
+        condition: service_started
+      ai-server:
+        condition: service_started
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./core:/rails:delegated
+      - core-node-modules:/rails/node_modules:delegated
+      - core-bundle-data:/usr/local/bundle:delegated
+    env_file:
+      - ./core/.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: skillrelay_development
+      POSTGRES_PORT: 5432
+      AI_SERVER_URL: http://localhost:8000
+      AI_SERVER_URL_FROM_CONTAINER: http://ai-server:3000
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_S3_BUCKET: skill-relay-dev
+      SQS_DOCUMENT_PROCESSING_QUEUE_URL: http://localstack:4566/000000000000/skillrelay-development-document-processing
+      DEMO_MODE: "true"
+
+  # Python worker
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_started
+      localstack:
+        condition: service_healthy
+    volumes:
+      - ./worker:/app:delegated
+    env_file:
+      - ./worker/.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: skillrelay_development
+      POSTGRES_PORT: 5432
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_REGION: ap-northeast-1
+      AWS_S3_BUCKET: skill-relay-dev
+      SQS_DOCUMENT_PROCESSING_QUEUE_URL: http://localstack:4566/000000000000/skillrelay-development-document-processing
+
+  # AI Server (Next.js)
+  ai-server:
+    build:
+      context: ./ai-server
+      dockerfile: Dockerfile
+    ports:
+      - 8000:3000
+    depends_on:
+      - postgres
+    volumes:
+      - ./ai-server:/app:delegated
+      - ai-server-node-modules:/app/node_modules:delegated
+    env_file:
+      - ./ai-server/.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: skillrelay_development
+      POSTGRES_PORT: 5432
+
+  # PostgreSQL with pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: skillrelay_development
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # Mailpit for email testing (ARM64/AMD64 compatible)
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+
+volumes:
+  postgres-data:
+  core-bundle-data:
+  core-node-modules:
+  ai-server-node-modules:

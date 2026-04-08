@@ -1,0 +1,112 @@
+<%# トピックチャット画面 %>
+<div class="container-fluid rooms-show__container" data-controller="topic-tabs topic-rehearing">
+  <%# ヘッダー %>
+  <div class="row rooms-show__header">
+    <div class="col-12 p-3 border-bottom bg-white">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="flex-grow-1">
+          <div class="fw-bold fs-4"><%= title %></div>
+          <% if subtitle.present? %>
+            <div class="text-muted small mt-1"><%= subtitle %></div>
+          <% end %>
+        </div>
+        <div class="d-flex align-items-center gap-3 flex-shrink-0">
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-primary btn-sm active"
+                    data-topic-tabs-target="chatButton"
+                    data-action="click->topic-tabs#showChat">
+              チャット
+            </button>
+            <button type="button" class="btn btn-outline-primary btn-sm"
+                    data-topic-tabs-target="knowledgeButton"
+                    data-action="click->topic-tabs#showKnowledge">
+              ナレッジ
+            </button>
+          </div>
+          <% if completed_requests.any? %>
+            <button type="button" class="btn btn-outline-warning btn-sm"
+                    data-action="click->topic-rehearing#showModal">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>再ヒアリングへ差し戻し
+            </button>
+          <% end %>
+          <%= link_to "戻る", back_path, class: "btn btn-outline-secondary btn-sm" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# チャット & ナレッジ %>
+  <div class="row rooms-show__body">
+    <div class="p-0 h-100" data-mounted="false"
+         data-topic-tabs-target="chatContainer">
+      <div
+        id="chat-app"
+        class="h-100"
+        data-room-id="<%= room.id %>"
+        data-request-id="<%= room.request_id || '' %>"
+        data-topic-id="<%= room.topic_id || '' %>"
+        data-room-type="topic"
+        data-status=""
+        data-admin="<%= current_admin? %>"
+        data-ai-server-url="<%= ENV['AI_SERVER_URL'] %>"
+        data-ai-api-key="<%= ENV['AI_SERVER_API_SECRET_KEY'] %>"
+        data-chat-mounted="false"
+      ></div>
+    </div>
+    <div class="p-0 h-100 d-none" data-mounted="false"
+         data-topic-tabs-target="knowledgeContainer">
+      <div id="knowledge-app" class="h-100" data-topic-id="<%= room.topic_id || '' %>"></div>
+    </div>
+  </div>
+
+  <%# 再ヒアリングモーダル %>
+  <% if completed_requests.any? %>
+    <div class="modal fade" data-topic-rehearing-target="modal" tabindex="-1" aria-label="再ヒアリングへ差し戻し" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">再ヒアリングへ差し戻し</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              再ヒアリングに差し戻すと、対象のヒアリングが完了するまでトピックチャットは利用できなくなります。
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-bold required">再ヒアリング対象のリクエスト</label>
+              <% completed_requests.each_with_index do |req, index| %>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="radio" name="selected_request_id"
+                         value="<%= req.id %>"
+                         data-action="change->topic-rehearing#selectRequest"
+                         data-topic-rehearing-request-path-param="<%= request_request_contents_path(req) %>"
+                         <%= 'checked' if index == 0 %>>
+                  <label class="form-check-label">
+                    <%= req.respondent&.name || '未設定' %> - <%= req.name || "ヒアリング ##{req.id}" %>
+                  </label>
+                </div>
+              <% end %>
+            </div>
+
+            <form data-topic-rehearing-target="form" action="<%= request_request_contents_path(completed_requests.first) %>" method="post" data-turbo="false">
+              <input type="hidden" name="authenticity_token" value="<%= form_authenticity_token %>">
+              <div class="mb-3">
+                <label class="form-label fw-bold required">再ヒアリング内容</label>
+                <textarea name="request_content[comment]" class="form-control" rows="6"
+                          placeholder="再ヒアリングの理由や追加で確認したい内容を入力してください" required></textarea>
+                <div class="invalid-feedback">再ヒアリング内容を入力してください。</div>
+              </div>
+
+              <div class="d-flex gap-2 justify-content-end">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="submit" class="btn btn-warning">差し戻し実行</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

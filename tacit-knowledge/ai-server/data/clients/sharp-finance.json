@@ -1,0 +1,86 @@
+{
+  "client_id": "sharp_finance",
+  "client_name": "シャープファイナンス",
+  "industry": "リース・与信",
+  "pbm_config": {
+    "total_steps": 3,
+    "steps": [
+      {
+        "step": 0,
+        "name_en": "Hard NG Screening",
+        "name_jp": "Hard NG 排除",
+        "purpose": "致命的な問題がないか確認",
+        "advance_condition": "no_dealbreakers",
+        "completion_criteria": "全NG項目クリア",
+        "context": "## 現在の PBM ステップ: Step 0 - Hard NG 排除\n\n現在はHard NG排除フェーズです。\nこの案件/テーマについて、致命的な問題や即座に排除すべき要因がないか確認してください。\n\n以下の観点で確認します：\n- 法令・規制上の問題はないか\n- 倫理的・コンプライアンス上の致命的な問題はないか\n- 技術的に実現不可能な要件はないか\n- 組織として絶対に受け入れられない条件はないか\n\n致命的な問題がなければ、次のステップ（前提確認）に進みます。",
+        "target_layers": [0, 1]
+      },
+      {
+        "step": 1,
+        "name_en": "Premise Verification",
+        "name_jp": "前提確認",
+        "purpose": "判断の前提条件を検証",
+        "advance_condition": "premises_count >= 3",
+        "completion_criteria": "3つ以上の前提確認",
+        "context": "## 現在の PBM ステップ: Step 1 - 前提確認\n\n現在は前提確認フェーズです。\nこの判断・業務の前提条件を検証してください。\n\n以下の観点で前提を確認します：\n- この判断の基礎となる前提条件は何か\n- その前提は現在も有効か\n- 暗黙の前提が隠れていないか\n- 前提が崩れた場合のリスクは何か\n\n{confirmed_premises}\n\n最低3つの主要前提が確認できたら、次のステップ（定量・定性評価）に進みます。",
+        "target_layers": [0, 1, 2]
+      },
+      {
+        "step": 2,
+        "name_en": "Quantitative & Qualitative Evaluation",
+        "name_jp": "定量・定性評価",
+        "purpose": "データに基づく深掘り",
+        "advance_condition": "coverage_score >= 0.8",
+        "completion_criteria": "カバレッジスコア0.8以上",
+        "context": "## 現在の PBM ステップ: Step 2 - 定量・定性評価\n\n現在は定量・定性評価フェーズです。\nデータに基づいて深掘りしてください。\n\n以下の観点で評価します：\n- 定量的な指標やデータに基づく判断\n- 定性的な評価（経験則、暗黙知）\n- トレードオフの分析\n- リスクと機会のバランス\n\nヒアリング計画の仮説を十分にカバーしてください。",
+        "target_layers": [1, 2, 3, 4]
+      }
+    ]
+  },
+  "bias_config": {
+    "enabled_biases": [
+      "optimistic_assertion", "confirmation_bias", "sunk_cost", "authority_bias", "overconfidence"
+    ],
+    "max_per_session": 2,
+    "min_interval": 3,
+    "confidence_threshold": 0.7,
+    "patterns": {
+      "optimistic_assertion": ["だと思う", "だろう", "大丈夫", "問題ない", "うまくいく", "心配ない"],
+      "confirmation_bias": ["前回も", "いつも", "毎回", "必ずうまく", "必ず成功", "今までも"],
+      "sunk_cost": ["ここまでやったから", "せっかく", "もう引き返せない", "今さら", "ここまで来たら"],
+      "authority_bias": ["上が", "上の指示", "上の方針", "社長が", "社長も", "部長が", "部長も", "先輩が", "先輩も", "専門家が", "専門家も"],
+      "overconfidence": ["絶対", "間違いない", "確実に", "確実だ", "100%", "疑いなく"]
+    },
+    "socratic_templates": {
+      "optimistic_assertion": "もし最悪のケースが起きた場合、この見通しはどう変わりますか？",
+      "confirmation_bias": "逆に、この前提が当てはまらなかったケースはありますか？",
+      "sunk_cost": "もし今日が初日だとして、同じ判断をしますか？",
+      "authority_bias": "その方の意見を除外した場合、データや事実だけから同じ結論に至りますか？",
+      "overconfidence": "この確信度を下げる要因があるとすれば、何が考えられますか？"
+    }
+  },
+  "elicitation_config": {
+    "methods": ["cdm", "contrast", "boundary", "hypothetical", "exception"],
+    "step_method_matrix": {
+      "0": ["exception", "boundary"],
+      "1": ["cdm", "contrast"],
+      "2": ["boundary", "hypothetical", "contrast"]
+    },
+    "max_methods_per_step": 2
+  },
+  "knowledge_granularity_config": {
+    "knowledge_forms": ["explicit_rule", "heuristic", "pattern", "conditional", "tradeoff"],
+    "promotion_rules": [
+      { "from_form": "pattern", "from_medallion": "bronze", "required_method": "contrast", "to_form": "conditional" }
+    ]
+  },
+  "contradiction_config": {
+    "enabled_types": ["session_internal"],
+    "similarity_threshold": 0.85,
+    "confirmation_template": "先ほど「{previous_content}」とおっしゃいましたが、今のお話と合わせるとどう理解すればいいですか？"
+  },
+  "saturation_config": {
+    "novelty_threshold": 0.8,
+    "consecutive_count": 3
+  }
+}

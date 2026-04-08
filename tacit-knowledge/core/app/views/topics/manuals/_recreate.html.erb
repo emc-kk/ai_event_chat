@@ -1,0 +1,32 @@
+<div class="offcanvas offcanvas-end" tabindex="-1" id="recreate" aria-labelledby="recreateLabel" style="width: 400px;">
+  <div class="offcanvas-header text-white" style="background-color: #0192E2;">
+    <h5 class="offcanvas-title">マニュアルの再生成</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+
+  <div class="offcanvas-body">
+    <%= form_with url: regenerate_topic_manual_path(@topic, @manual), method: :post, local: true do |f| %>
+      <div class="mb-4">
+        <label class="form-label fw-bold">出力テンプレート</label>
+        <p class="text-muted small">テンプレートを選択し直して再生成できます。未選択の場合は従来の汎用フォーマットで出力されます。</p>
+        <% templates = ManualTemplate.for_company(current_company_id).order(is_preset: :desc, name: :asc) rescue [] %>
+        <select name="manual_template_id" class="form-select">
+          <option value="">テンプレートなし（従来フォーマット）</option>
+          <% templates.each do |template| %>
+            <option value="<%= template.id %>"
+                    <%= 'selected' if @manual.manual_template_id == template.id %>
+                    title="<%= template.description %>">
+              <%= template.name %><%= template.is_preset? ? '（プリセット）' : '' %>
+            </option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn text-white" style="background-color: #0192E2;">
+          再生成を実行する
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>

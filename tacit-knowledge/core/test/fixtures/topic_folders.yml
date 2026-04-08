@@ -1,0 +1,9 @@
+# 会社Aのトピックフォルダ（Permission作成用）
+company_a_folder:
+  id: "01TEST_TOPIC_FOLDER_A_000"
+  company_id: "01TEST_COMPANY_A_000000000"
+  name: "テストフォルダA"
+  created_by_id: "01TEST_COMP_A_ADMIN_00000"
+  created_by_type: "Admin"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

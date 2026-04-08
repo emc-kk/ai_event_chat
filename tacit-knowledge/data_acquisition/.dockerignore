@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+*.pyo
+.venv
+.env
+*.egg-info
+.git
+.gitignore
+*.md
+jobs/
+scripts/
+instruction_server/
+coordinator/

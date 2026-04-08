@@ -1,0 +1,118 @@
+name: Destroy Preview Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'Preview slug (e.g., feature-name from mock/feature-name branch)'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: ap-northeast-1
+  PROJECT_NAME: skillrelay
+  ENVIRONMENT: production
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::778389812638:role/${{ env.PROJECT_NAME }}-${{ env.ENVIRONMENT }}-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      # =============================================================================
+      # Empty S3 bucket (required before CloudFormation can delete it)
+      # =============================================================================
+      - name: Empty S3 bucket
+        run: |
+          BUCKET="${{ env.PROJECT_NAME }}-preview-${{ inputs.slug }}"
+          echo "Emptying S3 bucket: $BUCKET"
+          aws s3 rm "s3://${BUCKET}" --recursive 2>/dev/null || echo "  (bucket not found or already empty, skipping)"
+
+      # =============================================================================
+      # Delete CloudFormation stack (AppRunner services, SQS queues, S3 bucket)
+      # =============================================================================
+      - name: Delete CloudFormation stack
+        run: |
+          STACK_NAME="${{ env.PROJECT_NAME }}-mock-${{ inputs.slug }}"
+          echo "Deleting stack: $STACK_NAME"
+
+          aws cloudformation delete-stack --stack-name $STACK_NAME
+          echo "Waiting for stack deletion to complete..."
+          aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME
+
+          echo "Stack deleted successfully"
+
+      # =============================================================================
+      # Drop PostgreSQL database
+      # =============================================================================
+      - name: Drop PostgreSQL database
+        run: |
+          PREVIEW_DB="skillrelay_mock_$(echo '${{ inputs.slug }}' | tr '-' '_')"
+          echo "Dropping database: $PREVIEW_DB"
+
+          POSTGRES_HOST=$(aws ssm get-parameter \
+            --name /${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/POSTGRES_HOST \
+            --query 'Parameter.Value' --output text)
+          POSTGRES_PASSWORD=$(aws ssm get-parameter \
+            --name /${{ env.PROJECT_NAME }}/${{ env.ENVIRONMENT }}/POSTGRES_PASSWORD \
+            --with-decryption --query 'Parameter.Value' --output text)
+
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client > /dev/null 2>&1
+
+          # Terminate active connections before dropping
+          PGPASSWORD=$POSTGRES_PASSWORD psql \
+            -h $POSTGRES_HOST \
+            -U postgres \
+            -d postgres \
+            -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${PREVIEW_DB}' AND pid <> pg_backend_pid();" \
+            || true
+
+          PGPASSWORD=$POSTGRES_PASSWORD psql \
+            -h $POSTGRES_HOST \
+            -U postgres \
+            -d postgres \
+            -c "DROP DATABASE IF EXISTS ${PREVIEW_DB};"
+
+          echo "Database '${PREVIEW_DB}' dropped"
+
+      # =============================================================================
+      # Cleanup ECR images
+      # =============================================================================
+      - name: Cleanup ECR images
+        run: |
+          TAG="mock-${{ inputs.slug }}"
+          echo "Cleaning up ECR images with tag: $TAG"
+
+          for REPO in ${{ env.PROJECT_NAME }}-core ${{ env.PROJECT_NAME }}-ai-server ${{ env.PROJECT_NAME }}-worker; do
+            echo "  Deleting $REPO:$TAG"
+            aws ecr batch-delete-image \
+              --repository-name $REPO \
+              --image-ids imageTag=$TAG 2>/dev/null || echo "  (image not found, skipping)"
+          done
+
+      # =============================================================================
+      # Summary
+      # =============================================================================
+      - name: Destruction summary
+        run: |
+          PREVIEW_DB="skillrelay_mock_$(echo '${{ inputs.slug }}' | tr '-' '_')"
+          echo "## Preview Environment Destroyed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Slug | \`${{ inputs.slug }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| CloudFormation Stack | \`${{ env.PROJECT_NAME }}-mock-${{ inputs.slug }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| DB Name | \`${PREVIEW_DB}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| ECR Tag | \`mock-${{ inputs.slug }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| S3 Bucket | \`${{ env.PROJECT_NAME }}-preview-${{ inputs.slug }}\` |" >> $GITHUB_STEP_SUMMARY

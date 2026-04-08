@@ -1,0 +1,228 @@
+{
+  "jepx_spot": {
+    "meta": {
+      "source": "jepx_spot",
+      "description": "JEPXスポット市場 システムプライス（日平均）",
+      "unit": "円/kWh",
+      "last_updated": "2026-03-09T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "delivery_date": "2026-02-01", "system_price": 12.45, "tokyo_price": 12.50, "kansai_price": 12.30, "chubu_price": 12.40, "hokkaido_price": 13.10, "tohoku_price": 12.60, "hokuriku_price": 12.20, "chugoku_price": 12.35, "shikoku_price": 12.25, "kyushu_price": 11.80 },
+      { "delivery_date": "2026-02-02", "system_price": 11.80, "tokyo_price": 11.90, "kansai_price": 11.70, "chubu_price": 11.85, "hokkaido_price": 12.50, "tohoku_price": 12.00, "hokuriku_price": 11.60, "chugoku_price": 11.75, "shikoku_price": 11.65, "kyushu_price": 11.20 },
+      { "delivery_date": "2026-02-03", "system_price": 13.20, "tokyo_price": 13.30, "kansai_price": 13.10, "chubu_price": 13.25, "hokkaido_price": 13.90, "tohoku_price": 13.40, "hokuriku_price": 13.00, "chugoku_price": 13.15, "shikoku_price": 13.05, "kyushu_price": 12.60 },
+      { "delivery_date": "2026-02-04", "system_price": 14.50, "tokyo_price": 14.70, "kansai_price": 14.30, "chubu_price": 14.45, "hokkaido_price": 15.20, "tohoku_price": 14.80, "hokuriku_price": 14.20, "chugoku_price": 14.35, "shikoku_price": 14.25, "kyushu_price": 13.80 },
+      { "delivery_date": "2026-02-05", "system_price": 15.10, "tokyo_price": 15.30, "kansai_price": 14.90, "chubu_price": 15.05, "hokkaido_price": 15.80, "tohoku_price": 15.40, "hokuriku_price": 14.80, "chugoku_price": 14.95, "shikoku_price": 14.85, "kyushu_price": 14.40 },
+      { "delivery_date": "2026-02-06", "system_price": 13.80, "tokyo_price": 13.90, "kansai_price": 13.70, "chubu_price": 13.85, "hokkaido_price": 14.50, "tohoku_price": 14.10, "hokuriku_price": 13.60, "chugoku_price": 13.75, "shikoku_price": 13.65, "kyushu_price": 13.20 },
+      { "delivery_date": "2026-02-07", "system_price": 12.90, "tokyo_price": 13.00, "kansai_price": 12.80, "chubu_price": 12.95, "hokkaido_price": 13.60, "tohoku_price": 13.20, "hokuriku_price": 12.70, "chugoku_price": 12.85, "shikoku_price": 12.75, "kyushu_price": 12.30 },
+      { "delivery_date": "2026-02-08", "system_price": 11.50, "tokyo_price": 11.60, "kansai_price": 11.40, "chubu_price": 11.55, "hokkaido_price": 12.20, "tohoku_price": 11.80, "hokuriku_price": 11.30, "chugoku_price": 11.45, "shikoku_price": 11.35, "kyushu_price": 10.90 },
+      { "delivery_date": "2026-02-09", "system_price": 10.80, "tokyo_price": 10.90, "kansai_price": 10.70, "chubu_price": 10.85, "hokkaido_price": 11.50, "tohoku_price": 11.10, "hokuriku_price": 10.60, "chugoku_price": 10.75, "shikoku_price": 10.65, "kyushu_price": 10.20 },
+      { "delivery_date": "2026-02-10", "system_price": 12.00, "tokyo_price": 12.10, "kansai_price": 11.90, "chubu_price": 12.05, "hokkaido_price": 12.70, "tohoku_price": 12.30, "hokuriku_price": 11.80, "chugoku_price": 11.95, "shikoku_price": 11.85, "kyushu_price": 11.40 },
+      { "delivery_date": "2026-02-11", "system_price": 13.10, "tokyo_price": 13.20, "kansai_price": 13.00, "chubu_price": 13.15, "hokkaido_price": 13.80, "tohoku_price": 13.40, "hokuriku_price": 12.90, "chugoku_price": 13.05, "shikoku_price": 12.95, "kyushu_price": 12.50 },
+      { "delivery_date": "2026-02-12", "system_price": 14.20, "tokyo_price": 14.40, "kansai_price": 14.00, "chubu_price": 14.15, "hokkaido_price": 14.90, "tohoku_price": 14.50, "hokuriku_price": 13.90, "chugoku_price": 14.05, "shikoku_price": 13.95, "kyushu_price": 13.50 },
+      { "delivery_date": "2026-02-13", "system_price": 15.60, "tokyo_price": 15.80, "kansai_price": 15.40, "chubu_price": 15.55, "hokkaido_price": 16.30, "tohoku_price": 15.90, "hokuriku_price": 15.30, "chugoku_price": 15.45, "shikoku_price": 15.35, "kyushu_price": 14.90 },
+      { "delivery_date": "2026-02-14", "system_price": 16.80, "tokyo_price": 17.10, "kansai_price": 16.50, "chubu_price": 16.70, "hokkaido_price": 17.50, "tohoku_price": 17.00, "hokuriku_price": 16.40, "chugoku_price": 16.55, "shikoku_price": 16.45, "kyushu_price": 16.00 },
+      { "delivery_date": "2026-02-15", "system_price": 14.90, "tokyo_price": 15.10, "kansai_price": 14.70, "chubu_price": 14.85, "hokkaido_price": 15.60, "tohoku_price": 15.20, "hokuriku_price": 14.60, "chugoku_price": 14.75, "shikoku_price": 14.65, "kyushu_price": 14.20 },
+      { "delivery_date": "2026-02-16", "system_price": 12.30, "tokyo_price": 12.40, "kansai_price": 12.20, "chubu_price": 12.35, "hokkaido_price": 13.00, "tohoku_price": 12.60, "hokuriku_price": 12.10, "chugoku_price": 12.25, "shikoku_price": 12.15, "kyushu_price": 11.70 },
+      { "delivery_date": "2026-02-17", "system_price": 11.20, "tokyo_price": 11.30, "kansai_price": 11.10, "chubu_price": 11.25, "hokkaido_price": 11.90, "tohoku_price": 11.50, "hokuriku_price": 11.00, "chugoku_price": 11.15, "shikoku_price": 11.05, "kyushu_price": 10.60 },
+      { "delivery_date": "2026-02-18", "system_price": 13.40, "tokyo_price": 13.50, "kansai_price": 13.30, "chubu_price": 13.45, "hokkaido_price": 14.10, "tohoku_price": 13.70, "hokuriku_price": 13.20, "chugoku_price": 13.35, "shikoku_price": 13.25, "kyushu_price": 12.80 },
+      { "delivery_date": "2026-02-19", "system_price": 14.70, "tokyo_price": 14.90, "kansai_price": 14.50, "chubu_price": 14.65, "hokkaido_price": 15.40, "tohoku_price": 15.00, "hokuriku_price": 14.40, "chugoku_price": 14.55, "shikoku_price": 14.45, "kyushu_price": 14.00 },
+      { "delivery_date": "2026-02-20", "system_price": 13.60, "tokyo_price": 13.70, "kansai_price": 13.50, "chubu_price": 13.65, "hokkaido_price": 14.30, "tohoku_price": 13.90, "hokuriku_price": 13.40, "chugoku_price": 13.55, "shikoku_price": 13.45, "kyushu_price": 13.00 },
+      { "delivery_date": "2026-02-21", "system_price": 12.80, "tokyo_price": 12.90, "kansai_price": 12.70, "chubu_price": 12.85, "hokkaido_price": 13.50, "tohoku_price": 13.10, "hokuriku_price": 12.60, "chugoku_price": 12.75, "shikoku_price": 12.65, "kyushu_price": 12.20 },
+      { "delivery_date": "2026-02-22", "system_price": 11.90, "tokyo_price": 12.00, "kansai_price": 11.80, "chubu_price": 11.95, "hokkaido_price": 12.60, "tohoku_price": 12.20, "hokuriku_price": 11.70, "chugoku_price": 11.85, "shikoku_price": 11.75, "kyushu_price": 11.30 },
+      { "delivery_date": "2026-02-23", "system_price": 10.50, "tokyo_price": 10.60, "kansai_price": 10.40, "chubu_price": 10.55, "hokkaido_price": 11.20, "tohoku_price": 10.80, "hokuriku_price": 10.30, "chugoku_price": 10.45, "shikoku_price": 10.35, "kyushu_price": 9.90 },
+      { "delivery_date": "2026-02-24", "system_price": 11.70, "tokyo_price": 11.80, "kansai_price": 11.60, "chubu_price": 11.75, "hokkaido_price": 12.40, "tohoku_price": 12.00, "hokuriku_price": 11.50, "chugoku_price": 11.65, "shikoku_price": 11.55, "kyushu_price": 11.10 },
+      { "delivery_date": "2026-02-25", "system_price": 13.30, "tokyo_price": 13.40, "kansai_price": 13.20, "chubu_price": 13.35, "hokkaido_price": 14.00, "tohoku_price": 13.60, "hokuriku_price": 13.10, "chugoku_price": 13.25, "shikoku_price": 13.15, "kyushu_price": 12.70 },
+      { "delivery_date": "2026-02-26", "system_price": 14.80, "tokyo_price": 15.00, "kansai_price": 14.60, "chubu_price": 14.75, "hokkaido_price": 15.50, "tohoku_price": 15.10, "hokuriku_price": 14.50, "chugoku_price": 14.65, "shikoku_price": 14.55, "kyushu_price": 14.10 },
+      { "delivery_date": "2026-02-27", "system_price": 15.40, "tokyo_price": 15.60, "kansai_price": 15.20, "chubu_price": 15.35, "hokkaido_price": 16.10, "tohoku_price": 15.70, "hokuriku_price": 15.10, "chugoku_price": 15.25, "shikoku_price": 15.15, "kyushu_price": 14.70 },
+      { "delivery_date": "2026-02-28", "system_price": 13.90, "tokyo_price": 14.00, "kansai_price": 13.80, "chubu_price": 13.95, "hokkaido_price": 14.60, "tohoku_price": 14.20, "hokuriku_price": 13.70, "chugoku_price": 13.85, "shikoku_price": 13.75, "kyushu_price": 13.30 },
+      { "delivery_date": "2026-03-01", "system_price": 12.60, "tokyo_price": 12.70, "kansai_price": 12.50, "chubu_price": 12.65, "hokkaido_price": 13.30, "tohoku_price": 12.90, "hokuriku_price": 12.40, "chugoku_price": 12.55, "shikoku_price": 12.45, "kyushu_price": 12.00 },
+      { "delivery_date": "2026-03-02", "system_price": 11.40, "tokyo_price": 11.50, "kansai_price": 11.30, "chubu_price": 11.45, "hokkaido_price": 12.10, "tohoku_price": 11.70, "hokuriku_price": 11.20, "chugoku_price": 11.35, "shikoku_price": 11.25, "kyushu_price": 10.80 },
+      { "delivery_date": "2026-03-03", "system_price": 13.00, "tokyo_price": 13.10, "kansai_price": 12.90, "chubu_price": 13.05, "hokkaido_price": 13.70, "tohoku_price": 13.30, "hokuriku_price": 12.80, "chugoku_price": 12.95, "shikoku_price": 12.85, "kyushu_price": 12.40 },
+      { "delivery_date": "2026-03-04", "system_price": 14.10, "tokyo_price": 14.30, "kansai_price": 13.90, "chubu_price": 14.05, "hokkaido_price": 14.80, "tohoku_price": 14.40, "hokuriku_price": 13.80, "chugoku_price": 13.95, "shikoku_price": 13.85, "kyushu_price": 13.40 },
+      { "delivery_date": "2026-03-05", "system_price": 15.30, "tokyo_price": 15.50, "kansai_price": 15.10, "chubu_price": 15.25, "hokkaido_price": 16.00, "tohoku_price": 15.60, "hokuriku_price": 15.00, "chugoku_price": 15.15, "shikoku_price": 15.05, "kyushu_price": 14.60 },
+      { "delivery_date": "2026-03-06", "system_price": 14.60, "tokyo_price": 14.80, "kansai_price": 14.40, "chubu_price": 14.55, "hokkaido_price": 15.30, "tohoku_price": 14.90, "hokuriku_price": 14.30, "chugoku_price": 14.45, "shikoku_price": 14.35, "kyushu_price": 13.90 },
+      { "delivery_date": "2026-03-07", "system_price": 13.50, "tokyo_price": 13.60, "kansai_price": 13.40, "chubu_price": 13.55, "hokkaido_price": 14.20, "tohoku_price": 13.80, "hokuriku_price": 13.30, "chugoku_price": 13.45, "shikoku_price": 13.35, "kyushu_price": 12.90 },
+      { "delivery_date": "2026-03-08", "system_price": 12.20, "tokyo_price": 12.30, "kansai_price": 12.10, "chubu_price": 12.25, "hokkaido_price": 12.90, "tohoku_price": 12.50, "hokuriku_price": 12.00, "chugoku_price": 12.15, "shikoku_price": 12.05, "kyushu_price": 11.60 }
+    ]
+  },
+  "nonfossil_fit": {
+    "meta": {
+      "source": "nonfossil_fit",
+      "description": "FIT非化石証書 オークション約定結果",
+      "unit": "円/kWh",
+      "last_updated": "2026-03-01T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "fiscal_year": 2022, "round": 1, "settlement_price": 0.30, "volume_gwh": 18.5 },
+      { "fiscal_year": 2022, "round": 2, "settlement_price": 0.35, "volume_gwh": 20.1 },
+      { "fiscal_year": 2022, "round": 3, "settlement_price": 0.40, "volume_gwh": 22.3 },
+      { "fiscal_year": 2022, "round": 4, "settlement_price": 0.45, "volume_gwh": 19.8 },
+      { "fiscal_year": 2023, "round": 1, "settlement_price": 0.42, "volume_gwh": 21.0 },
+      { "fiscal_year": 2023, "round": 2, "settlement_price": 0.50, "volume_gwh": 23.5 },
+      { "fiscal_year": 2023, "round": 3, "settlement_price": 0.55, "volume_gwh": 25.2 },
+      { "fiscal_year": 2023, "round": 4, "settlement_price": 0.60, "volume_gwh": 24.0 },
+      { "fiscal_year": 2024, "round": 1, "settlement_price": 0.58, "volume_gwh": 26.1 },
+      { "fiscal_year": 2024, "round": 2, "settlement_price": 0.62, "volume_gwh": 28.3 },
+      { "fiscal_year": 2024, "round": 3, "settlement_price": 0.65, "volume_gwh": 30.0 },
+      { "fiscal_year": 2024, "round": 4, "settlement_price": 0.70, "volume_gwh": 27.5 }
+    ]
+  },
+  "nonfossil_nonfit": {
+    "meta": {
+      "source": "nonfossil_nonfit",
+      "description": "非FIT非化石証書 オークション約定結果",
+      "unit": "円/kWh",
+      "last_updated": "2026-03-01T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "fiscal_year": 2022, "round": 1, "settlement_price": 0.60, "volume_gwh": 8.2 },
+      { "fiscal_year": 2022, "round": 2, "settlement_price": 0.70, "volume_gwh": 9.5 },
+      { "fiscal_year": 2022, "round": 3, "settlement_price": 0.80, "volume_gwh": 10.1 },
+      { "fiscal_year": 2022, "round": 4, "settlement_price": 0.85, "volume_gwh": 9.8 },
+      { "fiscal_year": 2023, "round": 1, "settlement_price": 0.90, "volume_gwh": 11.0 },
+      { "fiscal_year": 2023, "round": 2, "settlement_price": 1.00, "volume_gwh": 12.5 },
+      { "fiscal_year": 2023, "round": 3, "settlement_price": 1.10, "volume_gwh": 13.2 },
+      { "fiscal_year": 2023, "round": 4, "settlement_price": 1.15, "volume_gwh": 12.0 },
+      { "fiscal_year": 2024, "round": 1, "settlement_price": 1.20, "volume_gwh": 14.1 },
+      { "fiscal_year": 2024, "round": 2, "settlement_price": 1.25, "volume_gwh": 15.3 },
+      { "fiscal_year": 2024, "round": 3, "settlement_price": 1.30, "volume_gwh": 16.0 },
+      { "fiscal_year": 2024, "round": 4, "settlement_price": 1.35, "volume_gwh": 14.5 }
+    ]
+  },
+  "renewable_surcharge": {
+    "meta": {
+      "source": "renewable_surcharge",
+      "description": "再エネ賦課金 年次推移",
+      "unit": "円/kWh",
+      "last_updated": "2026-03-01T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "fiscal_year": "2012", "surcharge_rate": 0.22 },
+      { "fiscal_year": "2013", "surcharge_rate": 0.35 },
+      { "fiscal_year": "2014", "surcharge_rate": 0.75 },
+      { "fiscal_year": "2015", "surcharge_rate": 1.58 },
+      { "fiscal_year": "2016", "surcharge_rate": 2.25 },
+      { "fiscal_year": "2017", "surcharge_rate": 2.64 },
+      { "fiscal_year": "2018", "surcharge_rate": 2.90 },
+      { "fiscal_year": "2019", "surcharge_rate": 2.95 },
+      { "fiscal_year": "2020", "surcharge_rate": 2.98 },
+      { "fiscal_year": "2021", "surcharge_rate": 3.36 },
+      { "fiscal_year": "2022", "surcharge_rate": 3.45 },
+      { "fiscal_year": "2023", "surcharge_rate": 1.40 },
+      { "fiscal_year": "2024", "surcharge_rate": 3.49 },
+      { "fiscal_year": "2025", "surcharge_rate": 3.98 }
+    ]
+  },
+  "jepx_forward": {
+    "meta": {
+      "source": "jepx_forward",
+      "description": "JEPX 先渡市場 約定結果",
+      "unit": "円/kWh",
+      "last_updated": "2026-03-09T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "settlement_date": "2026-01-15", "delivery_month": "2026-04", "settlement_price": 14.20, "settled_volume": 250 },
+      { "settlement_date": "2026-01-22", "delivery_month": "2026-04", "settlement_price": 14.50, "settled_volume": 300 },
+      { "settlement_date": "2026-01-29", "delivery_month": "2026-05", "settlement_price": 13.80, "settled_volume": 280 },
+      { "settlement_date": "2026-02-05", "delivery_month": "2026-05", "settlement_price": 13.60, "settled_volume": 320 },
+      { "settlement_date": "2026-02-12", "delivery_month": "2026-05", "settlement_price": 13.90, "settled_volume": 290 },
+      { "settlement_date": "2026-02-19", "delivery_month": "2026-06", "settlement_price": 12.50, "settled_volume": 350 },
+      { "settlement_date": "2026-02-26", "delivery_month": "2026-06", "settlement_price": 12.80, "settled_volume": 310 },
+      { "settlement_date": "2026-03-05", "delivery_month": "2026-07", "settlement_price": 15.20, "settled_volume": 400 },
+      { "settlement_date": "2026-03-05", "delivery_month": "2026-08", "settlement_price": 16.50, "settled_volume": 380 },
+      { "settlement_date": "2026-03-05", "delivery_month": "2026-09", "settlement_price": 14.80, "settled_volume": 350 }
+    ]
+  },
+  "carbon_credit": {
+    "meta": {
+      "source": "carbon_credit",
+      "description": "カーボン・クレジット市場 日次レポート",
+      "unit": "円/t-CO2",
+      "last_updated": "2026-03-07T20:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "trade_date": "2026-03-03", "trade_category": "省エネルギー", "close_price": 3200, "volume": 1500 },
+      { "trade_date": "2026-03-03", "trade_category": "再エネ電力", "close_price": 4800, "volume": 2200 },
+      { "trade_date": "2026-03-03", "trade_category": "森林", "close_price": 8500, "volume": 800 },
+      { "trade_date": "2026-03-04", "trade_category": "省エネルギー", "close_price": 3250, "volume": 1600 },
+      { "trade_date": "2026-03-04", "trade_category": "再エネ電力", "close_price": 4900, "volume": 2100 },
+      { "trade_date": "2026-03-04", "trade_category": "森林", "close_price": 8600, "volume": 750 },
+      { "trade_date": "2026-03-05", "trade_category": "省エネルギー", "close_price": 3180, "volume": 1450 },
+      { "trade_date": "2026-03-05", "trade_category": "再エネ電力", "close_price": 4750, "volume": 2300 },
+      { "trade_date": "2026-03-05", "trade_category": "森林", "close_price": 8450, "volume": 900 },
+      { "trade_date": "2026-03-06", "trade_category": "省エネルギー", "close_price": 3300, "volume": 1700 },
+      { "trade_date": "2026-03-06", "trade_category": "再エネ電力", "close_price": 5000, "volume": 2400 },
+      { "trade_date": "2026-03-06", "trade_category": "森林", "close_price": 8700, "volume": 850 },
+      { "trade_date": "2026-03-07", "trade_category": "省エネルギー", "close_price": 3280, "volume": 1550 },
+      { "trade_date": "2026-03-07", "trade_category": "再エネ電力", "close_price": 4950, "volume": 2250 },
+      { "trade_date": "2026-03-07", "trade_category": "森林", "close_price": 8650, "volume": 820 }
+    ]
+  },
+  "jcredit_price": {
+    "meta": {
+      "source": "jcredit_price",
+      "description": "J-クレジット カテゴリ別価格推移",
+      "unit": "円/t-CO2",
+      "last_updated": "2026-03-01T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "period": "2024-04", "energy_saving_price": 2800, "re_electricity_price": 4200, "forest_price": 7500 },
+      { "period": "2024-07", "energy_saving_price": 2900, "re_electricity_price": 4350, "forest_price": 7800 },
+      { "period": "2024-10", "energy_saving_price": 3000, "re_electricity_price": 4500, "forest_price": 8000 },
+      { "period": "2025-01", "energy_saving_price": 3100, "re_electricity_price": 4600, "forest_price": 8200 },
+      { "period": "2025-04", "energy_saving_price": 3150, "re_electricity_price": 4700, "forest_price": 8300 },
+      { "period": "2025-07", "energy_saving_price": 3200, "re_electricity_price": 4800, "forest_price": 8500 },
+      { "period": "2025-10", "energy_saving_price": 3250, "re_electricity_price": 4900, "forest_price": 8600 },
+      { "period": "2026-01", "energy_saving_price": 3300, "re_electricity_price": 5000, "forest_price": 8700 }
+    ]
+  },
+  "electricity_rate": {
+    "meta": {
+      "source": "electricity_rate",
+      "description": "電気料金 平均単価（電力会社別）",
+      "unit": "円/kWh",
+      "last_updated": "2026-01-01T08:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "utility_company": "北海道電力", "contract_type": "特別高圧", "average_unit_price": 21.5 },
+      { "utility_company": "東北電力", "contract_type": "特別高圧", "average_unit_price": 20.8 },
+      { "utility_company": "東京電力EP", "contract_type": "特別高圧", "average_unit_price": 22.3 },
+      { "utility_company": "中部電力ミライズ", "contract_type": "特別高圧", "average_unit_price": 21.0 },
+      { "utility_company": "北陸電力", "contract_type": "特別高圧", "average_unit_price": 19.5 },
+      { "utility_company": "関西電力", "contract_type": "特別高圧", "average_unit_price": 20.2 },
+      { "utility_company": "中国電力", "contract_type": "特別高圧", "average_unit_price": 21.8 },
+      { "utility_company": "四国電力", "contract_type": "特別高圧", "average_unit_price": 22.0 },
+      { "utility_company": "九州電力", "contract_type": "特別高圧", "average_unit_price": 19.8 },
+      { "utility_company": "沖縄電力", "contract_type": "特別高圧", "average_unit_price": 25.3 }
+    ]
+  },
+  "balancing_market": {
+    "meta": {
+      "source": "balancing_market",
+      "description": "需給調整市場 約定結果",
+      "unit": "円/kW",
+      "last_updated": "2026-03-07T20:00:00+09:00",
+      "is_sample": true
+    },
+    "records": [
+      { "settlement_date": "2026-03-03", "product_type": "三次調整力②", "area": "東京", "settled_volume_kw": 50000, "settlement_price": 8.5 },
+      { "settlement_date": "2026-03-03", "product_type": "三次調整力②", "area": "関西", "settled_volume_kw": 35000, "settlement_price": 7.8 },
+      { "settlement_date": "2026-03-04", "product_type": "三次調整力②", "area": "東京", "settled_volume_kw": 48000, "settlement_price": 9.2 },
+      { "settlement_date": "2026-03-04", "product_type": "三次調整力②", "area": "関西", "settled_volume_kw": 32000, "settlement_price": 8.1 },
+      { "settlement_date": "2026-03-05", "product_type": "三次調整力②", "area": "東京", "settled_volume_kw": 52000, "settlement_price": 8.8 },
+      { "settlement_date": "2026-03-05", "product_type": "三次調整力②", "area": "関西", "settled_volume_kw": 38000, "settlement_price": 8.3 },
+      { "settlement_date": "2026-03-06", "product_type": "三次調整力②", "area": "東京", "settled_volume_kw": 45000, "settlement_price": 10.5 },
+      { "settlement_date": "2026-03-06", "product_type": "三次調整力②", "area": "関西", "settled_volume_kw": 33000, "settlement_price": 9.0 },
+      { "settlement_date": "2026-03-07", "product_type": "三次調整力②", "area": "東京", "settled_volume_kw": 51000, "settlement_price": 9.8 },
+      { "settlement_date": "2026-03-07", "product_type": "三次調整力②", "area": "関西", "settled_volume_kw": 36000, "settlement_price": 8.7 }
+    ]
+  }
+}

@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - Container Registry (ECR)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+Resources:
+  # ECR Repository for Core (Rails)
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${ProjectName}-core
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-core-ecr
+
+  # ECR Repository for AI Server (Next.js)
+  AIServerECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${ProjectName}-ai-server
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-ai-server-ecr
+
+  # ECR Repository for Worker (Python)
+  WorkerECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${ProjectName}-worker
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-worker-ecr
+
+Outputs:
+  ECRRepositoryURI:
+    Description: ECR Repository URI (Core)
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepository}
+    Export:
+      Name: !Sub ${ProjectName}-core-ecr-uri
+
+  ECRRepositoryName:
+    Description: ECR Repository Name (Core)
+    Value: !Ref ECRRepository
+    Export:
+      Name: !Sub ${ProjectName}-core-ecr-name
+
+  AIServerECRRepositoryURI:
+    Description: ECR Repository URI (AI Server)
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${AIServerECRRepository}
+    Export:
+      Name: !Sub ${ProjectName}-ai-server-ecr-uri
+
+  AIServerECRRepositoryName:
+    Description: ECR Repository Name (AI Server)
+    Value: !Ref AIServerECRRepository
+    Export:
+      Name: !Sub ${ProjectName}-ai-server-ecr-name
+
+  WorkerECRRepositoryURI:
+    Description: ECR Repository URI (Worker)
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${WorkerECRRepository}
+    Export:
+      Name: !Sub ${ProjectName}-worker-ecr-uri
+
+  WorkerECRRepositoryName:
+    Description: ECR Repository Name (Worker)
+    Value: !Ref WorkerECRRepository
+    Export:
+      Name: !Sub ${ProjectName}-worker-ecr-name

@@ -1,0 +1,194 @@
+{
+  "client_id": "daiwa_ei",
+  "client_name": "大和エナジー・インフラ",
+  "industry": "インフラ投資",
+  "pbm_config": {
+    "total_steps": 8,
+    "steps": [
+      {
+        "step": 0,
+        "name_en": "Screen",
+        "name_jp": "入口スクリーニング",
+        "purpose": "Hard NG排除",
+        "advance_condition": "no_dealbreakers",
+        "completion_criteria": "全NG項目クリア",
+        "context": "## 現在の PBM ステップ: Step 0 - 入口スクリーニング\n\n致命的な問題がないか確認するフェーズです。\n\n確認観点:\n- 法令・規制上の問題（環境アセス、許認可）\n- 反社会的勢力との関連\n- 制裁対象国・企業との関係\n- 組織として投資不可の案件類型\n\n致命的な問題がなければ、次のステップ（問題特定）に進みます。",
+        "target_layers": [0, 1]
+      },
+      {
+        "step": 1,
+        "name_en": "Identify the Problem",
+        "name_jp": "問題特定",
+        "purpose": "何を判断すべきか、何がリスクかを特定",
+        "advance_condition": "issues_count >= 3",
+        "completion_criteria": "論点3つ以上特定",
+        "context": "## 現在の PBM ステップ: Step 1 - 問題特定\n\nこの投資案件における主要な論点・リスクポイントを特定するフェーズです。\n\n確認観点:\n- 投資判断の核心的論点は何か\n- 主要なリスク要因は何か\n- ステークホルダーの利害関係\n- 判断に影響する外部環境要因\n\n{confirmed_premises}\n\n3つ以上の主要論点が特定できたら、次のステップ（情報収集）に進みます。",
+        "target_layers": [1, 2, 3]
+      },
+      {
+        "step": 2,
+        "name_en": "Gather Information",
+        "name_jp": "情報収集",
+        "purpose": "案件・市場・ポートフォリオデータ収集",
+        "advance_condition": "checklist_fulfilled",
+        "completion_criteria": "チェックリスト充足",
+        "context": "## 現在の PBM ステップ: Step 2 - 情報収集\n\n投資判断に必要な情報を網羅的に収集するフェーズです。\n\n収集対象:\n- 案件の基本情報（規模、場所、技術、事業者）\n- 市場データ（電力価格、需給予測、競合状況）\n- ポートフォリオ状況（既存投資との関連、集中度）\n- 規制・制度環境（FIT/FIP、環境規制）\n\n必要情報が揃ったら、次のステップ（状況分析）に進みます。",
+        "target_layers": [2, 3]
+      },
+      {
+        "step": 3,
+        "name_en": "Analyze the Situation",
+        "name_jp": "状況分析",
+        "purpose": "6軸リスク分解",
+        "advance_condition": "risk_axes_covered >= 6",
+        "completion_criteria": "6軸各1件以上",
+        "context": "## 現在の PBM ステップ: Step 3 - 状況分析\n\n収集した情報を6軸リスクフレームワークで分解・分析するフェーズです。\n\n6軸リスク分析:\n- 対象リスク: 発電所の稼働率、オフテイカーの信用力\n- 構造リスク: SPCスキーム、契約フロー、保険設計\n- 外生リスク: 電力市場価格、FIT制度変更、為替\n- 実行リスク: EPC業者の施工能力、O&M体制\n- 集中リスク: 地域集中、技術依存\n- 情報リスク: 環境アセスのデータ品質、DD範囲\n\n全6軸でリスクを特定できたら、次のステップ（選択肢構築）に進みます。",
+        "target_layers": [1, 2, 3]
+      },
+      {
+        "step": 4,
+        "name_en": "Develop Alternatives",
+        "name_jp": "選択肢構築",
+        "purpose": "シナリオ構築",
+        "advance_condition": "scenarios_count >= 2",
+        "completion_criteria": "2シナリオ以上構築",
+        "context": "## 現在の PBM ステップ: Step 4 - 選択肢構築\n\n投資判断の選択肢を複数のシナリオとして構築するフェーズです。\n\n構築するシナリオ:\n- ベースケース（標準的な前提条件）\n- ストレスケース（悪化シナリオ）\n- アップサイドケース（好転シナリオ）\n- 段階的投資/撤退オプション\n\n2つ以上のシナリオが構築できたら、次のステップ（選択肢評価）に進みます。",
+        "target_layers": [2, 3, 4]
+      },
+      {
+        "step": 5,
+        "name_en": "Evaluate Alternatives",
+        "name_jp": "選択肢評価",
+        "purpose": "ストレステスト・感度分析",
+        "advance_condition": "coverage_score >= 0.6",
+        "completion_criteria": "感度分析完了+カバレッジ各2件",
+        "context": "## 現在の PBM ステップ: Step 5 - 選択肢評価\n\n構築したシナリオに対してストレステスト・感度分析を行うフェーズです。\n\n評価観点:\n- 各シナリオのIRR/NPV試算\n- 主要変数の感度分析（電力価格、稼働率、工期）\n- ダウンサイドリスクの定量化\n- リスクミティゲーション策の有効性\n\nカバレッジが十分になったら、次のステップ（判断形成）に進みます。",
+        "target_layers": [1, 2, 3, 4]
+      },
+      {
+        "step": 6,
+        "name_en": "Select & Decide",
+        "name_jp": "判断形成",
+        "purpose": "投資委員会向け判断の形成",
+        "advance_condition": "conclusion_formed",
+        "completion_criteria": "結論+根拠+リスク全記録",
+        "context": "## 現在の PBM ステップ: Step 6 - 判断形成\n\n投資委員会への提案に向けて判断を形成するフェーズです。\n\n必要な要素:\n- 投資推奨の結論（Go/No-Go/条件付きGo）\n- 結論の根拠（定量・定性の両面）\n- 残存リスクと許容条件\n- モニタリング計画の概要\n\n結論と根拠がまとまったら、次のステップ（モニタリング計画）に進みます。",
+        "target_layers": [0, 1, 2, 4]
+      },
+      {
+        "step": 7,
+        "name_en": "Monitor & Review",
+        "name_jp": "モニタリング",
+        "purpose": "投資後追跡計画の策定",
+        "advance_condition": "coverage_score >= 0.8",
+        "completion_criteria": "レビュー完了 or クローズ",
+        "context": "## 現在の PBM ステップ: Step 7 - モニタリング\n\n投資実行後のモニタリング・レビュー計画を策定するフェーズです。\n\n計画すべき内容:\n- KPIモニタリング（稼働率、売電収入、O&Mコスト）\n- 定期レビューの頻度とスコープ\n- エスカレーション基準\n- EXIT/リファイナンスの判断基準\n\n全ての評価が完了したら、ヒアリングを終了します。",
+        "target_layers": [2, 3, 4]
+      }
+    ]
+  },
+  "bias_config": {
+    "enabled_biases": [
+      "optimism", "confirmation", "sunk_cost", "authority",
+      "overconfidence", "anchoring", "recency", "groupthink"
+    ],
+    "max_per_session": 3,
+    "min_interval": 4,
+    "confidence_threshold": 0.7,
+    "patterns": {
+      "optimism": ["大丈夫", "問題ない", "心配ない", "うまくいく", "だろう", "だと思う", "このプロジェクトは政府支援がある"],
+      "confirmation": ["いつも", "毎回", "前もそうだった", "過去の類似案件は全て成功", "前回もうまくいった"],
+      "sunk_cost": ["ここまでやったから", "せっかく", "もう引き返せない", "今さら", "すでにDD費用を投下した"],
+      "authority": ["上が", "上の指示", "社長が", "部長が", "先輩が", "専門家が"],
+      "overconfidence": ["絶対", "間違いない", "確実に", "100%", "疑いなく"],
+      "anchoring": ["最初に聞いた話では", "当初は", "当初のIRR想定では"],
+      "recency": ["最近は", "ここ数ヶ月", "最近の電力価格が高いから"],
+      "groupthink": ["みんなそう言っている", "チームの総意", "異論は出なかった", "全員一致で"]
+    },
+    "socratic_templates": {
+      "optimism": "もし最悪のケースが起きた場合、例えば建設工期が1年遅延した場合のIRRはどうなりますか？",
+      "confirmation": "類似規模のインフラで失敗した事例はありますか？その場合との違いは何でしょう？",
+      "sunk_cost": "もし今日が初日だとして、同じ投資判断をしますか？",
+      "authority": "その方の意見を除外した場合、データや事実だけから同じ結論に至りますか？",
+      "overconfidence": "この確信度を下げる要因があるとすれば、何が考えられますか？",
+      "anchoring": "現在の市場環境だけで見た場合の妥当なバリュエーションは？",
+      "recency": "過去5年間のデータで見た場合、同じ判断になりますか？",
+      "groupthink": "もしあなただけが反対意見を持っていたとしたら、どう主張しますか？"
+    }
+  },
+  "model_b": {
+    "enabled": true,
+    "axes": [
+      { "key": "risk_sensitivity", "name_jp": "リスク感度", "high_means": "慎重" },
+      { "key": "data_dependency", "name_jp": "データ依存度", "high_means": "データ重視" },
+      { "key": "precedent_dependency", "name_jp": "前例依存度", "high_means": "前例踏襲" },
+      { "key": "independence", "name_jp": "独立性", "high_means": "独立的" },
+      { "key": "uncertainty_tolerance", "name_jp": "不確実性耐性", "high_means": "曖昧に強い" },
+      { "key": "industry_understanding", "name_jp": "業界理解度", "high_means": "深い理解" }
+    ],
+    "alert_levels": [
+      { "level": "L1", "name": "Trend", "trigger": "特定バイアスが2週間で3回以上", "action": "ダッシュボード表示。ソクラティック微調整" },
+      { "level": "L2", "name": "Resistance", "trigger": "補正後も同バイアス継続（4週）", "action": "管理者通知。テンプレート変更" },
+      { "level": "L3", "name": "Drift", "trigger": "プロファイルが3ヶ月で有意変形", "action": "1on1推奨。外部要因確認" }
+    ],
+    "data_thresholds": [
+      { "sessions": "0-19", "confidence": "低", "display": "非表示" },
+      { "sessions": "20-49", "confidence": "中", "display": "レーダー表示（薄色）" },
+      { "sessions": "50+", "confidence": "高", "display": "全機能有効" }
+    ]
+  },
+  "risk_axis_examples": {
+    "target": "発電所の稼働率、オフテイカーの信用力",
+    "structure": "SPCスキーム、契約フロー、保険設計",
+    "external": "電力市場価格、FIT制度変更、為替",
+    "execution": "EPC業者の施工能力、O&M体制",
+    "concentration": "地域集中、技術依存",
+    "information": "環境アセスのデータ品質、DD範囲"
+  },
+  "layer_examples": {
+    "L0": "国の補助金制度の交付要件",
+    "L1": "IRR 8%以上をターゲット",
+    "L2": "工期遅延→COD延期→IRR低下→追加融資",
+    "L3": "発電所の建設進捗80%",
+    "L4": "政府関与案件で楽観的になった"
+  },
+  "elicitation_config": {
+    "methods": ["cdm", "contrast", "boundary", "hypothetical", "exception"],
+    "step_method_matrix": {
+      "0": ["exception", "boundary"],
+      "1": ["cdm", "contrast"],
+      "2": ["boundary", "exception"],
+      "3": ["contrast", "hypothetical"],
+      "4": ["hypothetical", "cdm"],
+      "5": ["boundary", "contrast"],
+      "6": ["cdm", "hypothetical"],
+      "7": ["exception", "cdm"]
+    },
+    "max_methods_per_step": 2
+  },
+  "knowledge_granularity_config": {
+    "knowledge_forms": ["explicit_rule", "heuristic", "pattern", "conditional", "tradeoff"],
+    "promotion_rules": [
+      { "from_form": "pattern", "from_medallion": "bronze", "required_method": "contrast", "to_form": "conditional" }
+    ]
+  },
+  "contradiction_config": {
+    "enabled_types": ["session_internal"],
+    "similarity_threshold": 0.85,
+    "confirmation_template": "先ほど「{previous_content}」とおっしゃいましたが、今のお話と合わせるとどう理解すればいいですか？"
+  },
+  "saturation_config": {
+    "novelty_threshold": 0.8,
+    "consecutive_count": 3
+  },
+  "data_sources": ["self_report", "internal_doc", "derived", "third_party", "sensor_iot"],
+  "mock_request_data": {
+    "id": "demo-daiwa-001",
+    "name": "北海道洋上風力発電プロジェクト",
+    "description": "石狩湾沖における洋上風力発電所（出力400MW）への投資判断ヒアリング。総事業費約2,000億円、FIP制度適用案件。",
+    "context": "大和エナジー・インフラが検討中の洋上風力発電投資案件です。\n\n主要仮説:\n1. 洋上風力の稼働率は陸上風力と比較してどの程度安定するか\n2. FIP制度下での売電収入の変動リスクは許容範囲内か\n3. EPC業者（海外大手）の施工リスクと国内サブコンの体制\n4. 系統接続コストと送電制約のリスク\n5. 環境アセスメントの結果と地元合意形成の進捗\n\n探求するテーマ:\n- IRR目標（8%以上）の達成可能性\n- ダウンサイドシナリオでの資金繰り\n- ポートフォリオにおける風力集中リスク\n- O&M体制（海外ベンダー依存度）\n- EXIT戦略（セカンダリ市場の成熟度）",
+    "topicId": "demo-topic-daiwa",
+    "topicName": "インフラ投資判断",
+    "topicDescription": "再生可能エネルギー案件の投資判断に関する知見の収集・構造化"
+  }
+}

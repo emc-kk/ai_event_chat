@@ -41,3 +41,9 @@ node_modules
 # https://vitejs.dev/guide/env-and-mode.html#env-files
 *.local
 
+# tacit-knowledge (暗黙知コンテンツ)
+tacit-knowledge/**/node_modules
+tacit-knowledge/**/.env
+tacit-knowledge/**/.env.local
+tacit-knowledge/**/.next
+.DS_Store

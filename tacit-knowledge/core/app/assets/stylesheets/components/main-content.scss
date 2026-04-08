@@ -1,0 +1,178 @@
+// Variables
+$sidebar-width: 280px;
+$bg-color: #EEF6FD;
+$white: #ffffff;
+$light-gray: #f8f9fa;
+$spacing-sm: 15px;
+$spacing-md: 20px;
+$border-radius-pill: 20px;
+
+// Status colors
+$status-not-started-bg: #6c757d;
+$status-not-started-text: #ffffff;
+
+$status-awaiting-verification-bg: #fff3cd;
+$status-awaiting-verification-text: #856404;
+
+$status-in-verification-bg: #fffaeb;
+$status-in-verification-text: #a67c00;
+
+$status-inhearing-bg: #cce7ff;
+$status-inhearing-text: #004085;
+
+$status-rehearing-bg: #e6f3ff;
+$status-rehearing-text: #0066cc;
+
+$status-completed-bg: #d4edda;
+$status-completed-text: #155724;
+
+$status-in-progress-bg: #cce7ff;
+$status-in-progress-text: #004085;
+
+$status-deleted-bg: #f8d7da;
+$status-deleted-text: #721c24;
+
+$status-updating-bg: #fff3cd;
+$status-updating-text: #856404;
+
+$status-error-bg: #dc3545;
+$status-error-text: #ffffff;
+
+$content-margin: 40px 40px 40px ($sidebar-width + 40px);
+
+body {
+  background-color: $bg-color;
+}
+
+// Main content layout
+.main-content {
+  margin: $content-margin;
+  min-height: 100vh;
+}
+
+// Search and filters
+.search-filters {
+  display: flex;
+  gap: $spacing-sm;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+}
+
+// Table styling
+.table {
+  th {
+    background-color: $light-gray;
+    font-weight: 600;
+    border: none;
+    padding: $spacing-sm;
+  }
+}
+
+.was-validated .form-control:valid, .form-control.is-valid {
+  border-color: #ced4da !important;
+  padding-right: 0.75rem !important;
+  background-image: none !important;
+}
+
+.was-validated .form-text.text-muted { 
+  display: none !important;
+}
+
+#messages {
+  .table-container {
+    overflow-x: auto;
+    margin: 20px;
+  }
+
+  .rails-table {
+    white-space: nowrap;
+    table-layout: auto;
+    min-width: 1200px;
+
+    th, td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+// Status badges
+.status-badge {
+  padding: 6px 12px;
+  border-radius: $border-radius-pill;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.status-not-started {
+    background-color: $status-not-started-bg;
+    color: $status-not-started-text;
+  }
+  &.status-in-progress {
+    background-color: $status-in-progress-bg;
+    color: $status-in-progress-text;
+  }
+  &.status-inhearing {
+    background-color: $status-inhearing-bg;
+    color: $status-inhearing-text;
+  }
+  &.status-awaiting-verification {
+    background-color: $status-awaiting-verification-bg;
+    color: $status-awaiting-verification-text;
+  }
+  &.status-in-verification {
+    background-color: $status-in-verification-bg;
+    color: $status-in-verification-text;
+  }
+  &.status-rehearing {
+    background-color: $status-rehearing-bg;
+    color: $status-rehearing-text;
+  }
+  &.status-completed {
+    background-color: $status-completed-bg;
+    color: $status-completed-text;
+  }
+  &.status-deleted {
+    background-color: $status-deleted-bg;
+    color: $status-deleted-text;
+  }
+  &.status-updating {
+    background-color: $status-updating-bg;
+    color: $status-updating-text;
+  }
+  &.status-error {
+    background-color: $status-error-bg;
+    color: $status-error-text;
+  }
+}
+
+// Chat Sessions specific tabs styling
+#chatTabs {
+  border-bottom: 1px solid #dee2e6;
+  
+  .nav-link {
+    color: #6c757d;
+    border: none !important;
+    background: none !important;
+    transition: color 0.15s ease-in-out;
+    
+    &:hover {
+      color: #0d6efd;
+    }
+    
+    &.active {
+      color: #0d6efd !important;
+      font-weight: 600;
+      border-bottom: 4px solid #0d6efd !important;
+    }
+  }
+}
+
+// logout-itemはsidebar-footerに配置されるためabsolute不要
+
+.form-label.required::after {
+  content: " *";
+  color: #dc3545;
+  font-weight: bold;
+}

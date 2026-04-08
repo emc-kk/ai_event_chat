@@ -1,0 +1,13 @@
+.c-container {
+  padding: 32px 20px;
+  background-color: #FFF;
+  border-radius: 20px;
+  border: 1px solid #F0F0F0;
+
+  &__title {
+    padding-bottom: 32px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #171E2B;
+  }
+}

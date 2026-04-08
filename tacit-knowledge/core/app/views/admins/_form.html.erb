@@ -1,0 +1,78 @@
+<%= form_with(model: admin, local: true, class: "needs-validation", html: { novalidate: true },
+    data: { controller: "bootstrap-validation", action: "submit->bootstrap-validation#validate", turbo: false }) do |form| %>
+  <% if admin.errors.any? %>
+    <div class="alert alert-danger">
+      <ul class="mb-0">
+        <% admin.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :email, "メールアドレス", class: "form-label fw-bold required" %>
+    <%= form.email_field :email, class: "form-control #{'is-invalid' if admin.errors[:email].present? }", placeholder: "メールアドレスを入力してください", required: true %>
+    <div class="invalid-feedback">
+      有効なメールアドレスを入力してください。
+    </div>
+    <% unless admin.new_record? %>
+      <div class="form-text text-muted">
+        メールアドレスを変更すると確認状態が「未確認」にリセットされ、新しい確認メールが送信されます。
+      </div>
+    <% end %>
+  </div>
+
+  <% if admin.new_record? %>
+    <div class="mb-3">
+      <%= form.label :password, "パスワード", class: "form-label fw-bold required" %>
+      <%= form.password_field :password, class: "form-control #{'is-invalid' if admin.errors[:password].present? }", placeholder: "パスワードを入力してください", required: true, minlength: 8 %>
+      <div class="form-text text-muted">
+        8文字以上で、大文字・小文字・数字・記号を含む必要があります
+      </div>
+      <div class="invalid-feedback">
+        パスワードは8文字以上で、大文字・小文字・数字・記号をそれぞれ含む必要があります。
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= form.label :password_confirmation, "パスワード確認", class: "form-label fw-bold required" %>
+      <%= form.password_field :password_confirmation, class: "form-control #{'is-invalid' if admin.errors[:password_confirmation].present? }", placeholder: "パスワードを再入力してください", required: true %>
+      <div class="form-text text-muted">
+        上記で入力したパスワードと同じものを入力してください
+      </div>
+      <div class="invalid-feedback">
+        パスワードが一致しません。同じパスワードを入力してください。
+      </div>
+    </div>
+  <% end %>
+
+  <% if privileged_admin? %>
+    <div class="mb-3">
+      <%= form.label :company_id, "会社", class: "form-label fw-bold" %>
+      <%= form.select :company_id,
+          options_for_select(
+            [["特権管理者（全会社）", ""]] + Company.all.map { |c| [c.name, c.id] },
+            admin.company_id
+          ),
+          { include_blank: false },
+          class: "form-select" %>
+      <div class="form-text text-muted">
+        特権管理者は全ての会社のデータにアクセスできます
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= form.label :name, "氏名", class: "form-label fw-bold required" %>
+    <%= form.text_field :name, class: "form-control #{'is-invalid' if admin.errors[:name].present? }", placeholder: "管理者の氏名", required: true %>
+    <div class="invalid-feedback">
+      氏名を入力してください。
+    </div>
+  </div>
+
+  <div class="d-flex gap-2 justify-content-end">
+    <%= link_to "キャンセル", admins_path, class: "btn btn-secondary" %>
+    <%= form.submit (admin.new_record? ? "登録" : "更新"), class: "btn btn-primary" %>
+  </div>
+<% end %>

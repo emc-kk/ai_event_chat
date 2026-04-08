@@ -1,0 +1,32 @@
+# 会社Aの辞書用語1
+term_kpi:
+  id: "01TEST_GLOSSARY_KPI_00000"
+  company_id: "01TEST_COMPANY_A_000000000"
+  term: "KPI報告書"
+  definition: "毎月の業績指標をまとめた報告書"
+  created_by_id: "01TEST_COMP_A_ADMIN_00000"
+  created_by_type: "Admin"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社Aの辞書用語2
+term_okr:
+  id: "01TEST_GLOSSARY_OKR_00000"
+  company_id: "01TEST_COMPANY_A_000000000"
+  term: "OKR会議"
+  definition: "四半期ごとの目標設定・振り返り会議"
+  created_by_id: "01TEST_COMP_A_ADMIN_00000"
+  created_by_type: "Admin"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>
+
+# 会社Bの辞書用語（クロスカンパニーテスト用）
+term_company_b:
+  id: "01TEST_GLOSSARY_CB_000000"
+  company_id: "01TEST_COMPANY_B_000000000"
+  term: "社内規定"
+  definition: "会社Bの社内規定集"
+  created_by_id: "01TEST_PRIV_ADMIN_00000000"
+  created_by_type: "Admin"
+  created_at: <%= Time.current %>
+  updated_at: <%= Time.current %>

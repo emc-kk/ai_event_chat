@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - Database infrastructure (RDS PostgreSQL)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+  
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+  
+  DatabasePassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: RDS PostgreSQL password
+
+Resources:
+  # RDS Subnet Group
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        - !ImportValue 
+          Fn::Sub: ${ProjectName}-${Environment}-public-subnet-1-id
+        - !ImportValue 
+          Fn::Sub: ${ProjectName}-${Environment}-public-subnet-2-id
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-db-subnet-group
+
+  # RDS PostgreSQL Instance (cost-optimized)
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub ${ProjectName}-${Environment}-postgres
+      DBInstanceClass: db.t3.medium
+      Engine: postgres
+      EngineVersion: '16'
+      AllocatedStorage: 20  # Minimum storage
+      StorageType: gp2
+      StorageEncrypted: true
+      MasterUsername: postgres
+      MasterUserPassword: !Ref DatabasePassword
+      VPCSecurityGroups:
+        - !ImportValue 
+          Fn::Sub: ${ProjectName}-${Environment}-rds-sg-id
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      BackupRetentionPeriod: 7
+      DeleteAutomatedBackups: true
+      DeletionProtection: false
+      PubliclyAccessible: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-${Environment}-postgres
+
+  # Update Parameter Store with actual database endpoint
+  UpdateDatabaseHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub /${ProjectName}/${Environment}/POSTGRES_HOST
+      Type: String
+      Value: !GetAtt RDSInstance.Endpoint.Address
+      Description: PostgreSQL database host endpoint
+      Tags:
+        Environment: !Ref Environment
+        Project: !Ref ProjectName
+
+Outputs:
+  DatabaseEndpoint:
+    Description: RDS PostgreSQL Endpoint
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-db-endpoint
+
+  DatabasePort:
+    Description: RDS PostgreSQL Port
+    Value: !GetAtt RDSInstance.Endpoint.Port
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-db-port

@@ -1,0 +1,283 @@
+<div class="col-md-10 w-100">
+  <%= render "topic_folders/breadcrumb" %>
+  <%= render "topics/table/header_menu" %>
+  <%= render "topic_folders/folder_list" %>
+  <div class="c-container">
+    <div class="table-container"
+         data-controller="request-polling"
+         data-request-polling-has-updating-value="<%= @has_updating_requests %>"
+         data-request-polling-request-ids-value="<%= @updating_request_ids.to_json %>">
+      <table class="table table-bordered mb-0">
+        <thead>
+          <tr>
+            <th>&nbsp;</th>
+            <th>トピックチャット</th>
+            <th>トピック名</th>
+            <% if admin_or_company_admin? %>
+              <th style="width: 50px;"></th>
+            <% end %>
+            <th>マニュアル</th>
+            <th>トピックステータス</th>
+            <% if admin_or_company_admin? %>
+              <th>権限</th>
+            <% end %>
+            <th>ヒアリング対象者</th>
+            <th>ヒアリング名</th>
+            <th>ヒアリング用チャットボット</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @topics.any? %>
+            <% @topics.each do |topic| %>
+              <% active_requests = topic.requests.hearing_type.left_joins(:respondent).where("requests.respondent_id IS NULL OR users.deleted_at IS NULL") %>
+              <% if active_requests.any? %>
+                <% active_requests.each_with_index do |request, index| %>
+                  <tr>
+                    <% if index == 0 %>
+                      <td rowspan="<%= active_requests.count %>" class="text-center">
+                        <% if topic.icon_color %>
+                          <%= image_tag("topic-icon/#{topic.icon_color}", style: "width: 50px; height: 50px;") %>
+                        <% else %>
+                        &nbsp;
+                        <% end %>
+                      </td>
+                      <td rowspan="<%= active_requests.count %>" class="text-center" data-topic-chat-id="<%= topic.id %>">
+                        <% if topic.chat_accessible? %>
+                          <% topic_chat_path = latest_room_path(topic, 'topic') || chat_topic_path(topic) %>
+                          <%= link_to topic_chat_path, class: "text-primary", title: "トピックチャット" do %>
+                            <i class="bi bi-chat-square-text fs-5"></i>
+                          <% end %>
+                        <% else %>
+                          <i class="bi bi-chat-square-text fs-5 text-muted" title="トピックが完了状態でないとアクセスできません"></i>
+                        <% end %>
+                      </td>
+                      <td rowspan="<%= active_requests.count %>">
+                        <%= link_to topic.name, edit_topic_path(topic), class: "text-primary" %>
+                      </td>
+                      <% if admin_or_company_admin? %>
+                        <td rowspan="<%= active_requests.count %>" class="text-center">
+                          <div class="d-flex align-items-center justify-content-center gap-1">
+                            <% if active_requests.count >= 2 %>
+                              <%= link_to topic_comparison_sessions_path(topic), class: "btn btn-sm btn-outline-info border-0", title: "知識差分比較" do %>
+                                <i class="bi bi-people"></i>
+                              <% end %>
+                            <% end %>
+                            <div class="dropdown">
+                              <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <a class="dropdown-item" href="#" onclick="openTopicMoveModal('<%= topic.id %>', '<%= j(topic.name) %>'); return false;">
+                                    <i class="bi bi-folder-symlink me-2"></i>移動
+                                  </a>
+                                </li>
+                                <% if active_requests.count >= 2 %>
+                                  <li>
+                                    <%= link_to topic_comparison_sessions_path(topic), class: "dropdown-item" do %>
+                                      <i class="bi bi-people me-2"></i>知識差分比較
+                                    <% end %>
+                                  </li>
+                                <% end %>
+                              </ul>
+                            </div>
+                          </div>
+                        </td>
+                      <% end %>
+                      <td rowspan="<%= active_requests.count %>">
+                        <%= render partial: 'topics/table/manual_link', locals: { topic: topic } %>
+                      </td>
+                      <td rowspan="<%= active_requests.count %>" data-topic-status-id="<%= topic.id %>">
+                      <span class="status-badge status-<%= topic.status.gsub("_", "-") %>">
+                        <%= t("activerecord.attributes.topic.statuses.#{topic.status}") %>
+                      </span>
+                      </td>
+                      <% if admin_or_company_admin? %>
+                        <td rowspan="<%= active_requests.count %>" class="text-center">
+                          <%= link_to permissions_path(permissible_type: "Topic", permissible_id: topic.id),
+                                      class: "text-primary", title: "権限設定" do %>
+                            <i class="bi bi-shield-lock fs-5"></i>
+                            <% if topic.has_direct_permissions? %>
+                              <span class="badge bg-success rounded-pill" style="font-size: 0.6em; vertical-align: top;">
+                                <%= topic.permissions.count %>
+                              </span>
+                            <% end %>
+                          <% end %>
+                        </td>
+                      <% end %>
+                    <% end %>
+
+                    <td>
+                      <% if request.respondent.present? %>
+                        <%= link_to request.respondent.name, user_path(request.respondent) %>
+                      <% else %>
+                        -
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if request.name.present? %>
+                        <div><%= link_to request.name, request_path(request), class: "text-primary" %></div>
+                      <% else %>
+                        -
+                      <% end %>
+                    </td>
+                    <td data-hearing-request-id="<%= request.id %>">
+                      <% if can_access_chat?(request, 'hearing') %>
+                        <% hearing_path = latest_room_path(request, 'hearing') || hearing_request_path(request) %>
+                        <%= link_to hearing_path, class: "text-primary", title: "ヒアリング用チャットボット" do %>
+                          <i class="bi bi-chat-dots fs-5"></i>
+                        <% end %>
+                      <% else %>
+                        <i class="bi bi-chat-dots fs-5 text-muted" title="このステータスではアクセスできません"></i>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              <% else %>
+                <tr>
+                  <td class="text-center">
+                    <% if topic.icon_color %>
+                      <%= image_tag("topic-icon/#{topic.icon_color}", style: "width: 50px; height: 50px;") %>
+                    <% else %>
+                      &nbsp;
+                    <% end %>
+                  </td>
+                  <td class="text-center">
+                    <% if topic.chat_accessible? %>
+                      <% topic_chat_path = latest_room_path(topic, 'topic') || chat_topic_path(topic) %>
+                      <%= link_to topic_chat_path, class: "text-primary", title: "トピックチャット" do %>
+                        <i class="bi bi-chat-square-text fs-5"></i>
+                      <% end %>
+                    <% else %>
+                      <i class="bi bi-chat-square-text fs-5 text-muted" title="トピックが完了状態でないとアクセスできません"></i>
+                    <% end %>
+                  </td>
+                  <td>
+                    <%= link_to topic.name, edit_topic_path(topic), class: "text-primary" %>
+                  </td>
+                  <% if admin_or_company_admin? %>
+                    <td class="text-center">
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li>
+                            <a class="dropdown-item" href="#" onclick="openTopicMoveModal('<%= topic.id %>', '<%= j(topic.name) %>'); return false;">
+                              <i class="bi bi-folder-symlink me-2"></i>移動
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </td>
+                  <% end %>
+                  <td>
+                    <%= render partial: 'topics/table/manual_link', locals: { topic: topic } %>
+                  </td>
+                  <td>
+                  <span class="status-badge status-<%= topic.status.gsub("_", "-") %>">
+                    <%= t("activerecord.attributes.topic.statuses.#{topic.status}") %>
+                  </span>
+                  </td>
+                  <% if admin_or_company_admin? %>
+                    <td class="text-center">
+                      <%= link_to permissions_path(permissible_type: "Topic", permissible_id: topic.id),
+                                  class: "text-primary", title: "権限設定" do %>
+                        <i class="bi bi-shield-lock fs-5"></i>
+                        <% if topic.has_direct_permissions? %>
+                          <span class="badge bg-success rounded-pill" style="font-size: 0.6em; vertical-align: top;">
+                            <%= topic.permissions.count %>
+                          </span>
+                        <% end %>
+                      <% end %>
+                    </td>
+                  <% end %>
+                  <td colspan="4" class="text-center text-muted">
+                    <% if topic.description&.include?("データソースファイルから作成") %>
+                      <i class="fa-solid fa-database me-1"></i>データソースから作成
+                    <% else %>
+                      ヒアリング依頼なし
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="<%= admin_or_company_admin? ? 9 : 7 %>" class="text-center text-muted py-4">
+                <i class="bi bi-inbox fa-2x mb-2"></i><br>
+                データがありません
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end mt-4">
+    <%= paginate @topics %>
+  </div>
+</div>
+<%= render partial: "components/modal_destroy", locals:
+  {
+    modalId: "userDestroyModal",
+    icon: "<i class='bi bi-exclamation-triangle text-warning fs-80'></i>",
+    confirm: "本当にこのトピックを削除しますか？",
+    options: {
+      text: '削除',
+      method: :delete,
+      data: { turbo_method: :delete },
+      class: "btn btn-danger d-flex justify-content-center align-items-center",
+      href: request_path(":id")
+    }
+  }
+%>
+<%= render "topic_folders/new_folder_modal" %>
+<%= render "topic_folders/folder_modals" %>
+
+<% if admin_or_company_admin? %>
+  <!-- トピック移動モーダル -->
+  <div class="modal fade" id="topicMoveModal" tabindex="-1" aria-labelledby="topicMoveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <%= form_with url: "#", method: :patch, local: true, id: "topicMoveForm" do |f| %>
+          <div class="modal-header">
+            <h5 class="modal-title" id="topicMoveModalLabel">
+              <i class="bi bi-folder-symlink me-2"></i>トピックを移動
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted mb-3">
+              「<span id="topicMoveName"></span>」を移動先フォルダを選択してください。
+            </p>
+            <div class="mb-3">
+              <%= label_tag "topic_folder_id", "移動先フォルダ", class: "form-label fw-bold" %>
+              <select name="topic[folder_id]" id="topic_folder_id" class="form-select">
+                <option value="">ルート（トップレベル）</option>
+                <% folder_scope_for_move = privileged_admin? ? TopicFolder.all : TopicFolder.for_company(current_company_id) %>
+                <% folder_scope_for_move.order(:name).each do |folder| %>
+                  <option value="<%= folder.id %>"><%= folder.breadcrumb_path %></option>
+                <% end %>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+            <%= f.submit "移動", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openTopicMoveModal(topicId, topicName) {
+      document.getElementById('topicMoveName').textContent = topicName;
+      var form = document.getElementById('topicMoveForm');
+      form.action = '/topics/' + topicId;
+      var modal = new bootstrap.Modal(document.getElementById('topicMoveModal'));
+      modal.show();
+    }
+  </script>
+<% end %>

@@ -1,0 +1,17 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div></div>
+  <div class="d-flex gap-2">
+    <% if admin_or_company_admin? %>
+      <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newFolderModal">
+        <i class="bi bi-folder-plus"></i> フォルダ作成
+      </button>
+      <%= link_to new_topic_path(folder_id: @current_folder&.id), class: "btn bg-primary text-white" do %>
+        トピック追加
+      <% end %>
+      <%= link_to "ヒアリング依頼", new_request_path, class: "btn btn-primary text-white" %>
+      <%= link_to manual_templates_path, class: "btn btn-outline-secondary" do %>
+        <i class="bi bi-file-earmark-text"></i> マニュアルテンプレート
+      <% end %>
+    <% end %>
+  </div>
+</div>

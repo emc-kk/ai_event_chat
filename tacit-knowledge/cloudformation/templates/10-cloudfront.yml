@@ -1,0 +1,205 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - CloudFront Distribution for Video Streaming with Signed URL/Cookie Access'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: development
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+  S3BucketName:
+    Type: String
+    Default: skill-relay-dev
+    Description: S3 bucket name for video storage
+
+  CloudFrontPublicKeyPem:
+    Type: String
+    Description: Public key in PEM format for signed URL/Cookie verification
+    NoEcho: true
+
+Resources:
+  # CloudFront Public Key for Signed URL/Cookie
+  CloudFrontPublicKey:
+    Type: AWS::CloudFront::PublicKey
+    Properties:
+      PublicKeyConfig:
+        Name: !Sub ${ProjectName}-${Environment}-video-public-key
+        CallerReference: !Sub ${ProjectName}-${Environment}-video-key-${AWS::StackName}
+        EncodedKey: !Ref CloudFrontPublicKeyPem
+        Comment: !Sub Public key for ${ProjectName} ${Environment} video signed URL/Cookie
+
+  # CloudFront Key Group
+  CloudFrontKeyGroup:
+    Type: AWS::CloudFront::KeyGroup
+    Properties:
+      KeyGroupConfig:
+        Name: !Sub ${ProjectName}-${Environment}-video-key-group
+        Items:
+          - !Ref CloudFrontPublicKey
+        Comment: !Sub Key group for ${ProjectName} ${Environment} video distribution
+
+  # Origin Access Control for S3
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub ${ProjectName}-${Environment}-video-oac
+        Description: !Sub OAC for ${ProjectName} ${Environment} video S3 bucket
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # CloudFront Cache Policy for Video
+  VideoCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub ${ProjectName}-${Environment}-video-cache-policy
+        Comment: Cache policy for video streaming
+        DefaultTTL: 86400
+        MaxTTL: 31536000
+        MinTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          CookiesConfig:
+            CookieBehavior: none
+          EnableAcceptEncodingBrotli: true
+          EnableAcceptEncodingGzip: true
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+  # CloudFront Response Headers Policy for CORS (for HLS streaming with signed cookies)
+  VideoResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub ${ProjectName}-${Environment}-video-cors-policy
+        Comment: CORS policy for HLS video streaming with signed cookies
+        CorsConfig:
+          AccessControlAllowCredentials: true
+          AccessControlAllowHeaders:
+            Items:
+              - Cookie
+              - Range
+              - Accept
+              - Accept-Encoding
+          AccessControlAllowMethods:
+            Items:
+              - GET
+              - HEAD
+              - OPTIONS
+          AccessControlAllowOrigins:
+            Items:
+              - https://skillrelay.ai
+              - https://www.skillrelay.ai
+              - http://localhost:3000
+              - http://127.0.0.1:3000
+          AccessControlExposeHeaders:
+            Items:
+              - Content-Length
+              - Content-Range
+              - Content-Type
+          AccessControlMaxAgeSec: 86400
+          OriginOverride: true
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub ${ProjectName} ${Environment} Video Distribution
+        Enabled: true
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_200
+
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+
+        Origins:
+          - Id: S3VideoOrigin
+            DomainName: !Sub ${S3BucketName}.s3.${AWS::Region}.amazonaws.com
+            OriginPath: /videos
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+
+        DefaultCacheBehavior:
+          TargetOriginId: S3VideoOrigin
+          ViewerProtocolPolicy: https-only
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          Compress: true
+          CachePolicyId: !Ref VideoCachePolicy
+          ResponseHeadersPolicyId: !Ref VideoResponseHeadersPolicy
+          TrustedKeyGroups:
+            - !Ref CloudFrontKeyGroup
+
+        # Custom Error Responses
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ErrorCachingMinTTL: 10
+
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # S3 Bucket Policy for CloudFront OAC
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3BucketName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub arn:aws:s3:::${S3BucketName}/videos/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
+
+Outputs:
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-cloudfront-distribution-id
+
+  CloudFrontDomainName:
+    Description: CloudFront Domain Name
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-cloudfront-domain-name
+
+  CloudFrontKeyGroupId:
+    Description: CloudFront Key Group ID
+    Value: !Ref CloudFrontKeyGroup
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-cloudfront-key-group-id
+
+  CloudFrontPublicKeyId:
+    Description: CloudFront Public Key ID
+    Value: !Ref CloudFrontPublicKey
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-cloudfront-public-key-id

@@ -1,0 +1,74 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="mb-1"><i class="bi bi-people"></i> 知識差分比較</h4>
+      <p class="text-muted mb-0">トピック: <%= @topic.name %></p>
+    </div>
+    <div class="d-flex gap-2">
+      <%= link_to new_topic_comparison_session_path(@topic), class: "btn btn-primary" do %>
+        <i class="bi bi-plus-lg"></i> 新規比較分析
+      <% end %>
+      <%= link_to "トピック一覧に戻る", topics_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <% if @comparison_sessions.any? %>
+    <div class="card">
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>実行日時</th>
+              <th>ステータス</th>
+              <th>一致率</th>
+              <th>比較対象</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @comparison_sessions.each do |session| %>
+              <tr>
+                <td><%= session.created_at.strftime('%Y/%m/%d %H:%M') %></td>
+                <td>
+                  <%
+                    status_badge = { 'analyzing' => 'bg-info', 'in_review' => 'bg-warning', 'completed' => 'bg-success' }
+                    status_label = { 'analyzing' => '分析中', 'in_review' => 'レビュー中', 'completed' => '完了' }
+                  %>
+                  <span class="badge <%= status_badge[session.status] %>"><%= status_label[session.status] %></span>
+                </td>
+                <td><%= session.consensus_rate.present? ? "#{(session.consensus_rate.to_f * 100).round(1)}%" : '-' %></td>
+                <td>
+                  <% session.requests.includes(:respondent).each do |req| %>
+                    <span class="badge bg-light text-dark"><%= req.respondent&.name || req.name %></span>
+                  <% end %>
+                </td>
+                <td class="text-end">
+                  <div class="d-flex gap-1 justify-content-end">
+                    <%= link_to topic_comparison_session_path(@topic, session), class: "btn btn-sm btn-outline-primary" do %>
+                      <i class="bi bi-eye"></i> 詳細
+                    <% end %>
+                    <%= button_to topic_comparison_session_path(@topic, session), method: :delete,
+                      class: "btn btn-sm btn-outline-danger",
+                      data: { turbo_confirm: "この比較結果を削除しますか？" } do %>
+                      <i class="bi bi-trash"></i>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div class="card">
+      <div class="card-body text-center text-muted py-5">
+        <i class="bi bi-people d-block mb-3" style="font-size: 3rem;"></i>
+        <p>まだ比較分析が実行されていません。</p>
+        <%= link_to new_topic_comparison_session_path(@topic), class: "btn btn-primary" do %>
+          <i class="bi bi-plus-lg"></i> 比較分析を実行
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
