@@ -31,9 +31,9 @@ const FIXED_QUESTIONS: Record<string, Record<string, [string, string, string]>> 
   },
   wine: {
     "たまに飲む程度": [
-      "📍 場面\n友人のホームパーティーへの手土産ワインを選ぶ場面です。\n予算：3,000円　｜　料理：洋食全般\n\n▶ どれを選びますか？",
-      "📍 場面\nレストランでソムリエに「赤と白どちらにしますか？」と聞かれました。\nメイン：和牛ステーキ\n\n▶ どう答えますか？",
-      "📍 場面\n上司へのお土産にワインを1本選ぶ場面です。\n予算：5,000円　｜　相手の好み：不明\n\n▶ どう選びますか？",
+      "📍 場面\n友人のホームパーティーへの手土産ワインを選ぶ場面です。\n予算：3,000円　｜　料理：洋食全般\n\n🍷 選択肢\nA. チリ産カベルネ・ソーヴィニヨン（赤）— 1,500円\nB. イタリア産キャンティ（赤）— 2,500円\nC. フランス産シャブリ（白）— 3,000円\nD. スペイン産カヴァ（スパークリング）— 2,000円\n\n▶ どれを選びますか？（A〜D）",
+      "📍 場面\nレストランでソムリエに「赤と白どちらにしますか？」と聞かれました。\nメイン：和牛ステーキ\n\n🍷 選択肢\nA. 赤ワイン\nB. 白ワイン\n\n▶ どちらを選びますか？（A or B）",
+      "📍 場面\n上司へのお土産にワインを1本選ぶ場面です。\n予算：5,000円　｜　相手の好み：不明\n\n🍷 選択肢\nA. フランス産ボルドー（赤）— 4,500円\nB. ニュージーランド産ソーヴィニヨン・ブラン（白）— 3,500円\nC. イタリア産バローロ（赤）— 5,000円\nD. シャンパーニュ（泡）— 5,000円\n\n▶ どれを選びますか？（A〜D）",
     ],
     "月に数回自分で選ぶ": [
       "📍 場面\n接待ディナー（フレンチ）での場面です。\n先方：初対面の60代役員　｜　コース：魚介中心\n\n▶ ワインを1本選ぶとしたら、どれにしますか？",
@@ -191,6 +191,21 @@ export async function POST(req: Request) {
   const phase = answeredCount % 3;
   const sceneIndex = Math.floor(answeredCount / 3);
   console.log(`[HEARING] answeredCount=${answeredCount}, phase=${phase} (0=場面,1=フォロー1,2=フォロー2), sceneIndex=${sceneIndex}, totalMessages=${messages.length}, topic=${topic}`);
+
+  // 場面質問（phase=0）は固定テキストをそのまま返す（AI生成しない）
+  if (phase === 0 && answeredCount < 9) {
+    const fixed = getFixedQuestion(topic || "", sceneIndex);
+    if (fixed) {
+      const fixedResult = streamText({
+        model: anthropic("claude-haiku-4-5-20251001"),
+        system: `次の内容を一字一句そのまま出力してください。改変・追加・省略は一切しないでください。\n\n${fixed}`,
+        messages: [{ role: "user", content: "出力してください。" }],
+      });
+      return createUIMessageStreamResponse({
+        stream: fixedResult.toUIMessageStream(),
+      });
+    }
+  }
 
   const systemPrompt = buildSystemPrompt(topic || "", answeredCount);
 

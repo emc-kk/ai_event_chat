@@ -6,6 +6,7 @@ import { DefaultChatTransport } from "ai";
 import { nanoid } from "nanoid";
 import { Mic, MicOff, RotateCcw, Send } from "lucide-react";
 import { useVoice3Layer } from "../../hooks/use-voice-3layer";
+import { getSceneSvgFromMap } from "./scene-svgs";
 
 // =====================================================
 // データ定義
@@ -145,7 +146,7 @@ const TOPIC_PROFILE: Record<
 
 const INITIAL_MARKER = "__INITIAL_MESSAGE__";
 
-// ゴルフ・初心者・場面1 のSVG図（試験表示用）
+// ゴルフ・初心者・場面1 のSVG図
 const GOLF_BEGINNER_SCENE1_SVG = `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans JP',Arial,sans-serif">
   <defs>
     <linearGradient id="sky-b1" x1="0" y1="0" x2="0" y2="1">
@@ -173,53 +174,135 @@ const GOLF_BEGINNER_SCENE1_SVG = `<svg width="100%" height="500" viewBox="0 0 72
     <filter id="shadow-b1">
       <feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.28)"/>
     </filter>
-    <marker id="arr-b1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-      <polygon points="0 0, 8 3, 0 6" fill="#FFFFFF"/>
-    </marker>
     <marker id="arr-dot-b1" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#90EE90"/>
     </marker>
   </defs>
-  <rect x="0" y="0" width="720" height="48" fill="#1E3A5F"/>
-  <text x="360" y="18" text-anchor="middle" fill="#A8C0D8" font-size="11">場面 1</text>
-  <text x="360" y="38" text-anchor="middle" fill="#FFFFFF" font-size="15" font-weight="bold">ティーショットの選択｜パー4・330ヤード・右に池</text>
-  <rect x="0" y="48" width="720" height="215" fill="url(#sky-b1)"/>
-  <ellipse cx="110" cy="95" rx="72" ry="25" fill="rgba(255,255,255,0.75)"/>
-  <ellipse cx="150" cy="82" rx="50" ry="20" fill="rgba(255,255,255,0.80)"/>
-  <ellipse cx="80" cy="108" rx="40" ry="17" fill="rgba(255,255,255,0.65)"/>
-  <ellipse cx="590" cy="100" rx="65" ry="24" fill="rgba(255,255,255,0.62)"/>
-  <ellipse cx="630" cy="88" rx="44" ry="18" fill="rgba(255,255,255,0.68)"/>
-  <rect x="0" y="258" width="720" height="182" fill="url(#rough-b1)"/>
-  <path d="M 140,440 L 580,440 L 475,262 L 245,262 Z" fill="url(#fw-b1)"/>
-  <line x1="270" y1="440" x2="308" y2="262" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-  <line x1="360" y1="440" x2="360" y2="262" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-  <line x1="450" y1="440" x2="412" y2="262" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
-  <rect x="0" y="256" width="720" height="6" fill="#1E4820" opacity="0.7"/>
-  <ellipse cx="345" cy="252" rx="60" ry="20" fill="url(#green-b1)" filter="url(#shadow-b1)"/>
-  <ellipse cx="338" cy="247" rx="36" ry="11" fill="#2AA050" opacity="0.38"/>
-  <line x1="348" y1="252" x2="348" y2="205" stroke="#C0C0C0" stroke-width="2.5"/>
-  <polygon points="348,205 378,212 348,219" fill="#CC2200"/>
-  <ellipse cx="352" cy="255" rx="8" ry="3" fill="rgba(0,0,0,0.25)"/>
-  <ellipse cx="468" cy="330" rx="120" ry="68" fill="url(#pond-b1)" opacity="0.92"/>
-  <ellipse cx="456" cy="320" rx="90" ry="48" fill="#5AA8E0" opacity="0.30"/>
-  <ellipse cx="432" cy="309" rx="30" ry="8" fill="rgba(255,255,255,0.22)" transform="rotate(-15,432,309)"/>
-  <ellipse cx="478" cy="350" rx="20" ry="5" fill="rgba(255,255,255,0.18)" transform="rotate(10,478,350)"/>
-  <rect x="396" y="288" width="136" height="40" rx="7" fill="rgba(0,20,80,0.72)"/>
-  <text x="464" y="304" text-anchor="middle" fill="#5EC8FF" font-size="13" font-weight="bold">池（右）OB注意</text>
-  <text x="464" y="321" text-anchor="middle" fill="#AAD8FF" font-size="11">ウォーターハザード</text>
-  <rect x="158" y="293" width="140" height="38" rx="7" fill="rgba(0,60,20,0.72)"/>
-  <text x="228" y="309" text-anchor="middle" fill="#80FF90" font-size="13" font-weight="bold">左サイドが安全</text>
-  <text x="228" y="325" text-anchor="middle" fill="#AAFFB8" font-size="11">フェアウェイ広め</text>
-  <line x1="360" y1="424" x2="320" y2="262" stroke="#90EE90" stroke-width="2.5" stroke-dasharray="10,6" marker-end="url(#arr-dot-b1)" opacity="0.85"/>
-  <rect x="308" y="358" width="105" height="48" rx="9" fill="#1E3A5F" filter="url(#shadow-b1)"/>
-  <text x="360" y="376" text-anchor="middle" fill="#A8C0D8" font-size="11">距離</text>
-  <text x="360" y="398" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="bold">330Y</text>
-  <rect x="295" y="425" width="130" height="15" rx="4" fill="rgba(255,255,255,0.12)"/>
-  <text x="360" y="437" text-anchor="middle" fill="rgba(255,255,255,0.55)" font-size="10">ティーボックス</text>
-  <circle cx="360" cy="407" r="14" fill="#1A2E4A"/>
-  <path d="M 346,420 Q 360,428 374,420 L 377,440 Q 360,445 343,440 Z" fill="#1A2E4A"/>
-  <line x1="374" y1="421" x2="416" y2="388" stroke="#4A4A4A" stroke-width="3.5"/>
-  <circle cx="416" cy="388" r="5" fill="#6A6A6A"/>
+  <rect x="0" y="0" width="720" height="215" fill="url(#sky-b1)"/>
+  <ellipse cx="110" cy="55" rx="72" ry="25" fill="rgba(255,255,255,0.75)"/>
+  <ellipse cx="150" cy="42" rx="50" ry="20" fill="rgba(255,255,255,0.80)"/>
+  <ellipse cx="80" cy="68" rx="40" ry="17" fill="rgba(255,255,255,0.65)"/>
+  <ellipse cx="590" cy="60" rx="65" ry="24" fill="rgba(255,255,255,0.62)"/>
+  <ellipse cx="630" cy="48" rx="44" ry="18" fill="rgba(255,255,255,0.68)"/>
+  <rect x="0" y="210" width="720" height="230" fill="url(#rough-b1)"/>
+  <path d="M 140,440 L 580,440 L 475,215 L 245,215 Z" fill="url(#fw-b1)"/>
+  <line x1="270" y1="440" x2="308" y2="215" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="360" y1="440" x2="360" y2="215" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <line x1="450" y1="440" x2="412" y2="215" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+  <rect x="0" y="208" width="720" height="6" fill="#1E4820" opacity="0.7"/>
+  <!-- グリーン -->
+  <ellipse cx="345" cy="205" rx="60" ry="20" fill="url(#green-b1)" filter="url(#shadow-b1)"/>
+  <ellipse cx="338" cy="200" rx="36" ry="11" fill="#2AA050" opacity="0.38"/>
+  <!-- ピン -->
+  <line x1="348" y1="205" x2="348" y2="158" stroke="#C0C0C0" stroke-width="2.5"/>
+  <polygon points="348,158 378,165 348,172" fill="#CC2200"/>
+  <ellipse cx="352" cy="208" rx="8" ry="3" fill="rgba(0,0,0,0.25)"/>
+  <!-- 池 -->
+  <ellipse cx="468" cy="300" rx="110" ry="60" fill="url(#pond-b1)" opacity="0.92"/>
+  <ellipse cx="456" cy="290" rx="80" ry="42" fill="#5AA8E0" opacity="0.30"/>
+  <ellipse cx="432" cy="279" rx="30" ry="8" fill="rgba(255,255,255,0.22)" transform="rotate(-15,432,279)"/>
+  <!-- 距離矢印 -->
+  <line x1="360" y1="390" x2="340" y2="218" stroke="#90EE90" stroke-width="2.5" stroke-dasharray="10,6" marker-end="url(#arr-dot-b1)" opacity="0.85"/>
+  <!-- ゴルファー -->
+  <circle cx="360" cy="375" r="14" fill="#1A2E4A"/>
+  <path d="M 346,388 Q 360,396 374,388 L 377,408 Q 360,413 343,408 Z" fill="#1A2E4A"/>
+  <line x1="374" y1="389" x2="416" y2="356" stroke="#4A4A4A" stroke-width="3.5"/>
+  <circle cx="416" cy="356" r="5" fill="#6A6A6A"/>
+  <!-- コース情報パネル（左上） -->
+  <rect x="40" y="10" width="250" height="165" rx="10" ry="10" fill="white" opacity="0.9" filter="url(#shadow-b1)"/>
+  <text x="165" y="37" text-anchor="middle" fill="#1a6b3a" font-size="18" font-weight="bold">コース情報</text>
+  <line x1="50" y1="47" x2="280" y2="47" stroke="#dddddd" stroke-width="1"/>
+  <text x="58" y="74" fill="#555" font-size="15">⛳ パー</text>
+  <text x="278" y="74" text-anchor="end" fill="#333" font-size="19" font-weight="bold">4</text>
+  <text x="58" y="102" fill="#555" font-size="15">📏 距離</text>
+  <text x="278" y="102" text-anchor="end" fill="#e63946" font-size="19" font-weight="bold">330Y</text>
+  <text x="58" y="130" fill="#555" font-size="15">💧 池</text>
+  <text x="278" y="130" text-anchor="end" fill="#2E6FB0" font-size="16" font-weight="bold">右サイド</text>
+  <text x="58" y="158" fill="#555" font-size="15">🏌 ドライバー</text>
+  <text x="278" y="158" text-anchor="end" fill="#2e8b57" font-size="16" font-weight="bold">池越え可能</text>
+</svg>`;
+
+// ゴルフ・初心者・場面2 のSVG図
+const GOLF_BEGINNER_SCENE2_SVG = `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans JP', Arial, sans-serif">
+  <defs>
+    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e63946"/>
+    </marker>
+    <radialGradient id="fairwayGrad2" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#7ec850"/>
+      <stop offset="100%" stop-color="#5aab30"/>
+    </radialGradient>
+    <radialGradient id="greenGrad2" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#2e8b57"/>
+      <stop offset="100%" stop-color="#1a6b3a"/>
+    </radialGradient>
+    <radialGradient id="bunkerGrad2" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#e8d5a0"/>
+      <stop offset="100%" stop-color="#c9b070"/>
+    </radialGradient>
+    <filter id="panelShadow2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#00000022"/>
+    </filter>
+    <filter id="greenShadow2">
+      <feDropShadow dx="3" dy="4" stdDeviation="6" flood-color="#00000044"/>
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="720" height="440" fill="url(#fairwayGrad2)"/>
+  <g opacity="0.12" stroke="#ffffff" stroke-width="18">
+    <line x1="60"  y1="0" x2="60"  y2="440"/>
+    <line x1="140" y1="0" x2="140" y2="440"/>
+    <line x1="220" y1="0" x2="220" y2="440"/>
+    <line x1="300" y1="0" x2="300" y2="440"/>
+    <line x1="380" y1="0" x2="380" y2="440"/>
+    <line x1="460" y1="0" x2="460" y2="440"/>
+    <line x1="540" y1="0" x2="540" y2="440"/>
+    <line x1="620" y1="0" x2="620" y2="440"/>
+    <line x1="700" y1="0" x2="700" y2="440"/>
+  </g>
+  <!-- コース情報パネル（左上） -->
+  <rect x="40" y="10" width="230" height="140" rx="10" ry="10" fill="white" opacity="0.9" filter="url(#panelShadow2)"/>
+  <text x="155" y="37" text-anchor="middle" fill="#1a6b3a" font-size="18" font-weight="bold">コース情報</text>
+  <line x1="50" y1="47" x2="260" y2="47" stroke="#dddddd" stroke-width="1"/>
+  <text x="58" y="74" fill="#555" font-size="15">📍 ピンまで</text>
+  <text x="258" y="74" text-anchor="end" fill="#e63946" font-size="19" font-weight="bold">15Y</text>
+  <text x="58" y="102" fill="#555" font-size="15">🏔 アゴ</text>
+  <text x="258" y="102" text-anchor="end" fill="#2e8b57" font-size="16" font-weight="bold">低め</text>
+  <text x="58" y="130" fill="#555" font-size="15">🏖 砂の状態</text>
+  <text x="258" y="130" text-anchor="end" fill="#b89840" font-size="16" font-weight="bold">やや硬め</text>
+  <!-- グリーン（中央寄り） -->
+  <ellipse cx="430" cy="220" rx="175" ry="140" fill="url(#greenGrad2)" filter="url(#greenShadow2)"/>
+  <ellipse cx="430" cy="220" rx="175" ry="140" fill="none" stroke="#a8e6cf" stroke-width="2.5" opacity="0.6"/>
+  <text x="500" y="340" text-anchor="middle" fill="white" font-size="14" opacity="0.7" font-weight="bold">グリーン</text>
+  <!-- バンカー（中央寄り） -->
+  <ellipse cx="260" cy="280" rx="95" ry="68" fill="#8b7340" opacity="0.35"/>
+  <ellipse cx="257" cy="276" rx="95" ry="68" fill="url(#bunkerGrad2)"/>
+  <ellipse cx="257" cy="276" rx="95" ry="68" fill="none" stroke="#b89840" stroke-width="2" stroke-dasharray="6,3" opacity="0.8"/>
+  <g fill="#b8963a" opacity="0.4">
+    <circle cx="225" cy="262" r="3"/><circle cx="250" cy="252" r="2"/>
+    <circle cx="275" cy="268" r="3"/><circle cx="240" cy="284" r="2"/>
+    <circle cx="265" cy="296" r="3"/><circle cx="290" cy="260" r="2"/>
+    <circle cx="218" cy="290" r="2"/><circle cx="298" cy="284" r="3"/>
+    <circle cx="238" cy="302" r="2"/><circle cx="272" cy="308" r="2"/>
+  </g>
+  <text x="257" y="330" text-anchor="middle" fill="#6b4e1a" font-size="13" font-weight="bold">バンカー</text>
+  <!-- ボール -->
+  <circle cx="250" cy="272" r="11" fill="#00000033"/>
+  <circle cx="248" cy="269" r="11" fill="white" stroke="#cccccc" stroke-width="1.5"/>
+  <circle cx="244" cy="265" r="2.5" fill="#eeeeee"/>
+  <circle cx="252" cy="265" r="2.5" fill="#eeeeee"/>
+  <circle cx="248" cy="271" r="2.5" fill="#eeeeee"/>
+  <text x="215" cy="256" x="215" y="256" text-anchor="middle" fill="#333" font-size="12" font-weight="bold">ボール</text>
+  <line x1="225" y1="258" x2="238" y2="265" stroke="#555" stroke-width="1" opacity="0.7"/>
+  <!-- ピン -->
+  <line x1="410" y1="140" x2="410" y2="210" stroke="#888888" stroke-width="2.5"/>
+  <polygon points="410,140 410,163 432,152" fill="#e63946"/>
+  <circle cx="410" cy="210" r="5" fill="#cccccc" stroke="#999" stroke-width="1"/>
+  <ellipse cx="410" cy="212" rx="8" ry="4" fill="#1a4a2a" stroke="#0d3320" stroke-width="1"/>
+  <text x="438" y="158" text-anchor="start" fill="white" font-size="13" font-weight="bold">ピン</text>
+  <!-- 距離矢印 -->
+  <line x1="260" y1="260" x2="398" y2="210" stroke="#e63946" stroke-width="2.2" stroke-dasharray="8,4" marker-end="url(#arrowhead2)"/>
+  <rect x="305" y="218" width="64" height="28" rx="6" ry="6" fill="white" opacity="0.9" filter="url(#panelShadow2)"/>
+  <text x="337" y="237" text-anchor="middle" fill="#e63946" font-size="17" font-weight="bold">15Y</text>
 </svg>`;
 
 function getMessageText(message: {
@@ -656,23 +739,54 @@ function ChatPhase({
           const firstAssistantIndex = filtered.findIndex(
             (m) => m.role === "assistant"
           );
-          const showDiagramFor =
-            enrichedTopic.includes("ゴルフ") &&
-            enrichedTopic.includes("初心者（スコア100以上）");
+          // 場面ごとのSVGマップ（ゴルフ初心者の場面1,2はインライン定義を優先）
+          const INLINE_SVG_MAP: Record<string, string> = {
+            "golf_初心者（スコア100以上）_0": GOLF_BEGINNER_SCENE1_SVG,
+            "golf_初心者（スコア100以上）_1": GOLF_BEGINNER_SCENE2_SVG,
+          };
+
+          // assistantメッセージの番号から場面SVGを取得
+          // 場面質問は assistantIndex 0, 3, 6 (= answeredCount 0, 3, 6 → phase 0)
+          const getSceneSvg = (assistantIndex: number): string | null => {
+            // 場面質問は0番目、3番目、6番目のassistantメッセージ
+            if (assistantIndex % 3 !== 0) return null;
+            const sceneIndex = Math.floor(assistantIndex / 3);
+
+            // まずインライン定義をチェック
+            const topicId = enrichedTopic.includes("ゴルフ") ? "golf"
+              : enrichedTopic.includes("ワイン") ? "wine"
+              : enrichedTopic.includes("釣り") ? "fishing"
+              : enrichedTopic.includes("接待") ? "entertainment" : null;
+            if (!topicId) return null;
+
+            const levelMatch = enrichedTopic.match(/\/ (.+)）$/);
+            const level = levelMatch ? levelMatch[1] : null;
+            if (!level) return null;
+
+            const inlineKey = `${topicId}_${level}_${sceneIndex}`;
+            if (INLINE_SVG_MAP[inlineKey]) return INLINE_SVG_MAP[inlineKey];
+
+            // 外部マップから取得
+            return getSceneSvgFromMap(enrichedTopic, sceneIndex);
+          };
+
+          let assistantCount = 0;
           return filtered.map((message, index) => {
             const text = getMessageText(
               message as Parameters<typeof getMessageText>[0]
             );
             if (!text) return null;
-            const isFirstAssistant =
-              message.role === "assistant" && index === firstAssistantIndex;
+            const isAssistant = message.role === "assistant";
+            const currentAssistantIndex = isAssistant ? assistantCount : -1;
+            if (isAssistant) assistantCount++;
+            const sceneSvg = isAssistant ? getSceneSvg(currentAssistantIndex) : null;
             return (
               <div key={message.id}>
-                {isFirstAssistant && showDiagramFor && (
+                {sceneSvg && (
                   <div
                     className="w-full mb-2 rounded-xl overflow-hidden"
                     style={{ maxHeight: "500px" }}
-                    dangerouslySetInnerHTML={{ __html: GOLF_BEGINNER_SCENE1_SVG }}
+                    dangerouslySetInnerHTML={{ __html: sceneSvg }}
                   />
                 )}
                 <div
@@ -747,6 +861,38 @@ function ChatPhase({
       {/* Input area — 完了後は非表示・画面下部に固定 */}
       {!showCompletion && (
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white px-4 pt-3 pb-4 space-y-2 z-10">
+        {/* 選択肢ボタン（最新のassistantメッセージに選択肢がある場合） */}
+        {(() => {
+          const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+          if (!lastAssistant) return null;
+          const lastText = getMessageText(lastAssistant as Parameters<typeof getMessageText>[0]);
+          if (!lastText || !lastText.includes("🍷 選択肢")) return null;
+          // 選択肢を抽出（A. xxx, B. xxx 形式）
+          const choiceLines = lastText.split("\n").filter((l) => /^[A-D]\.\s/.test(l.trim()));
+          if (choiceLines.length === 0) return null;
+          return (
+            <div className="grid grid-cols-2 gap-2 mb-1">
+              {choiceLines.map((line) => {
+                const label = line.trim();
+                return (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      if (voice.isConnected) voice.disconnect();
+                      setInput("");
+                      sendMessage({ text: label });
+                    }}
+                    disabled={status === "streaming" || status === "submitted"}
+                    className="px-3 py-3 rounded-xl bg-gray-100 text-gray-800 text-sm font-medium text-left border-2 border-gray-200 hover:border-[#1E3A5F] hover:bg-gray-50 active:scale-[0.97] transition-all disabled:opacity-50"
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })()}
+
         {voice.error && (
           <p className="text-xs text-red-500 text-center">{voice.error}</p>
         )}
