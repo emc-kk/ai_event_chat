@@ -313,6 +313,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - cloudformation:ListStacks
+                  - cloudformation:ListExports
                 Resource: '*'
               - Effect: Allow
                 Action:
