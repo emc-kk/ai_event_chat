@@ -146,6 +146,32 @@ const TOPIC_PROFILE: Record<
 
 const INITIAL_MARKER = "__INITIAL_MESSAGE__";
 
+// =====================================================
+// ワイン選択肢データ（レベル × 場面）
+// =====================================================
+const WINE_CHOICES: Record<string, string[][]> = {
+  "たまに飲む程度": [
+    ["A. チリ産カベルネ・ソーヴィニヨン（赤）— 1,500円", "B. イタリア産キャンティ（赤）— 2,500円", "C. フランス産シャブリ（白）— 3,000円", "D. スペイン産カヴァ（スパークリング）— 2,000円"],
+    ["A. 赤ワイン", "B. 白ワイン"],
+    ["A. フランス産ボルドー（赤）— 4,500円", "B. NZ産ソーヴィニヨン・ブラン（白）— 3,500円", "C. イタリア産バローロ（赤）— 5,000円", "D. シャンパーニュ（泡）— 5,000円"],
+  ],
+  "月に数回自分で選ぶ": [
+    ["A. シャブリ（白）— 魚介に合わせる", "B. ブルゴーニュ・ピノノワール（赤）— 軽めの赤で無難に", "C. シャンパーニュ（泡）— 華やかさで場を演出", "D. ソムリエにコースに合わせて相談する"],
+    ["A. 価格帯で絞って直感で選ぶ", "B. 品種を手がかりに選ぶ", "C. 産地を手がかりに選ぶ", "D. ソムリエに予算と料理を伝えて選んでもらう"],
+    ["A. ブルゴーニュの村名格付け（赤）— 定番の上質さ", "B. シャンパーニュ ブラン・ド・ブラン（泡）— 特別感", "C. バローロ（赤）— 「ワインの王」", "D. 相手の生まれ年ヴィンテージを探す"],
+  ],
+  "接待等でよく選ぶ": [
+    ["A. ボルドー格付けシャトーの当たり年", "B. ブルゴーニュの一級畑", "C. ソムリエと相談し白→赤の流れで2本", "D. 先方の好みを探る一言を添えてから決める"],
+    ["A. ボルドー — 力強さと構造を楽しむ", "B. ブルゴーニュ — 繊細さとエレガンスを楽しむ", "C. 料理との相性で決める", "D. 飲み頃（熟成状態）で判断する"],
+    ["A. ボルドー左岸の格付けシャトー（カベルネ主体）", "B. ブルゴーニュのグラン・クリュ（ピノ・ノワール）", "C. バローロまたはバルバレスコ（ネッビオーロ）", "D. ローヌのエルミタージュ（シラー主体）"],
+  ],
+  "本格的に学んでいる": [
+    ["A. まず外観（色調・透明度・粘性）を確認", "B. まず香りを取る（第一アロマ）", "C. まずグラスを回して香りを開かせる", "D. 産地や品種の情報を確認してから味わう"],
+    ["A. ヴィンテージ重視 — 当たり年の力はスタイルを超える", "B. 生産者重視 — 造り手の哲学が品質を決める", "C. 両方見るが、最終的にはヴィンテージ", "D. 両方見るが、最終的には生産者"],
+    ["A. 産地によって選び方の軸は大きく変わる", "B. 基本的に同じで産地はあまり関係ない", "C. 旧世界と新世界で軸を分けている", "D. 産地より品種やスタイルを重視"],
+  ],
+};
+
 // ゴルフ・初心者・場面1 のSVG図
 const GOLF_BEGINNER_SCENE1_SVG = `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans JP',Arial,sans-serif">
   <defs>
@@ -728,7 +754,7 @@ function ChatPhase({
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-72">
+      <div className={`flex-1 overflow-y-auto px-4 py-4 space-y-3 ${enrichedTopic.includes("ワイン") ? "pb-[488px]" : "pb-72"}`}>
         {(() => {
           const filtered = messages.filter(
             (m) =>
@@ -861,34 +887,50 @@ function ChatPhase({
       {/* Input area — 完了後は非表示・画面下部に固定 */}
       {!showCompletion && (
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white px-4 pt-3 pb-4 space-y-2 z-10">
-        {/* 選択肢ボタン（最新のassistantメッセージに選択肢がある場合） */}
+        {/* 選択肢ボタン（ワイン: WINE_CHOICES から、その他: テキスト解析） */}
         {(() => {
           const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
           if (!lastAssistant) return null;
           const lastText = getMessageText(lastAssistant as Parameters<typeof getMessageText>[0]);
-          if (!lastText || !lastText.includes("🍷 選択肢")) return null;
-          // 選択肢を抽出（A. xxx, B. xxx 形式）
-          const choiceLines = lastText.split("\n").filter((l) => /^[A-D]\.\s/.test(l.trim()));
+          if (!lastText) return null;
+
+          let choiceLines: string[] = [];
+
+          // ワインの場合: WINE_CHOICES データから選択肢を取得（場面質問時のみ）
+          if (enrichedTopic.includes("ワイン")) {
+            const phase = userAnswerCount % 3;
+            const sceneIdx = Math.floor(userAnswerCount / 3);
+            if (phase === 0 && sceneIdx < 3) {
+              const levelMatch = enrichedTopic.match(/\/ (.+)）$/);
+              const level = levelMatch ? levelMatch[1] : null;
+              if (level && WINE_CHOICES[level]) {
+                choiceLines = WINE_CHOICES[level][sceneIdx] ?? [];
+              }
+            }
+          } else {
+            // その他のトピック: テキスト内 🍷 選択肢 から抽出
+            if (lastText.includes("🍷 選択肢")) {
+              choiceLines = lastText.split("\n").filter((l) => /^[A-D]\.\s/.test(l.trim())).map((l) => l.trim());
+            }
+          }
+
           if (choiceLines.length === 0) return null;
           return (
             <div className="grid grid-cols-2 gap-2 mb-1">
-              {choiceLines.map((line) => {
-                const label = line.trim();
-                return (
-                  <button
-                    key={label}
-                    onClick={() => {
-                      if (voice.isConnected) voice.disconnect();
-                      setInput("");
-                      sendMessage({ text: label });
-                    }}
-                    disabled={status === "streaming" || status === "submitted"}
-                    className="px-3 py-3 rounded-xl bg-gray-100 text-gray-800 text-sm font-medium text-left border-2 border-gray-200 hover:border-[#1E3A5F] hover:bg-gray-50 active:scale-[0.97] transition-all disabled:opacity-50"
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              {choiceLines.map((label) => (
+                <button
+                  key={label}
+                  onClick={() => {
+                    if (voice.isConnected) voice.disconnect();
+                    setInput("");
+                    sendMessage({ text: label });
+                  }}
+                  disabled={status === "streaming" || status === "submitted"}
+                  className="px-3 py-3 rounded-xl bg-gray-100 text-gray-800 text-sm font-medium text-left border-2 border-gray-200 hover:border-[#1E3A5F] hover:bg-gray-50 active:scale-[0.97] transition-all disabled:opacity-50"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           );
         })()}

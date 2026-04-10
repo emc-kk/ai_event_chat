@@ -37,6 +37,25 @@ function golfSvg(rows: InfoRow[], elements: string): string {
 </svg>`;
 }
 
+function wineImageSvg(rows: InfoRow[], imagePath: string): string {
+  const panel = rows
+    .map(
+      (r, i) =>
+        `<text x="58" y="${74 + i * 28}" fill="#555" font-size="15">${r.icon} ${r.label}</text>
+  <text x="278" y="${74 + i * 28}" text-anchor="end" fill="${r.color}" font-size="16" font-weight="bold">${r.value}</text>`
+    )
+    .join("\n  ");
+  const panelH = 50 + rows.length * 28;
+  return `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family="'Noto Sans JP',Arial,sans-serif">
+  <defs><filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.28)"/></filter></defs>
+  <image href="${imagePath}" x="0" y="0" width="720" height="440" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="40" y="10" width="250" height="${panelH}" rx="10" fill="white" opacity="0.92" filter="url(#sh)"/>
+  <text x="165" y="37" text-anchor="middle" fill="#722F37" font-size="18" font-weight="bold">場面情報</text>
+  <line x1="50" y1="47" x2="280" y2="47" stroke="#ddd" stroke-width="1"/>
+  ${panel}
+</svg>`;
+}
+
 function wineSvg(rows: InfoRow[], sceneType: "restaurant" | "shop" | "tasting"): string {
   const panel = rows
     .map(
@@ -125,7 +144,7 @@ function fishingSvg(rows: InfoRow[], sceneType: "sea" | "river" | "lake"): strin
 </svg>`;
 }
 
-function entertainmentSvg(rows: InfoRow[]): string {
+function fishingImageSvg(rows: InfoRow[], imagePath: string): string {
   const panel = rows
     .map(
       (r, i) =>
@@ -134,21 +153,28 @@ function entertainmentSvg(rows: InfoRow[]): string {
     )
     .join("\n  ");
   const panelH = 50 + rows.length * 28;
-  return `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans JP',Arial,sans-serif">
+  return `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family="'Noto Sans JP',Arial,sans-serif">
   <defs><filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.28)"/></filter></defs>
-  <rect width="720" height="440" fill="#1a1520"/>
-  <rect y="350" width="720" height="90" fill="#2a1f30"/>
-  <rect x="100" y="140" width="520" height="200" rx="12" fill="#3a2a20" opacity="0.6"/>
-  <rect x="130" y="170" width="460" height="4" rx="2" fill="#5a4a3a"/>
-  <g opacity="0.4">
-    <ellipse cx="220" cy="250" rx="35" ry="7" fill="#fff"/>
-    <ellipse cx="360" cy="250" rx="35" ry="7" fill="#fff"/>
-    <ellipse cx="500" cy="250" rx="35" ry="7" fill="#fff"/>
-  </g>
-  <rect x="200" y="190" width="8" height="50" rx="2" fill="#c0a060" opacity="0.5"/>
-  <circle cx="204" cy="186" r="5" fill="#ff9933" opacity="0.5"/>
-  <rect x="500" y="190" width="8" height="50" rx="2" fill="#c0a060" opacity="0.5"/>
-  <circle cx="504" cy="186" r="5" fill="#ff9933" opacity="0.5"/>
+  <image href="${imagePath}" x="0" y="0" width="720" height="440" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="40" y="10" width="250" height="${panelH}" rx="10" fill="white" opacity="0.92" filter="url(#sh)"/>
+  <text x="165" y="37" text-anchor="middle" fill="#1a4f8a" font-size="18" font-weight="bold">場面情報</text>
+  <line x1="50" y1="47" x2="280" y2="47" stroke="#ddd" stroke-width="1"/>
+  ${panel}
+</svg>`;
+}
+
+function entertainmentImageSvg(rows: InfoRow[], imagePath: string): string {
+  const panel = rows
+    .map(
+      (r, i) =>
+        `<text x="58" y="${74 + i * 28}" fill="#555" font-size="15">${r.icon} ${r.label}</text>
+  <text x="278" y="${74 + i * 28}" text-anchor="end" fill="${r.color}" font-size="16" font-weight="bold">${r.value}</text>`
+    )
+    .join("\n  ");
+  const panelH = 50 + rows.length * 28;
+  return `<svg width="100%" height="500" viewBox="0 0 720 440" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" font-family="'Noto Sans JP',Arial,sans-serif">
+  <defs><filter id="sh"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.28)"/></filter></defs>
+  <image href="${imagePath}" x="0" y="0" width="720" height="440" preserveAspectRatio="xMidYMid slice"/>
   <rect x="40" y="10" width="250" height="${panelH}" rx="10" fill="white" opacity="0.92" filter="url(#sh)"/>
   <text x="165" y="37" text-anchor="middle" fill="#8B4513" font-size="18" font-weight="bold">場面情報</text>
   <line x1="50" y1="47" x2="280" y2="47" stroke="#ddd" stroke-width="1"/>
@@ -204,14 +230,30 @@ const GOLF_MID_2 = golfSvg(
     { icon: "↪️", label: "形状", value: "右ドッグレッグ", color: "#8B4513" },
     { icon: "⚠️", label: "注意", value: "先にバンカー？", color: "#b89840" },
   ],
-  `<path d="M300,440 Q320,300 420,250 Q520,200 550,180" stroke="url(#fw)" stroke-width="80" fill="none" opacity="0.8"/>
-  <ellipse cx="420" cy="200" rx="50" ry="20" fill="url(#grn)" filter="url(#sh)"/>
-  <line x1="420" y1="180" x2="420" y2="200" stroke="#C0C0C0" stroke-width="2"/>
-  <polygon points="420,180 435,184 420,188" fill="#CC2200"/>
-  <rect x="460" y="220" width="80" height="24" rx="5" fill="rgba(0,0,0,0.5)"/>
-  <text x="500" y="237" text-anchor="middle" fill="#ffcc00" font-size="11" font-weight="bold">バンカー？</text>
-  <circle cx="300" cy="410" r="8" fill="white" stroke="#ccc" stroke-width="1.5"/>
-  <text x="320" y="430" fill="rgba(255,255,255,0.5)" font-size="10">ティー</text>`
+  `<ellipse cx="430" cy="280" rx="50" ry="20" fill="url(#grn)" filter="url(#sh)"/>
+  <ellipse cx="430" cy="280" rx="48" ry="18" fill="none" stroke="#a8e6cf" stroke-width="1.5" opacity="0.5"/>
+  <line x1="440" y1="262" x2="440" y2="280" stroke="#C0C0C0" stroke-width="2"/>
+  <polygon points="440,262 455,266 440,270" fill="#CC2200"/>
+  <g transform="translate(480,252)">
+    <ellipse cx="0" cy="20" rx="14" ry="4" fill="rgba(0,0,0,0.12)"/>
+    <rect x="-2" y="-5" width="5" height="25" rx="2" fill="#5A3A1A"/>
+    <ellipse cx="0" cy="-14" rx="18" ry="16" fill="#1E5A20" opacity="0.85"/>
+    <ellipse cx="-8" cy="-10" rx="12" ry="10" fill="#2A7A2A" opacity="0.7"/>
+    <ellipse cx="6" cy="-18" rx="10" ry="9" fill="#1E6E20" opacity="0.75"/>
+  </g>
+  <g transform="translate(515,257)">
+    <ellipse cx="0" cy="18" rx="12" ry="3" fill="rgba(0,0,0,0.10)"/>
+    <rect x="-2" y="-3" width="4" height="21" rx="2" fill="#5A3A1A"/>
+    <ellipse cx="0" cy="-12" rx="15" ry="13" fill="#1E5A20" opacity="0.8"/>
+    <ellipse cx="-5" cy="-8" rx="10" ry="8" fill="#2A7A2A" opacity="0.65"/>
+  </g>
+  <rect x="540" y="248" width="120" height="24" rx="6" fill="rgba(0,0,0,0.6)"/>
+  <text x="600" y="265" text-anchor="middle" fill="#ffcc00" font-size="11" font-weight="bold">⚠ バンカー可能性有</text>
+  <line x1="360" y1="410" x2="440" y2="270" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-dasharray="8,5"/>
+  <rect x="370" y="330" width="60" height="24" rx="5" fill="rgba(0,0,0,0.55)"/>
+  <text x="400" y="347" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="bold">400Y</text>
+  <circle cx="360" cy="415" r="8" fill="white" stroke="#ccc" stroke-width="1.5"/>
+  <text x="375" y="432" fill="rgba(255,255,255,0.5)" font-size="10">ティー</text>`
 );
 
 const GOLF_MID_3 = golfSvg(
@@ -283,222 +325,224 @@ const GOLF_ADV_3 = golfSvg(
 );
 
 // --- ワイン ---
-const WINE_CASUAL_1 = wineSvg(
+const WINE_CASUAL_1 = wineImageSvg(
   [
     { icon: "🎉", label: "場面", value: "パーティー手土産", color: "#722F37" },
     { icon: "💰", label: "予算", value: "3,000円", color: "#e63946" },
     { icon: "🍽️", label: "料理", value: "洋食全般", color: "#8B4513" },
   ],
-  "shop"
+  "/images/tacit-knowledge-image/wine/party.jpeg"
 );
-const WINE_CASUAL_2 = wineSvg(
+const WINE_CASUAL_2 = wineImageSvg(
   [
     { icon: "🍽️", label: "場面", value: "レストラン", color: "#722F37" },
     { icon: "❓", label: "質問", value: "赤 or 白？", color: "#e63946" },
     { icon: "🥩", label: "メイン", value: "和牛ステーキ", color: "#8B4513" },
   ],
-  "restaurant"
+  "/images/tacit-knowledge-image/wine/restaurant.webp"
 );
-const WINE_CASUAL_3 = wineSvg(
+const WINE_CASUAL_3 = wineImageSvg(
   [
     { icon: "🎁", label: "場面", value: "上司への手土産", color: "#722F37" },
     { icon: "💰", label: "予算", value: "5,000円", color: "#e63946" },
     { icon: "❓", label: "好み", value: "不明", color: "#999" },
   ],
-  "shop"
+  "/images/tacit-knowledge-image/wine/tinretu.jpg"
 );
-const WINE_MONTHLY_1 = wineSvg(
+const WINE_MONTHLY_1 = wineImageSvg(
   [
     { icon: "🍽️", label: "場面", value: "接待フレンチ", color: "#722F37" },
     { icon: "👤", label: "相手", value: "60代役員", color: "#333" },
     { icon: "🐟", label: "コース", value: "魚介中心", color: "#2E6FB0" },
   ],
-  "restaurant"
+  "/images/tacit-knowledge-image/wine/restaurant.webp"
 );
-const WINE_MONTHLY_2 = wineSvg(
+const WINE_MONTHLY_2 = wineImageSvg(
   [
     { icon: "📋", label: "場面", value: "知らない銘柄ばかり", color: "#722F37" },
     { icon: "💰", label: "予算", value: "1人5,000円", color: "#e63946" },
     { icon: "❓", label: "手がかり", value: "何を基準に？", color: "#999" },
   ],
-  "restaurant"
+  "/images/tacit-knowledge-image/wine/tinretu.jpg"
 );
-const WINE_MONTHLY_3 = wineSvg(
+const WINE_MONTHLY_3 = wineImageSvg(
   [
     { icon: "🎂", label: "場面", value: "誕生日プレゼント", color: "#722F37" },
     { icon: "👤", label: "相手", value: "ワイン好き", color: "#8B4513" },
     { icon: "💰", label: "予算", value: "10,000円", color: "#e63946" },
   ],
-  "shop"
+  "/images/tacit-knowledge-image/wine/tasting.webp"
 );
-const WINE_BIZ_1 = wineSvg(
+const WINE_BIZ_1 = wineImageSvg(
   [
     { icon: "🍽️", label: "場面", value: "「お任せします」", color: "#722F37" },
     { icon: "💰", label: "予算", value: "1本3万円まで", color: "#e63946" },
     { icon: "🍴", label: "料理", value: "フレンチコース", color: "#8B4513" },
   ],
-  "restaurant"
+  "/images/tacit-knowledge-image/wine/restaurant.webp"
 );
-const WINE_BIZ_2 = wineSvg(
+const WINE_BIZ_2 = wineImageSvg(
   [
-    { icon: "🍷", label: "選択", value: "ボルドー vs ブルゴーニュ", color: "#722F37" },
+    { icon: "🍷", label: "比較", value: "ボルドー vs", color: "#722F37" },
+    { icon: "", label: "", value: "ブルゴーニュ", color: "#722F37" },
     { icon: "🌙", label: "条件", value: "今夜1本だけ", color: "#333" },
   ],
-  "restaurant"
+  "/images/tacit-knowledge-image/wine/Bordeaux.jpg"
 );
-const WINE_BIZ_3 = wineSvg(
+const WINE_BIZ_3 = wineImageSvg(
   [
     { icon: "📅", label: "保管", value: "10年後まで", color: "#722F37" },
     { icon: "🎯", label: "目的", value: "自飲み用", color: "#333" },
     { icon: "❌", label: "注意", value: "投資ではない", color: "#999" },
   ],
-  "shop"
+  "/images/tacit-knowledge-image/wine/tinretu.jpg"
 );
-const WINE_SERIOUS_1 = wineSvg(
+const WINE_SERIOUS_1 = wineImageSvg(
   [
     { icon: "🍷", label: "場面", value: "テイスティング", color: "#722F37" },
     { icon: "❓", label: "質問", value: "最初に確認は？", color: "#e63946" },
   ],
-  "tasting"
+  "/images/tacit-knowledge-image/wine/tasting.webp"
 );
-const WINE_SERIOUS_2 = wineSvg(
+const WINE_SERIOUS_2 = wineImageSvg(
   [
     { icon: "📊", label: "テーマ", value: "優先基準", color: "#722F37" },
     { icon: "🏷️", label: "比較", value: "ヴィンテージ vs 生産者", color: "#333" },
   ],
-  "tasting"
+  "/images/tacit-knowledge-image/wine/vintage.jpeg"
 );
-const WINE_SERIOUS_3 = wineSvg(
+const WINE_SERIOUS_3 = wineImageSvg(
   [
     { icon: "🌍", label: "テーマ", value: "産地別の選び方", color: "#722F37" },
     { icon: "❓", label: "質問", value: "軸は変わる？", color: "#e63946" },
   ],
-  "tasting"
+  "/images/tacit-knowledge-image/wine/hatake.avif"
 );
 
 // --- 釣り ---
-const FISH_CASUAL_1 = fishingSvg(
+const FISH_IMG = "/images/tacit-knowledge-image/turi/turi.avif";
+const FISH_CASUAL_1 = fishingImageSvg(
   [
     { icon: "📍", label: "選択肢", value: "海・川・管理釣り場", color: "#1a4f8a" },
     { icon: "📅", label: "日程", value: "週末", color: "#333" },
     { icon: "❓", label: "質問", value: "どこに行く？", color: "#e63946" },
   ],
-  "sea"
+  FISH_IMG
 );
-const FISH_CASUAL_2 = fishingSvg(
+const FISH_CASUAL_2 = fishingImageSvg(
   [
     { icon: "📍", label: "場所", value: "初めての釣り場", color: "#1a4f8a" },
     { icon: "👥", label: "周囲", value: "他に釣り人あり", color: "#333" },
     { icon: "❓", label: "質問", value: "まず何を確認？", color: "#e63946" },
   ],
-  "sea"
+  FISH_IMG
 );
-const FISH_CASUAL_3 = fishingSvg(
+const FISH_CASUAL_3 = fishingImageSvg(
   [
     { icon: "⏱️", label: "経過", value: "1時間", color: "#333" },
     { icon: "🎣", label: "釣果", value: "ゼロ", color: "#e63946" },
     { icon: "👥", label: "周囲", value: "同様に釣れず", color: "#999" },
     { icon: "❓", label: "質問", value: "何を変える？", color: "#e63946" },
   ],
-  "sea"
+  FISH_IMG
 );
-const FISH_MONTHLY_1 = fishingSvg(
+const FISH_MONTHLY_1 = fishingImageSvg(
   [
     { icon: "⏱️", label: "経過", value: "朝6時から2時間", color: "#333" },
     { icon: "🎣", label: "釣果", value: "ゼロ", color: "#e63946" },
     { icon: "👤", label: "隣の人", value: "釣れている", color: "#2e8b57" },
   ],
-  "river"
+  FISH_IMG
 );
-const FISH_MONTHLY_2 = fishingSvg(
+const FISH_MONTHLY_2 = fishingImageSvg(
   [
     { icon: "🌧️", label: "天気", value: "午後から崩れる", color: "#2E6FB0" },
     { icon: "🎣", label: "釣果", value: "まだゼロ", color: "#e63946" },
     { icon: "❓", label: "質問", value: "どうする？", color: "#e63946" },
   ],
-  "river"
+  FISH_IMG
 );
-const FISH_MONTHLY_3 = fishingSvg(
+const FISH_MONTHLY_3 = fishingImageSvg(
   [
     { icon: "🌊", label: "状況", value: "川に濁りあり", color: "#8B4513" },
     { icon: "🎣", label: "釣果", value: "まずまず", color: "#2e8b57" },
     { icon: "❓", label: "質問", value: "ルアーをどう変える？", color: "#e63946" },
   ],
-  "river"
+  FISH_IMG
 );
-const FISH_SERIOUS_1 = fishingSvg(
+const FISH_SERIOUS_1 = fishingImageSvg(
   [
     { icon: "🐟", label: "ターゲット", value: "シーバス", color: "#1a4f8a" },
     { icon: "🌊", label: "潮", value: "上げ→下げ変化点", color: "#2E6FB0" },
     { icon: "🐠", label: "ベイト", value: "表層にいる", color: "#2e8b57" },
   ],
-  "sea"
+  FISH_IMG
 );
-const FISH_SERIOUS_2 = fishingSvg(
+const FISH_SERIOUS_2 = fishingImageSvg(
   [
     { icon: "📍", label: "場所", value: "お気に入りポイント", color: "#1a4f8a" },
     { icon: "⏱️", label: "経過", value: "2時間反応なし", color: "#e63946" },
     { icon: "❓", label: "質問", value: "どうする？", color: "#e63946" },
   ],
-  "sea"
+  FISH_IMG
 );
-const FISH_SERIOUS_3 = fishingSvg(
+const FISH_SERIOUS_3 = fishingImageSvg(
   [
     { icon: "🐟", label: "状況", value: "ライズあり", color: "#2e8b57" },
     { icon: "🎣", label: "バイト", value: "なし（数投済み）", color: "#e63946" },
     { icon: "❓", label: "質問", value: "アプローチ変更？", color: "#e63946" },
   ],
-  "sea"
+  FISH_IMG
 );
 
 // --- 接待会食 ---
-const ENT_ANNUAL_1 = entertainmentSvg([
+const ENT_ANNUAL_1 = entertainmentImageSvg([
   { icon: "📋", label: "場面", value: "初めての接待", color: "#8B4513" },
   { icon: "💰", label: "予算", value: "1人1万円", color: "#e63946" },
   { icon: "👥", label: "相手", value: "担当者2名", color: "#333" },
   { icon: "❓", label: "質問", value: "まず何を確認？", color: "#e63946" },
-]);
-const ENT_ANNUAL_2 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_ANNUAL_2 = entertainmentImageSvg([
   { icon: "⏱️", label: "経過", value: "30分", color: "#333" },
   { icon: "😶", label: "状況", value: "相手が話さない", color: "#e63946" },
   { icon: "🍽️", label: "料理", value: "提供済み", color: "#2e8b57" },
-]);
-const ENT_ANNUAL_3 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_ANNUAL_3 = entertainmentImageSvg([
   { icon: "🕘", label: "時刻", value: "21時", color: "#333" },
   { icon: "🍺", label: "雰囲気", value: "飲み足りなさそう", color: "#e63946" },
   { icon: "❓", label: "質問", value: "2次会どうする？", color: "#e63946" },
-]);
-const ENT_MONTHLY_1 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_MONTHLY_1 = entertainmentImageSvg([
   { icon: "📋", label: "翌日", value: "大型案件の提案", color: "#e63946" },
   { icon: "👥", label: "相手", value: "先方役員2名", color: "#333" },
   { icon: "🤝", label: "関係", value: "まだ浅い", color: "#999" },
   { icon: "❓", label: "質問", value: "どんな店を？", color: "#e63946" },
-]);
-const ENT_MONTHLY_2 = entertainmentSvg([
-  { icon: "⏱️", label: "タイミング", value: "中盤・場が温まる", color: "#333" },
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_MONTHLY_2 = entertainmentImageSvg([
+  { icon: "⏱️", label: "時期", value: "中盤・場が温まる", color: "#333" },
   { icon: "💬", label: "状況", value: "愚痴を話し始めた", color: "#e63946" },
   { icon: "❓", label: "質問", value: "どう対応？", color: "#e63946" },
-]);
-const ENT_MONTHLY_3 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_MONTHLY_3 = entertainmentImageSvg([
   { icon: "🍽️", label: "場所", value: "予約した個室", color: "#8B4513" },
   { icon: "⏱️", label: "問題", value: "料理30分来ない", color: "#e63946" },
   { icon: "⚠️", label: "原因", value: "オーダー未通", color: "#e63946" },
-]);
-const ENT_FREQUENT_1 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_FREQUENT_1 = entertainmentImageSvg([
   { icon: "📋", label: "状況", value: "商談前・場は盛況", color: "#333" },
   { icon: "🍺", label: "相手", value: "酔ってきた", color: "#e63946" },
   { icon: "❓", label: "質問", value: "どうする？", color: "#e63946" },
-]);
-const ENT_FREQUENT_2 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_FREQUENT_2 = entertainmentImageSvg([
   { icon: "⏱️", label: "タイミング", value: "中盤", color: "#333" },
   { icon: "💬", label: "発言", value: "「競合と話してる」", color: "#e63946" },
   { icon: "❓", label: "質問", value: "どう対応？", color: "#e63946" },
-]);
-const ENT_FREQUENT_3 = entertainmentSvg([
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
+const ENT_FREQUENT_3 = entertainmentImageSvg([
   { icon: "📅", label: "時期", value: "翌日", color: "#333" },
   { icon: "💬", label: "先方", value: "「楽しかった」", color: "#2e8b57" },
   { icon: "❓", label: "質問", value: "フォローは？", color: "#e63946" },
-]);
+], "/images/tacit-knowledge-image/settai/restaurant.webp");
 
 // =====================================================
 // トピック×レベル×場面 → SVG のマッピング
@@ -514,7 +558,7 @@ export const SCENE_SVGS: Record<string, Record<string, [string, string, string]>
     "上級者（スコア85以下）": [GOLF_ADV_1, GOLF_ADV_2, GOLF_ADV_3],
   },
   wine: {
-    "たまに飲む程度": ["", "", ""],  // 選択肢テキストで表示、SVG不要
+    "たまに飲む程度": [WINE_CASUAL_1, WINE_CASUAL_2, WINE_CASUAL_3],
     "月に数回自分で選ぶ": [WINE_MONTHLY_1, WINE_MONTHLY_2, WINE_MONTHLY_3],
     "接待等でよく選ぶ": [WINE_BIZ_1, WINE_BIZ_2, WINE_BIZ_3],
     "本格的に学んでいる": [WINE_SERIOUS_1, WINE_SERIOUS_2, WINE_SERIOUS_3],
