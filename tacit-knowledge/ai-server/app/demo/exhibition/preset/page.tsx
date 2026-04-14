@@ -867,17 +867,37 @@ function ChatPhase({
 
         {/* 完了後CTA — 入力欄の代わりにチャット末尾に表示 */}
         {showCompletion && (
-          <div className="mx-2 mt-4 mb-2 rounded-2xl bg-[#1E3A5F] text-white p-6 text-center space-y-4">
-            <p className="text-lg font-bold">
-              もっと詳しく知りたい方はスタッフにお声掛けください。
-            </p>
-            <button
-              onClick={onReset}
-              className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl bg-white text-[#1E3A5F] text-sm font-semibold hover:bg-gray-100 active:scale-95 transition-all"
-            >
-              <RotateCcw className="h-4 w-4" />
-              最初に戻る
-            </button>
+          <div className="mx-2 mt-4 mb-2 space-y-3">
+            {/* アンケートCTA */}
+            <div className="rounded-2xl border-2 border-[#1E3A5F] bg-gradient-to-br from-[#f0f7ff] to-[#e8f4fd] p-6 text-center">
+              <p className="text-sm font-medium text-gray-800 leading-relaxed mb-4">
+                🎁 診断結果をお受け取りいただくために、<br />
+                簡単なアンケートにご協力ください。
+                <span className="inline-block bg-[#1E3A5F] text-white text-[11px] font-bold px-2 py-0.5 rounded-full ml-2 align-middle">1分で完了</span>
+              </p>
+              <a
+                href="https://417b56.share-na2.hsforms.com/2RGUrKk-bQw6oTMDTe7w0qQ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full max-w-xs mx-auto py-4 px-6 bg-[#2563eb] hover:bg-[#1d4ed8] active:scale-[0.98] text-white text-base font-bold rounded-xl shadow-lg shadow-blue-200 transition-all"
+              >
+                ▶ アンケートに回答する
+              </a>
+            </div>
+
+            {/* スタッフ案内 + リセット */}
+            <div className="rounded-2xl bg-[#1E3A5F] text-white p-6 text-center space-y-4">
+              <p className="text-lg font-bold">
+                もっと詳しく知りたい方はスタッフにお声掛けください。
+              </p>
+              <button
+                onClick={onReset}
+                className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl bg-white text-[#1E3A5F] text-sm font-semibold hover:bg-gray-100 active:scale-95 transition-all"
+              >
+                <RotateCcw className="h-4 w-4" />
+                最初に戻る
+              </button>
+            </div>
           </div>
         )}
 
