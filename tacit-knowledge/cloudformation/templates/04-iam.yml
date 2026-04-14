@@ -18,10 +18,6 @@ Parameters:
     Description: GitHub repository in format owner/repo
     Default: emc-kk/skillrelay
 
-  GitHubRepoExpo:
-    Type: String
-    Description: GitHub repository for exhibition deploy (owner/repo)
-    Default: emc-kk/ai_event_chat
 
 Resources:
   # IAM Role for App Runner Access (ECR Access)
@@ -261,9 +257,7 @@ Resources:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
               StringLike:
-                token.actions.githubusercontent.com:sub:
-                  - !Sub repo:${GitHubRepo}:*
-                  - !Sub repo:${GitHubRepoExpo}:*
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepo}:*
       Policies:
         - PolicyName: GitHubActionsPolicy
           PolicyDocument:

@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SkillRelay - Exhibition (Expo) IAM Role for GitHub Actions (separate from main repo)'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: skillrelay
+    Description: Project name for resource naming
+
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+
+  GitHubRepoExpo:
+    Type: String
+    Description: GitHub repository for exhibition deploy (owner/repo)
+    Default: emc-kk/ai_event_chat
+
+Resources:
+  ExpoGitHubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-${Environment}-expo-github-actions-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepoExpo}:*
+      Policies:
+        - PolicyName: ExpoGitHubActionsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # ECR access
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:DescribeImages
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                  - ecr:PutImage
+                Resource: '*'
+              # AppRunner access
+              - Effect: Allow
+                Action:
+                  - apprunner:ListServices
+                  - apprunner:StartDeployment
+                  - apprunner:DescribeService
+                  - apprunner:CreateService
+                  - apprunner:DeleteService
+                  - apprunner:UpdateService
+                  - apprunner:TagResource
+                  - apprunner:UntagResource
+                Resource: '*'
+              # CloudFormation exports (for getting role ARNs)
+              - Effect: Allow
+                Action:
+                  - cloudformation:ListExports
+                  - cloudformation:ListStacks
+                Resource: '*'
+              # IAM PassRole for AppRunner
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-ai-server-apprunner-access-role
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-${Environment}-ai-server-apprunner-instance-role
+              # CloudWatch Logs
+              - Effect: Allow
+                Action:
+                  - logs:GetLogEvents
+                Resource: '*'
+
+Outputs:
+  ExpoGitHubActionsRoleArn:
+    Description: Exhibition GitHub Actions Role ARN
+    Value: !GetAtt ExpoGitHubActionsRole.Arn
+    Export:
+      Name: !Sub ${ProjectName}-${Environment}-expo-github-role-arn
