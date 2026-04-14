@@ -150,6 +150,13 @@ jobs:
               }
             }"
 
+      - name: Force deploy with latest image
+        if: steps.get-service.outputs.exists == 'true'
+        run: |
+          echo "Triggering start-deployment to force pull latest image..."
+          aws apprunner start-deployment \
+            --service-arn "${{ steps.get-service.outputs.service_arn }}"
+
       - name: Wait for deployment
         run: |
           SERVICE_ARN=$(aws apprunner list-services \
